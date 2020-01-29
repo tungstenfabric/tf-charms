@@ -346,3 +346,13 @@ def get_rabbitmq_connection_details():
         "rabbit_port": "5673",
         "rabbit_address_list": ips,
     }
+
+
+def update_issu_state(issu_relation_data):
+    ctx = {'old': issu_relation_data}
+    ctx["new"] = utils.get_cassandra_connection_details()
+    ctx["new"].update(utils.get_rabbitmq_connection_details())
+    ctx["new"].update(utils.get_zookeeper_connection_details())
+
+    common_utils.render_and_log("contrail-issu.conf", utils.BASE_CONFIGS_PATH + "/contrail-issu.conf", ctx)
+    # TODO run docker
