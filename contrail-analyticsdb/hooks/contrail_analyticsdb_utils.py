@@ -32,6 +32,7 @@ IMAGES = {
     '5.1': [
         "contrail-node-init",
         "contrail-nodemgr",
+        "contrail-provisioner",
         "contrail-analytics-query-engine",
         "contrail-external-cassandra",
     ],
@@ -49,7 +50,7 @@ SERVICES = {
         "database": [
             "query-engine",
             "nodemgr",
-            "cassandra"
+            "cassandra",
         ]
     }
 }
@@ -157,6 +158,8 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log(cver + "/analytics-database.env",
         BASE_CONFIGS_PATH + "/common_analyticsdb.env", ctx)
+    changed |= common_utils.render_and_log(cver + "/defaults_analyticsdb.env",
+        BASE_CONFIGS_PATH + "/defaults_analyticsdb.env", ctx)
     changed |= common_utils.render_and_log(cver + "/analytics-database.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
