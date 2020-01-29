@@ -40,6 +40,7 @@ IMAGES = {
     '5.1': [
         "contrail-node-init",
         "contrail-nodemgr",
+        "contrail-provisioner",
         "contrail-analytics-api",
         "contrail-analytics-collector",
         "contrail-analytics-alarm-gen",
@@ -65,6 +66,7 @@ SERVICES = {
         "analytics": [
             "api",
             "nodemgr",
+            "provisioner",
             "collector",
         ],
         "analytics-alarm": [
@@ -198,6 +200,9 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log(cver + "/analytics.env",
         BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
+    
+    changed |= common_utils.render_and_log(cver + "/defaults.env",
+        BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
 
     changed |= common_utils.render_and_log(cver + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)

@@ -32,6 +32,20 @@ services:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
+  provisioner:
+    image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
+    env_file: 
+      - /etc/contrail/common_analytics.env
+      - /etc/contrail/defaults_analytics.env
+    environment:
+      - NODE_TYPE=analytics-snmp
+    network_mode: "host"
+    volumes_from:
+      - node-init
+    depends_on:
+      - node-init
+    restart: always
+{{ logging | indent(4,True) }}
   snmp-collector:
     image: "{{ container_registry }}/contrail-analytics-snmp-collector:{{ contrail_version_tag }}"
     network_mode: "host"

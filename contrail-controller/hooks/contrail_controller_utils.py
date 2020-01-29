@@ -35,6 +35,7 @@ REDIS_CONFIGS_PATH = BASE_CONFIGS_PATH + "/redis"
 IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
+    'contrail-provisioner',
     "contrail-controller-config-api",
     "contrail-controller-config-svcmonitor",
     "contrail-controller-config-schema",
@@ -54,11 +55,13 @@ SERVICES = {
     "control": [
         "control",
         "nodemgr",
+        'provisioner',
         "named",
         "dns",
     ],
     "config-database": [
         "nodemgr",
+        'provisioner',
         "zookeeper",
         "rabbitmq",
         "cassandra",
@@ -70,6 +73,7 @@ SERVICES = {
     "config": [
         "svc-monitor",
         "nodemgr",
+        'provisioner',
         "device-manager",
         "api",
         "schema",
@@ -163,6 +167,8 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("config.env",
         BASE_CONFIGS_PATH + "/common_config.env", ctx)
+    changed |= common_utils.render_and_log("defaults_config.env",
+        BASE_CONFIGS_PATH + "/defaults_config.env", ctx)
 
     service_changed = common_utils.render_and_log("config-api.yaml",
         CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)

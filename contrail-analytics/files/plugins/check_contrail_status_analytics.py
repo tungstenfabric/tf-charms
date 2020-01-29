@@ -19,16 +19,19 @@ SERVICES = {
         "analytics": [
             "api",
             "nodemgr",
+            "provisioner",
             "collector",
         ],
         "analytics-alarm": [
             "alarm-gen",
             "nodemgr",
+            "provisioner",
             "kafka",
         ],
         "analytics-snmp": [
             "snmp-collector",
             "nodemgr",
+            "provisioner",
             "topology",
         ],
     },

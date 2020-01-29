@@ -16,7 +16,8 @@ SERVICES = {
         "database": [
             "query-engine",
             "nodemgr",
-            "cassandra"
+            "cassandra",
+            "provisioner"
         ]
     }
 }

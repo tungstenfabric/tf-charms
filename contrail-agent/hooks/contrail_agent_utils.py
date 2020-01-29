@@ -49,6 +49,7 @@ SERVICES = {
     "vrouter": [
         "agent",
         "nodemgr",
+        "provisioner"
     ]
 }
 
@@ -209,6 +210,8 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
+    changed |= common_utils.render_and_log("defaults_vrouter.env",
+        BASE_CONFIGS_PATH + "/defaults_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)

@@ -7,6 +7,7 @@ SERVICES = {
     "vrouter": [
         "agent",
         "nodemgr",
+        "provisioner"
     ]
 }
 

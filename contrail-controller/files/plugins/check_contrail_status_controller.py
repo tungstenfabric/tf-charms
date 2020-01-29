@@ -7,11 +7,13 @@ SERVICES = {
     'control': [
         'control',
         'nodemgr',
+        'provisioner',
         'named',
         'dns',
     ],
     'config-database': [
         'nodemgr',
+        'provisioner',
         'zookeeper',
         'rabbitmq',
         'cassandra',
@@ -23,6 +25,7 @@ SERVICES = {
     'config': [
         'svc-monitor',
         'nodemgr',
+        'provisioner',
         'device-manager',
         'api',
         'schema',
