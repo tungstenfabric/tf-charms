@@ -562,13 +562,15 @@ def nrpe_external_master_relation_changed():
 
 @hooks.hook('contrail-issu-relation-changed')
 def contrail_issu_relation_changed():
-    ctx = {'old': relation_get()}
-    ctx["new"] = utils.get_cassandra_connection_details()
-    ctx["new"].update(utils.get_rabbitmq_connection_details())
-    ctx["new"].update(utils.get_zookeeper_connection_details())
+    data = relation_get()
+    if "orchestrator-info" in data:
+        config["orchestrator_info"] = data["orchestrator-info"]
+        config.save()
+        if is_leader():
+            update_northbound_relations()
+    utils.update_charm_status()
 
-    common_utils.render_and_log("issu.conf", utils.BASE_CONFIGS_PATH + "/issu.conf", ctx)
-    # TODO run docker
+    utils.update_issu_state(data)
 
 
 def update_nrpe_config():
