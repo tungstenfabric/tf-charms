@@ -22,6 +22,63 @@
       "revId": "cdc68c21b2176650bfa3bfbe80c4b462d0161734",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b5d4b19_9819a08f",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-01-30T13:49:30Z",
+      "side": 1,
+      "message": "it\u0027s also not needed here",
+      "range": {
+        "startLine": 52,
+        "startChar": 8,
+        "endLine": 52,
+        "endChar": 21
+      },
+      "revId": "cdc68c21b2176650bfa3bfbe80c4b462d0161734",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a4c49af_4eafbf8f",
+        "filename": "contrail-agent/templates/defaults_vrouter.env",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-01-30T13:49:30Z",
+      "side": 1,
+      "message": "it means that this file will be empty always in destination...",
+      "revId": "cdc68c21b2176650bfa3bfbe80c4b462d0161734",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d54a81f4_966f7a94",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-01-30T13:49:30Z",
+      "side": 1,
+      "message": "please do not leave unneeded spaces )",
+      "revId": "cdc68c21b2176650bfa3bfbe80c4b462d0161734",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
