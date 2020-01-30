@@ -327,14 +327,14 @@ def update_rabbitmq_cluster_hostnames():
 def get_cassandra_connection_details():
     ips = get_controller_ips("unit-address", "control-network")
     return {
-        "cassandra_address_list": ips,
+        "cassandra_address_list": list(ips.values()),
     }
 
 
 def get_zookeeper_connection_details():
     ips = get_controller_ips("unit-address", "control-network")
     return {
-        "zookeeper_address_list": ips,
+        "zookeeper_address_list": list(ips.values()),
     }
 
 
@@ -344,15 +344,15 @@ def get_rabbitmq_connection_details():
         "rabbit_q_name": "vnc-config.issu-queue",
         "rabbit_vhost": "contrail",
         "rabbit_port": "5673",
-        "rabbit_address_list": ips,
+        "rabbit_address_list": list(ips.values()),
     }
 
 
 def update_issu_state(issu_relation_data):
     ctx = {'old': issu_relation_data}
-    ctx["new"] = utils.get_cassandra_connection_details()
-    ctx["new"].update(utils.get_rabbitmq_connection_details())
-    ctx["new"].update(utils.get_zookeeper_connection_details())
+    ctx["new"] = get_cassandra_connection_details()
+    ctx["new"].update(get_rabbitmq_connection_details())
+    ctx["new"].update(get_zookeeper_connection_details())
 
-    common_utils.render_and_log("contrail-issu.conf", utils.BASE_CONFIGS_PATH + "/contrail-issu.conf", ctx)
+    common_utils.render_and_log("contrail-issu.conf", BASE_CONFIGS_PATH + "/contrail-issu.conf", ctx)
     # TODO run docker

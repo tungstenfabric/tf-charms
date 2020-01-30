@@ -275,11 +275,10 @@ def update_southbound_relations(rid=None):
         "ssl-enabled": config.get("ssl_enabled") and config.get("config_analytics_ssl_available"),
         # base64 encoded ca-cert
         "ca-cert": config.get("ca_cert"),
+        "rabbitmq_connection_details": json.dumps(utils.get_rabbitmq_connection_details()),
+        "cassandra_connection_details": json.dumps(utils.get_cassandra_connection_details()),
+        "zookeeper_connection_details": json.dumps(utils.get_zookeeper_connection_details()),
     }
-
-    settings.update(utils.get_cassandra_connection_details())
-    settings.update(utils.get_rabbitmq_connection_details())
-    settings.update(utils.get_zookeeper_connection_details())
 
     for rid in ([rid] if rid else relation_ids("contrail-controller")):
         relation_set(relation_id=rid, relation_settings=settings)
@@ -562,15 +561,18 @@ def nrpe_external_master_relation_changed():
 
 @hooks.hook('contrail-issu-relation-changed')
 def contrail_issu_relation_changed():
-    data = relation_get()
-    if "orchestrator-info" in data:
-        config["orchestrator_info"] = data["orchestrator-info"]
+    rel_data = relation_get()
+    if "orchestrator-info" in rel_data:
+        config["orchestrator_info"] = rel_data["orchestrator-info"]
         config.save()
         if is_leader():
             update_northbound_relations()
     utils.update_charm_status()
 
-    utils.update_issu_state(data)
+    issu_data = dict()
+    for name in ["rabbitmq_connection_details", "cassandra_connection_details", "zookeeper_connection_details"]:
+        issu_data.update(common_utils.json_loads(rel_data.get(name), dict()))
+    utils.update_issu_state(issu_data)
 
 
 def update_nrpe_config():
