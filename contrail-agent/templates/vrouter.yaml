@@ -32,6 +32,7 @@ services:
       - node-init
     restart: on-failure
 {{ logging | indent(4,True) }}
+{% if contrail_version >= 2002 %}
   provisioner:
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
@@ -46,6 +47,7 @@ services:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
+{% endif %}
   vrouter-kernel-init:
 {%- if agent_mode == 'dpdk' %}
     image: "{{ container_registry }}/contrail-vrouter-kernel-init-dpdk:{{ contrail_version_tag }}"

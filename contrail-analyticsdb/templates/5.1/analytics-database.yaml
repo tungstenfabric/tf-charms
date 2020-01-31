@@ -36,6 +36,7 @@ services:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
+{% if contrail_version >= 2002 %}
   provisioner:
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
@@ -50,6 +51,7 @@ services:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
+{% endif %}
   query-engine:
     image: "{{ container_registry }}/contrail-analytics-query-engine:{{ contrail_version_tag }}"
     network_mode: "host"

@@ -114,6 +114,7 @@ def get_context():
     ctx["jvm_extra_opts"] = config.get("cassandra-jvm-extra-opts")
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
+    ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
@@ -164,8 +165,9 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("config.env",
         BASE_CONFIGS_PATH + "/common_config.env", ctx)
-    changed |= common_utils.render_and_log("defaults_config.env",
-        BASE_CONFIGS_PATH + "/defaults_config.env", ctx)
+    if common_utils.get_contrail_version() >= 2002:
+        changed |= common_utils.render_and_log("defaults_config.env",
+            BASE_CONFIGS_PATH + "/defaults_config.env", ctx)
 
     service_changed = common_utils.render_and_log("config-api.yaml",
         CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)
