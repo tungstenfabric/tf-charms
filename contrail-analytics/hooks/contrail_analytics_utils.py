@@ -151,6 +151,7 @@ def get_context():
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
     ctx["logging"] = docker_utils.render_logging()
+    ctx["contrail_version"] = common_utils.get_contrail_version()
 
     ctx.update(controller_ctx())
     ctx.update(analytics_ctx())
@@ -200,8 +201,9 @@ def update_charm_status():
     changed |= common_utils.render_and_log(cver + "/analytics.env",
         BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
     
-    changed |= common_utils.render_and_log(cver + "/defaults.env",
-        BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
+    if common_utils.get_contrail_version() >= 2002:
+        changed |= common_utils.render_and_log(cver + "/defaults.env",
+            BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
 
     changed |= common_utils.render_and_log(cver + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)

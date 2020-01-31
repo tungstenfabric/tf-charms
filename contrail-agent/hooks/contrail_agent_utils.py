@@ -111,6 +111,7 @@ def get_context():
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx["sriov_physical_interface"] = config.get("sriov-physical-interface")
     ctx["sriov_numvfs"] = config.get("sriov-numvfs")
+    ctx["contrail_version"] = common_utils.get_contrail_version()
 
     iface = config.get("physical-interface")
     ctx["physical_interface"] = iface
@@ -210,8 +211,9 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
-    changed |= common_utils.render_and_log("defaults_vrouter.env",
-        BASE_CONFIGS_PATH + "/defaults_vrouter.env", ctx)
+    if common_utils.get_contrail_version() >= 2002:    
+        changed |= common_utils.render_and_log("defaults_vrouter.env",
+            BASE_CONFIGS_PATH + "/defaults_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
