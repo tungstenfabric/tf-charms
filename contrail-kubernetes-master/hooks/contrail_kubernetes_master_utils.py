@@ -163,6 +163,9 @@ def update_charm_status():
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
+    if config.get("maintenance"):
+        return
+
     ctx = get_context()
     missing_relations = []
     if not ctx.get("nested_mode") and not ctx.get("controller_servers"):

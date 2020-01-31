@@ -83,6 +83,7 @@ def contrail_controller_changed():
     log("RelData: " + str(data))
 
     _update_config(data, "analytics_servers", "analytics-server")
+    _update_config(data, "maintenance", "maintenance")
     config.save()
 
     utils.update_charm_status()

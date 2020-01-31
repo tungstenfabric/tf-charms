@@ -89,6 +89,7 @@ def contrail_analytics_changed():
     changed |= _value_changed(data, "auth-info", "auth_info")
     changed |= _value_changed(data, "orchestrator-info", "orchestrator_info")
     changed |= _value_changed(data, "rabbitmq_hosts", "rabbitmq_hosts")
+    changed |= _value_changed(data, "maintenance", "maintenance")
     config.save()
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started

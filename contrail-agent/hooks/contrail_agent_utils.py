@@ -161,8 +161,6 @@ def get_context():
 
 
 def update_charm_status():
-    fix_dns_settings()
-
     tag = config.get('image-tag')
     for image in IMAGES + (IMAGES_DPDK if config["dpdk"] else IMAGES_KERNEL):
         try:
@@ -172,6 +170,11 @@ def update_charm_status():
             status_set('blocked',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+
+    if config.get("maintenance"):
+        return
+
+    fix_dns_settings()
 
     ctx = get_context()
     missing_relations = []
@@ -226,7 +229,7 @@ def update_charm_status():
 
 
 def fix_dns_settings():
-    # in some bionix installations DNS is proxied by local instance
+    # in some bionic installations DNS is proxied by local instance
     # of systed-resolved service. this services applies DNS settings
     # that was taken overDHCP to exact interface - ens3 for example.
     # and when we move traffic from ens3 to vhost0 then local DNS
