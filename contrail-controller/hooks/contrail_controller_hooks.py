@@ -248,6 +248,7 @@ def config_changed():
 
 def update_northbound_relations(rid=None):
     settings = {
+        "maintenance": config.get("maintenance"),
         "api-vip": config.get("vip"),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
@@ -266,6 +267,7 @@ def update_northbound_relations(rid=None):
 
 def update_southbound_relations(rid=None):
     settings = {
+        "maintenance": config.get("maintenance"),
         "api-vip": config.get("vip"),
         "analytics-server": json.dumps(utils.get_analytics_list()),
         "auth-mode": config.get("auth-mode"),
@@ -302,16 +304,18 @@ def contrail_controller_changed():
     data = relation_get()
     if "orchestrator-info" in data:
         config["orchestrator_info"] = data["orchestrator-info"]
+    if data.get("unit-type") == 'issu':
+        config["maintenance"] = 'issu'
     # TODO: set error if orchestrator is changed and container was started
     # with another orchestrator
+    if is_leader() and "dpdk" in data:
+        # remote unit is an agent
+        address = data["private-address"]
+        flags = common_utils.json_loads(config.get("agents-info"), dict())
+        flags[address] = data["dpdk"]
+        config["agents-info"] = json.dumps(flags)
+    config.save()
     if is_leader():
-        if "dpdk" in data:
-            # remote unit is an agent
-            address = data["private-address"]
-            flags = common_utils.json_loads(config.get("agents-info"), dict())
-            flags[address] = data["dpdk"]
-            config["agents-info"] = json.dumps(flags)
-            config.save()
         update_southbound_relations()
         update_northbound_relations()
     utils.update_charm_status()
@@ -321,15 +325,27 @@ def contrail_controller_changed():
 def contrail_controller_departed():
     # while we have at least one openstack/kubernetes unit on the remote end
     # then we can suggest that orchestrator is still defined
+    agents_present = False
+    issu_present = False
     for rid in relation_ids("contrail-controller"):
         for unit in related_units(rid):
             utype = relation_get('unit-type', unit, rid)
             if utype == "openstack" or utype == "kubernetes":
-                return
+                agents_present = True
+            if utype == "issu":
+                issu_present = True
 
-    config.pop("orchestrator_info", None)
-    if is_leader():
+    changed = False
+    if not agents_present and "orchestrator_info" in config:
+        config.pop("orchestrator_info", None)
+        changed = True
+    if not issu_present and config.get("maintenance") == 'issu':
+        # TODO: finish ISSU process
+        config.pop("maintenance", None)
+        changed = True
+    if changed and is_leader():
         update_northbound_relations()
+        update_southbound_relations()
 
 
 @hooks.hook("contrail-analytics-relation-joined")
@@ -557,6 +573,12 @@ def tls_certificates_relation_departed():
 @hooks.hook('nrpe-external-master-relation-changed')
 def nrpe_external_master_relation_changed():
     update_nrpe_config()
+
+
+@hooks.hook("contrail-issu-relation-joined")
+def contrail_issu_relation_joined():
+    settings = {'unit-type': 'issu'}
+    relation_set(relation_settings=settings)
 
 
 @hooks.hook('contrail-issu-relation-changed')

@@ -140,6 +140,9 @@ def update_charm_status():
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
+    if config.get("maintenance"):
+        return
+
     ctx = get_context()
     missing_relations = []
     if not ctx.get("analytics_servers"):
@@ -234,7 +237,6 @@ def _update_hosts_file(file, ip, hostname, remove_hostname=False):
     hostname_present = False
     for line in lines:
         _line = line.split()
-
         if len(_line) < 2:
             newlines.append(line)
             continue
@@ -342,7 +344,7 @@ def get_rabbitmq_connection_details():
     ips = get_controller_ips("unit-address", "control-network")
     return {
         "rabbit_q_name": "vnc-config.issu-queue",
-        "rabbit_vhost": "contrail",
+        "rabbit_vhost": "/",
         "rabbit_port": "5673",
         "rabbit_address_list": list(ips.values()),
     }

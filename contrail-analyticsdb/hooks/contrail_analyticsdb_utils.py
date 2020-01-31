@@ -133,6 +133,9 @@ def update_charm_status():
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
+    if config.get("maintenance"):
+        return
+
     ctx = get_context()
     missing_relations = []
     if not ctx.get("controller_servers"):

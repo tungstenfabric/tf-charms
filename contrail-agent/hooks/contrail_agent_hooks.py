@@ -77,6 +77,7 @@ def contrail_controller_changed():
     _update_config("api_port", "port")
     _update_config("auth_info", "auth-info")
     _update_config("orchestrator_info", "orchestrator-info")
+    _update_config("maintenance", "maintenance")
     config.save()
 
     utils.update_charm_status()
@@ -85,7 +86,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_controller_node_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                      for unit in related_units(rid)]
+                  for unit in related_units(rid)]
     if units:
         return
 
