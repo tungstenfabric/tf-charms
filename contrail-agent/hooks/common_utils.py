@@ -317,22 +317,25 @@ def add_nagios_to_sudoers():
 
 def get_contrail_version():
     """
-    Function return get image tag and return contrail version in comparable format.
-    Return value is integer looks like 500  (for 5.0 version) or 2002 for 2002 version
-    If container tag set is 'latest' or if the version cannot be understood from the container tag, 
+    Function returns contrail version from image-tag in comparable format.
+    Returned value is integer looks like 500 (for 5.0 version) or 2002 for 2002 version
+    If container tag is 'latest' or if the version cannot be evaluated then 
     version will be set to 9999
-    If someone changes the naming conventions, he must make changes to this function to support these new conventions.
+    If someone changes the naming conventions, he must make changes in this function to support these new conventions.
     """
     cver = 9999
 
     tag = config.get("image-tag")
-    cver = 500 if '5.0' in tag else cver
-    cver = 510 if '5.1' in tag else cver
-    tag_date = re.findall(r"19\d\d", tag)
-    if len(tag_date) == 0:
-        tag_date = re.findall(r"20\d\d", tag)
-    if len(tag_date) != 0:
-        cver = int(tag_date[0])
+    if '5.0' in tag:
+        cver = 500
+    elif '5.1' in tag:
+        cver = 510
+    else:
+        tag_date = re.findall(r"19\d\d", tag)
+        if len(tag_date) == 0:
+            tag_date = re.findall(r"20\d\d", tag)
+        if len(tag_date) != 0:
+            cver = int(tag_date[0])
 
     return cver
 

@@ -203,8 +203,7 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log(cver + "/analytics.env",
         BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
-    
-    if common_utils.get_contrail_version() >= 2002:
+    if ctx["contrail_version"] >= 2002:
         changed |= common_utils.render_and_log(cver + "/defaults.env",
             BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
 

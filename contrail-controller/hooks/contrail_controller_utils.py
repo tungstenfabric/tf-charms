@@ -168,9 +168,9 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("config.env",
         BASE_CONFIGS_PATH + "/common_config.env", ctx)
-    if common_utils.get_contrail_version() >= 2002:
-        changed |= common_utils.render_and_log("defaults_config.env",
-            BASE_CONFIGS_PATH + "/defaults_config.env", ctx)
+    if ctx["contrail_version"] >= 2002:
+        changed |= common_utils.render_and_log("defaults.env",
+            BASE_CONFIGS_PATH + "/defaults_controller.env", ctx)
 
     service_changed = common_utils.render_and_log("config-api.yaml",
         CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)

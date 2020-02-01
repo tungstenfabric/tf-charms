@@ -162,8 +162,8 @@ def update_charm_status():
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log(cver + "/analytics-database.env",
         BASE_CONFIGS_PATH + "/common_analyticsdb.env", ctx)
-    if common_utils.get_contrail_version() >= 2002:
-        changed |= common_utils.render_and_log(cver + "/defaults_analyticsdb.env",
+    if ctx["contrail_version"] >= 2002:
+        changed |= common_utils.render_and_log(cver + "/defaults.env",
             BASE_CONFIGS_PATH + "/defaults_analyticsdb.env", ctx)
     changed |= common_utils.render_and_log(cver + "/analytics-database.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)

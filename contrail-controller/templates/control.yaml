@@ -39,7 +39,7 @@ services:
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_config.env
-      - /etc/contrail/defaults_config.env
+      - /etc/contrail/defaults_controller.env
     environment:
       - NODE_TYPE=control
     network_mode: "host"
