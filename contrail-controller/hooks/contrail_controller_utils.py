@@ -41,6 +41,7 @@ IMAGES = [
     "contrail-controller-config-schema",
     "contrail-controller-config-devicemgr",
     "contrail-controller-control-control",
+    "contrail-controller-config-dnsmasq",
     "contrail-controller-control-named",
     "contrail-controller-control-dns",
     "contrail-controller-webui-web",
