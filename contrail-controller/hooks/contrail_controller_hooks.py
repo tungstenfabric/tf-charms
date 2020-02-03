@@ -55,8 +55,8 @@ def install():
 
 @hooks.hook("leader-elected")
 def leader_elected():
-    for var_name in [("ip","unit-address","control-network"),
-                     ("data_ip","data-address","data-network")]:
+    for var_name in [("ip", "unit-address", "control-network"),
+                     ("data_ip", "data-address", "data-network")]:
         ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name[0])), list())
         ips = utils.get_controller_ips(var_name[1], var_name[2])
         if not ip_list:
@@ -67,7 +67,6 @@ def leader_elected():
                 "controller_{}s".format(var_name[0]): json.dumps(ips)
             }
             leader_set(settings=settings)
-            # TODO: pass this list to all south/north relations
         else:
             current_ip_list = ips.values()
             dead_ips = set(ip_list).difference(current_ip_list)
@@ -79,6 +78,8 @@ def leader_elected():
                 log("There are a dead controllers that are in the list: "
                     + str(dead_ips), level=ERROR)
 
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
@@ -138,6 +139,8 @@ def cluster_changed():
     unit = remote_unit()
     _address_changed(unit, ip, 'ip')
     _address_changed(unit, data_ip, 'data_ip')
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
@@ -183,6 +186,8 @@ def cluster_departed():
         }
         leader_set(settings=settings)
 
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
@@ -197,14 +202,13 @@ def config_changed():
     if config.changed("control-network") or config.changed("data-network"):
         ip = common_utils.get_ip()
         data_ip = common_utils.get_ip(config_param="data-network", fallback=ip)
-        rel_settings = {"private-address": ip, "data-address": data_ip}
-        cluster_settings = {"unit-address": ip, "data-address": data_ip}
-        rnames = ("contrail-controller",
-                  "contrail-analytics", "contrail-analyticsdb",
-                  "http-services", "https-services")
-        for rname in rnames:
+
+        rel_settings = {"private-address": ip}
+        for rname in ("http-services", "https-services"):
             for rid in relation_ids(rname):
                 relation_set(relation_id=rid, relation_settings=rel_settings)
+
+        cluster_settings = {"unit-address": ip, "data-address": data_ip}
         if config.get('local-rabbitmq-hostname-resolution'):
             cluster_settings.update({
                 "rabbitmq-hostname": utils.get_contrail_rabbit_hostname(),
@@ -213,9 +217,9 @@ def config_changed():
             # control-network changes to something different although
             # such host reconfiguration is unlikely
             utils.update_rabbitmq_cluster_hostnames()
-
         for rid in relation_ids("controller-cluster"):
             relation_set(relation_id=rid, relation_settings=cluster_settings)
+
         if is_leader():
             _address_changed(local_unit(), ip, 'ip')
             _address_changed(local_unit(), data_ip, 'data_ip')
@@ -247,12 +251,14 @@ def config_changed():
 
 
 def update_northbound_relations(rid=None):
+    # controller_ips/data_ips are already dumped json
     settings = {
         "maintenance": config.get("maintenance"),
-        "api-vip": config.get("vip"),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
         "orchestrator-info": config.get("orchestrator_info"),
+        "controller_ips": leader_get("controller_ip_list"),
+        "controller_data_ips": leader_get("controller_data_ip_list"),
     }
 
     if rid:
@@ -266,9 +272,9 @@ def update_northbound_relations(rid=None):
 
 
 def update_southbound_relations(rid=None):
+    # controller_ips/data_ips are already dumped json
     settings = {
         "maintenance": config.get("maintenance"),
-        "api-vip": config.get("vip"),
         "analytics-server": json.dumps(utils.get_analytics_list()),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
@@ -277,6 +283,8 @@ def update_southbound_relations(rid=None):
         "ssl-enabled": config.get("ssl_enabled") and config.get("config_analytics_ssl_available"),
         # base64 encoded ca-cert
         "ca-cert": config.get("ca_cert"),
+        "controller_ips": leader_get("controller_ip_list"),
+        "controller_data_ips": leader_get("controller_data_ip_list"),
         "rabbitmq_connection_details": json.dumps(utils.get_rabbitmq_connection_details()),
         "cassandra_connection_details": json.dumps(utils.get_cassandra_connection_details()),
         "zookeeper_connection_details": json.dumps(utils.get_zookeeper_connection_details()),
@@ -288,13 +296,6 @@ def update_southbound_relations(rid=None):
 
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined():
-    ip = common_utils.get_ip()
-    settings = {
-        "private-address": ip,
-        "data-address": common_utils.get_ip(config_param="data-network", fallback=ip),
-        "port": 8082
-    }
-    relation_set(relation_settings=settings)
     if is_leader():
         update_southbound_relations(rid=relation_id())
 
@@ -351,9 +352,7 @@ def contrail_controller_departed():
 @hooks.hook("contrail-analytics-relation-joined")
 def analytics_joined():
     ip = common_utils.get_ip()
-    settings = {"private-address": ip,
-                "data-address": common_utils.get_ip(config_param="data-network", fallback=ip),
-                'unit-type': 'controller'}
+    settings = {'unit-type': 'controller'}
     relation_set(relation_settings=settings)
     if is_leader():
         update_northbound_relations(rid=relation_id())
@@ -372,9 +371,7 @@ def analytics_changed_departed():
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined():
     ip = common_utils.get_ip()
-    settings = {"private-address": ip,
-                "data-address": common_utils.get_ip(config_param="data-network", fallback=ip),
-                'unit-type': 'controller'}
+    settings = {'unit-type': 'controller'}
     relation_set(relation_settings=settings)
     if is_leader():
         update_northbound_relations(rid=relation_id())

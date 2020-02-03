@@ -358,20 +358,4 @@ def contrail_status_cmd(name, plugins_dir):
 
 
 def is_config_analytics_ssl_available():
-    tag = config.get("image-tag")
-    # for now image tags are looking as YYMMsomethingelse, if the format
-    # changes, this logic needs to be rewrited
-    if '5.0' in tag or '5.1' in tag:
-        return False
-
-    tag_date = re.findall(r"19\d\d", tag)
-    if len(tag_date) == 0:
-        tag_date = re.findall(r"20\d\d", tag)
-    if len(tag_date) != 0:
-        ver = int(tag_date[0])
-        tag = 'latest' if ver >= 1910 else ''
-
-    if 'latest' in tag or 'master' in tag:
-        return True
-
-    return False
+    return (get_contrail_version() >= 1910)

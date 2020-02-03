@@ -89,9 +89,8 @@ def contrail_controller_changed():
                 config.pop(key, None)
 
     _update_config("auth_info", "auth-info")
-    _update_config("api_ip", "private-address")
-    _update_config("api_port", "port")
     _update_config("auth_mode", "auth-mode")
+    _update_config("controller_ips", "controller_ips")
 
     info = data.get("agents-info")
     if not info:
@@ -129,7 +128,7 @@ def contrail_cotroller_departed():
     if units:
         return
 
-    keys = ["auth_info", "api_ip", "api_port", "auth_mode"]
+    keys = ["auth_info", "auth_mode"]
     for key in keys:
         config.pop(key, None)
     config.save()

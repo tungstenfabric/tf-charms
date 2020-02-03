@@ -100,19 +100,11 @@ def get_context():
                 kubemanager_ip_list.append(ip)
     # add it's own ip address
     kubemanager_ip_list.append(common_utils.get_ip())
-    sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    ctx["kubemanager_servers"] = sorted(kubemanager_ip_list, key=sort_key)
+
+    ctx["kubemanager_servers"] = kubemanager_ip_list
     # get contrail configuration from relation
-    ips = list()
-    data_ips = list()
-    for rid in relation_ids("contrail-controller"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                ips.append(ip)
-            data_ip = relation_get("data-address", unit, rid)
-            if data_ip or ip:
-                data_ips.append(data_ip if data_ip else ip)
+    ips = common_utils.json_loads(config.get("controller_ips"), list())
+    data_ips = common_utils.json_loads(config.get("controller_data_ips"), list())
     ctx["controller_servers"] = ips
     ctx["control_servers"] = data_ips
     ips = common_utils.json_loads(config.get("analytics_servers"), list())

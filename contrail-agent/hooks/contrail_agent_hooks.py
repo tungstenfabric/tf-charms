@@ -73,11 +73,11 @@ def contrail_controller_changed():
             config[key] = data[data_key]
 
     _update_config("analytics_servers", "analytics-server")
-    _update_config("api_ip", "private-address")
-    _update_config("api_port", "port")
     _update_config("auth_info", "auth-info")
     _update_config("orchestrator_info", "orchestrator-info")
     _update_config("maintenance", "maintenance")
+    _update_config("controller_ips", "controller_ips")
+    _update_config("controller_data_ips", "controller_data_ips")
     config.save()
 
     utils.update_charm_status()

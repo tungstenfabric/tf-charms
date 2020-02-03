@@ -84,12 +84,13 @@ def contrail_analytics_joined():
 def contrail_analytics_changed():
     data = relation_get()
     changed = False
-    changed |= _value_changed(data, "api-vip", "api_vip")
     changed |= _value_changed(data, "auth-mode", "auth_mode")
     changed |= _value_changed(data, "auth-info", "auth_info")
     changed |= _value_changed(data, "orchestrator-info", "orchestrator_info")
     changed |= _value_changed(data, "rabbitmq_hosts", "rabbitmq_hosts")
     changed |= _value_changed(data, "maintenance", "maintenance")
+    changed |= _value_changed(data, "controller_ips", "controller_ips")
+    changed |= _value_changed(data, "controller_data_ips", "controller_data_ips")
     config.save()
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
@@ -103,8 +104,7 @@ def contrail_analytics_departed():
     units = [unit for rid in relation_ids("contrail-analytics")
                   for unit in related_units(rid)]
     if not units:
-        for key in ["api_vip", "auth_info", "auth_mode", "orchestrator_info",
-                    "rabbitmq_hosts"]:
+        for key in ["auth_info", "auth_mode", "orchestrator_info", "rabbitmq_hosts"]:
             config.pop(key, None)
     config.save()
     utils.update_charm_status()
@@ -213,7 +213,7 @@ def _http_services(vip):
 
 @hooks.hook("http-services-relation-joined")
 def http_services_joined(rel_id=None):
-    vip = config.get("api_vip")
+    vip = config.get("vip")
     func = close_port if vip else open_port
     for port in ["8081"]:
         try:
