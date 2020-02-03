@@ -89,22 +89,9 @@ def controller_ctx():
         # NOTE: auth_mode must be transmitted by controller
         return {}
 
-    controller_ip_list = []
-    controller_data_ip_list = []
-    for rid in relation_ids("contrail-analytics"):
-        for unit in related_units(rid):
-            utype = relation_get('unit-type', unit, rid)
-            if utype == "controller":
-                ip = relation_get("private-address", unit, rid)
-                if ip:
-                    controller_ip_list.append(ip)
-                data_ip = relation_get("data-address", unit, rid)
-                if data_ip or ip:
-                    controller_data_ip_list.append(data_ip if data_ip else ip)
     sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    controller_ip_list = sorted(controller_ip_list, key=sort_key)
-    controller_data_ip_list = sorted(controller_data_ip_list, key=sort_key)
-
+    controller_ip_list = sorted(common_utils.json_loads(config.get("controller_ips"), list()), key=sort_key)
+    controller_data_ip_list = sorted(common_utils.json_loads(config.get("controller_data_ips"), list()), key=sort_key)
     return {
         "auth_mode": auth_mode,
         "controller_servers": controller_ip_list,

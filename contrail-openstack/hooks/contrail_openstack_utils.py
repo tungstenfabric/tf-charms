@@ -45,6 +45,7 @@ PACKAGE_CODENAMES = {
         '17': 'queens',
         '18': 'rocky',
         '19': 'stein',
+        '20': 'train',
     },
     'neutron': {
         '7': 'liberty',
@@ -55,6 +56,7 @@ PACKAGE_CODENAMES = {
         '12': 'queens',
         '13': 'rocky',
         '14': 'stein',
+        '15': 'train',
     },
     'heat': {
         '5': 'liberty',
@@ -65,6 +67,7 @@ PACKAGE_CODENAMES = {
         '10': 'queens',
         '11': 'rocky',
         '12': 'stein',
+        '13': 'train',
     },
 }
 
@@ -205,9 +208,10 @@ def _get_endpoints():
 @restart_on_change({
     "/etc/neutron/plugins/opencontrail/ContrailPlugin.ini": ["neutron-server"],
     "/etc/contrail/keystone/ssl/ca-cert.pem": ["neutron-server"],
+    "/etc/contrail/vnc_api_lib.ini": ["neutron-server", "heat-engine"],
 })
 def write_configs():
-    # don't need to write any configs for nova. only for neutron.
+    # don't need to write any configs for nova. only for neutron and heat.
     neutron = _is_related_to("neutron-api")
     heat = _is_related_to("heat")
     if not neutron and not heat:

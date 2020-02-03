@@ -92,7 +92,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_cotroller_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                      for unit in related_units(rid)]
+                  for unit in related_units(rid)]
     if units:
         return
 

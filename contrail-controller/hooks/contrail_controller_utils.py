@@ -332,21 +332,21 @@ def update_rabbitmq_cluster_hostnames():
 
 
 def get_cassandra_connection_details():
-    ips = get_controller_ips("unit-address", "control-network")
+    ips = common_utils.json_loads(leader_get("controller_ip_list"), list())
     return {
         "cassandra_address_list": list(ips.values()),
     }
 
 
 def get_zookeeper_connection_details():
-    ips = get_controller_ips("unit-address", "control-network")
+    ips = common_utils.json_loads(leader_get("controller_ip_list"), list())
     return {
         "zookeeper_address_list": list(ips.values()),
     }
 
 
 def get_rabbitmq_connection_details():
-    ips = get_controller_ips("unit-address", "control-network")
+    ips = common_utils.json_loads(leader_get("controller_ip_list"), list())
     return {
         "rabbit_q_name": "vnc-config.issu-queue",
         "rabbit_vhost": "/",
