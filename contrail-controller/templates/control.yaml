@@ -83,36 +83,7 @@ services:
       - contrail_control_dns:/etc/contrail/dns
     volumes_from:
       - node-init
-{% if contrail_version >= 2002 %}
-      - dnsmasq
-{% endif %}
-    depends_on:
-      - node-init
-{% if contrail_version >= 2002 %}
-      - dnsmasq
-{% endif %}
-    restart: always
-{{ logging | indent(4,True) }}
-{% if contrail_version >= 2002 %}
-  dnsmasq:
-    image: "{{ container_registry }}/contrail-controller-config-dnsmasq:{{ contrail_version_tag }}"
-    network_mode: "host"
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    env_file: /etc/contrail/common_config.env
-    environment:
-      - NODE_TYPE=device-manager
-      - USE_EXTERNAL_TFTP={{ use_external_tftp }}
-    volumes_from:
-      - node-init
-    volumes:
-      - dnsmasq:/etc/dnsmasq
-      - dhcp_leases:/var/lib/dnsmasq
     depends_on:
       - node-init
     restart: always
-#    stdin_open:
-#    tty:
 {{ logging | indent(4,True) }}
-{% endif %}
