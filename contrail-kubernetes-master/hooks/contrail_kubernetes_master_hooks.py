@@ -84,6 +84,8 @@ def contrail_controller_changed():
 
     _update_config(data, "analytics_servers", "analytics-server")
     _update_config(data, "maintenance", "maintenance")
+    _update_config(data, "controller_ips", "controller_ips")
+    _update_config(data, "controller_data_ips", "controller_data_ips")
     config.save()
 
     utils.update_charm_status()
@@ -92,7 +94,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_cotroller_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                      for unit in related_units(rid)]
+                  for unit in related_units(rid)]
     if units:
         return
 
