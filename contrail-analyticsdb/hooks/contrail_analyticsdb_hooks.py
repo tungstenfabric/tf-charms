@@ -80,6 +80,8 @@ def analyticsdb_changed():
     changed |= _value_changed(data, "auth-info", "auth_info")
     changed |= _value_changed(data, "orchestrator-info", "orchestrator_info")
     changed |= _value_changed(data, "maintenance", "maintenance")
+    changed |= _value_changed(data, "controller_ips", "controller_ips")
+    changed |= _value_changed(data, "controller_data_ips", "controller_data_ips")
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
     if changed:

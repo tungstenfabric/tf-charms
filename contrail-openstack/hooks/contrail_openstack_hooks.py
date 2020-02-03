@@ -92,6 +92,7 @@ def contrail_controller_changed():
     _update_config("api_ip", "private-address")
     _update_config("api_port", "port")
     _update_config("auth_mode", "auth-mode")
+    _update_config("controller_ips", "controller_ips")
 
     info = data.get("agents-info")
     if not info:
