@@ -92,10 +92,10 @@ def get_context():
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     # previous versions of charm may store next value in config as string.
     ssl_enabled = config.get("ssl_enabled", False)
-    if not isinstance(value, bool):
-        value = yaml.load(value)
-        if not isinstance(value, bool):
-            value = False
+    if not isinstance(ssl_enabled, bool):
+        ssl_enabled = yaml.load(ssl_enabled)
+        if not isinstance(ssl_enabled, bool):
+            ssl_enabled = False
     ctx["ssl_enabled"] = ssl_enabled
     ctx["analyticsdb_minimum_diskgb"] = config.get("cassandra-minimum-diskgb")
     ctx["jvm_extra_opts"] = config.get("cassandra-jvm-extra-opts")
