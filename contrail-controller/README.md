@@ -13,6 +13,7 @@ components.
 Only OpenStack Mitaka or newer is supported.
 Only for Contrail 4.0 for now.
 Juju 2.0 is required.
+No TFTP or any other service should be listening port 69.
 
 Usage
 -----
