@@ -17,6 +17,10 @@ services:
       - /etc/timezone:/etc/timezone
       - /etc/localtime:/etc/localtime
       - /var/crashes:/var/crashes
+{% if contrail_version >= 2002 %}
+      dnsmasq:
+      tftp:
+{% endif %}
 {{ logging | indent(4,True) }}
   nodemgr:
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
@@ -84,7 +88,34 @@ services:
     env_file: /etc/contrail/common_config.env
     volumes_from:
       - node-init
+{% if contrail_version >= 2002 %}
+      dnsmasq:
+{% endif %}
+    depends_on:
+      - node-init
+{% if contrail_version >= 2002 %}
+      dnsmasq:
+{% endif %}
+    restart: always
+{{ logging | indent(4,True) }}
+{% if contrail_version >= 2002 %}
+  dnsmasq:
+    image: "{{ container_registry }}/contrail-controller-config-dnsmasq:{{ contrail_version_tag }}"
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    env_file: /etc/contrail/common_config.env
+    environment:
+      - NODE_TYPE=device-manager
+    volumes_from:
+      - node-init
+    volumes:
+      - dnsmasq:/etc/dnsmasq
+      - tftp:/etc/tftp
+      - dhcp_leases:/var/lib/dnsmasq
     depends_on:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
+{% endif %}
