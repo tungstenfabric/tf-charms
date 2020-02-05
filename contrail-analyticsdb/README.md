@@ -9,8 +9,8 @@ provides a Neutron plugin to integrate with OpenStack.
 This charm provides the analytics DB node component which includes
 cassandra, kafka and zookeeper services.
 
-Only OpenStack Mitaka or newer is supported.
-Only for Contrail 4.0 for now.
+Only OpenStack Ocata or newer is supported.
+Only for Contrail 5.0 or above.
 Juju 2.0 is required.
 
 Usage

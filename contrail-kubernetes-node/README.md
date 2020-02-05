@@ -14,7 +14,7 @@ This subordinate charm provides connectivity of Contrail to the Kubernetes maste
 to create and configure network interfaces.
 
 [The Charmed Distribution Of Kubernetes](https://jaas.ai/canonical-kubernetes) is supported.
-Only for Contrail 5.0 for now.
+Only for Contrail 5.0 or above.
 Juju 2.0 is required.
 
 Usage

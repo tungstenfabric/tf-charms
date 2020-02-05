@@ -13,8 +13,8 @@ instances plug into.
 This subordinate charm provides connectivity of Contrail to the Neutron API component
 and Nova Compute component and configures neutron-server and nova-compute.
 
-Only OpenStack Mitaka or newer is supported.
-Only for Contrail 4.0 for now.
+Only OpenStack Ocata or newer is supported.
+Only for Contrail 5.0 or above.
 Juju 2.0 is required.
 
 Usage

@@ -1,6 +1,3 @@
-from socket import inet_aton
-import struct
-
 from charmhelpers.core.hookenv import (
     config,
     related_units,
@@ -9,6 +6,7 @@ from charmhelpers.core.hookenv import (
     status_set,
     log,
 )
+from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
@@ -40,7 +38,6 @@ IMAGES = {
     '5.1': [
         "contrail-node-init",
         "contrail-nodemgr",
-        "contrail-provisioner",
         "contrail-analytics-api",
         "contrail-analytics-collector",
         "contrail-analytics-alarm-gen",
@@ -49,6 +46,10 @@ IMAGES = {
         "contrail-external-redis",
     ],
 }  
+# images for new versions that can be absent in previous releases
+IMAGES_OPTIONAL = [
+    "contrail-provisioner",
+]
 
 SERVICES = {
     '5.0': {
@@ -108,8 +109,6 @@ def analytics_ctx():
                 analytics_ip_list.append(ip)
     # add it's own ip address
     analytics_ip_list.append(common_utils.get_ip())
-    sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    analytics_ip_list = sorted(analytics_ip_list, key=sort_key)
     return {"analytics_servers": analytics_ip_list}
 
 
@@ -121,9 +120,6 @@ def analyticsdb_ctx():
             ip = relation_get("private-address", unit, rid)
             if ip:
                 analyticsdb_ip_list.append(ip)
-
-    sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    analyticsdb_ip_list = sorted(analyticsdb_ip_list, key=sort_key)
     return {"analyticsdb_servers": analyticsdb_ip_list}
 
 
@@ -167,6 +163,11 @@ def update_charm_status():
             status_set('blocked',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+    for image in IMAGES_OPTIONAL:
+        try:
+            docker_utils.pull(image, tag)
+        except Exception as e:
+            log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
         return
@@ -220,3 +221,27 @@ def update_charm_status():
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES[cver])
+
+
+def update_nrpe_config():
+    plugins_dir = '/usr/local/lib/nagios/plugins'
+    nrpe_compat = nrpe.NRPE()
+    component_ip = common_utils.get_ip()
+    common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.add_nagios_to_sudoers()
+
+    check_api_cmd = 'check_http -H {} -p 8081'.format(component_ip)
+    nrpe_compat.add_check(
+        shortname='check_analytics_api',
+        description='Check Contrail Analytics API',
+        check_cmd=check_api_cmd
+    )
+
+    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    nrpe_compat.add_check(
+        shortname=ctl_status_shortname,
+        description='Check contrail-status',
+        check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    nrpe_compat.write()

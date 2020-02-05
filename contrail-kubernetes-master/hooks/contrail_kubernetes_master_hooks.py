@@ -15,7 +15,6 @@ from charmhelpers.core.hookenv import (
     is_leader,
     leader_get,
 )
-from charmhelpers.contrib.charmsupport import nrpe
 
 import contrail_kubernetes_master_utils as utils
 import common_utils
@@ -48,7 +47,7 @@ def config_changed():
         raise Exception('Nested mode cannot be changed after deployment.')
     # TODO: analyze other params and raise exception if readonly params were changed
 
-    update_nrpe_config()
+    utils.update_nrpe_config()
     if config.changed("control-network"):
         settings = {'private-address': common_utils.get_ip()}
         rnames = ("contrail-controller", "contrail-kubernetes-config")
@@ -214,23 +213,7 @@ def upgrade_charm():
 
 @hooks.hook('nrpe-external-master-relation-changed')
 def nrpe_external_master_relation_changed():
-    update_nrpe_config()
-
-
-def update_nrpe_config():
-    plugins_dir = '/usr/local/lib/nagios/plugins'
-    nrpe_compat = nrpe.NRPE()
-    common_utils.rsync_nrpe_checks(plugins_dir)
-    common_utils.add_nagios_to_sudoers()
-
-    ctl_status_shortname = 'check_contrail_status_' + utils.MODULE
-    nrpe_compat.add_check(
-        shortname=ctl_status_shortname,
-        description='Check contrail-status',
-        check_cmd=common_utils.contrail_status_cmd(utils.MODULE, plugins_dir)
-    )
-
-    nrpe_compat.write()
+    utils.update_nrpe_config()
 
 
 def main():

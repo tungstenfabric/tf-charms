@@ -9,8 +9,8 @@ provides a Neutron plugin to integrate with OpenStack.
 This charm provides the analytics node component which includes
 contrail-collector, contrail-query-engine and contrail-analytics-api services.
 
-Only OpenStack Mitaka or newer is supported.
-Only for Contrail 4.0 for now.
+Only OpenStack Ocata or newer is supported.
+Only for Contrail 5.0 or above.
 Juju 2.0 is required.
 
 Usage

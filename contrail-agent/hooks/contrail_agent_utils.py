@@ -1,6 +1,5 @@
 import os
 import socket
-import struct
 from subprocess import (
     check_call,
     check_output,
@@ -9,21 +8,17 @@ import netifaces
 from charmhelpers.core.hookenv import (
     config,
     log,
-    related_units,
-    relation_get,
-    relation_ids,
     status_set,
     unit_get,
     WARNING,
 )
 
 from charmhelpers.core.host import (
-    file_hash,
     service_restart,
     get_total_ram,
     lsb_release,
 )
-
+from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
@@ -36,8 +31,11 @@ CONFIGS_PATH = BASE_CONFIGS_PATH + "/vrouter"
 IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
-    "contrail-provisioner",
     "contrail-vrouter-agent",
+]
+# images for new versions that can be absent in previous releases
+IMAGES_OPTIONAL = [
+    "contrail-provisioner",
 ]
 IMAGES_KERNEL = [
     "contrail-vrouter-kernel-build-init",
@@ -162,6 +160,11 @@ def update_charm_status():
             status_set('blocked',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+    for image in IMAGES_OPTIONAL:
+        try:
+            docker_utils.pull(image, tag)
+        except Exception as e:
+            log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
         return
@@ -284,3 +287,18 @@ def get_vhost_ip():
         return addr[netifaces.AF_INET][0]["addr"]
 
     return None
+
+def update_nrpe_config():
+    plugins_dir = '/usr/local/lib/nagios/plugins'
+    nrpe_compat = nrpe.NRPE(primary=False)
+    common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.add_nagios_to_sudoers()
+
+    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    nrpe_compat.add_check(
+        shortname=ctl_status_shortname,
+        description='Check contrail-status',
+        check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    nrpe_compat.write()

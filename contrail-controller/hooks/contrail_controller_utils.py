@@ -1,5 +1,3 @@
-from socket import inet_aton
-import struct
 import os
 import tempfile
 import socket
@@ -15,6 +13,7 @@ from charmhelpers.core.hookenv import (
     INFO,
     local_unit,
 )
+from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 from charmhelpers.core.unitdata import kv
 import common_utils
@@ -35,7 +34,6 @@ REDIS_CONFIGS_PATH = BASE_CONFIGS_PATH + "/redis"
 IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
-    'contrail-provisioner',
     "contrail-controller-config-api",
     "contrail-controller-config-svcmonitor",
     "contrail-controller-config-schema",
@@ -49,6 +47,11 @@ IMAGES = [
     "contrail-external-zookeeper",
     "contrail-external-rabbitmq",
     "contrail-external-redis",
+]
+# images for new versions that can be absent in previous releases
+IMAGES_OPTIONAL = [
+    "contrail-provisioner",
+    "contrail-controller-config-dnsmasq",
 ]
 
 SERVICES = {
@@ -96,8 +99,6 @@ def get_analytics_list():
             ip = relation_get("private-address", unit, rid)
             if ip:
                 analytics_ip_list.append(ip)
-    sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    analytics_ip_list = sorted(analytics_ip_list, key=sort_key)
     return analytics_ip_list
 
 
@@ -141,6 +142,11 @@ def update_charm_status():
             status_set('blocked',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+    for image in IMAGES_OPTIONAL:
+        try:
+            docker_utils.pull(image, tag)
+        except Exception as e:
+            log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
         return
@@ -360,3 +366,34 @@ def update_issu_state(issu_relation_data):
 
     common_utils.render_and_log("contrail-issu.conf", BASE_CONFIGS_PATH + "/contrail-issu.conf", ctx)
     # TODO run docker
+
+
+def update_nrpe_config():
+    plugins_dir = '/usr/local/lib/nagios/plugins'
+    nrpe_compat = nrpe.NRPE()
+    component_ip = common_utils.get_ip()
+    common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.add_nagios_to_sudoers()
+
+    check_ui_cmd = 'check_http -H {} -p 8143 -S'.format(component_ip)
+    nrpe_compat.add_check(
+        shortname='check_contrail_web_ui',
+        description='Check Contrail WebUI',
+        check_cmd=check_ui_cmd
+    )
+
+    check_api_cmd = 'check_http -H {} -p 8082'.format(component_ip)
+    nrpe_compat.add_check(
+        shortname='check_contrail_api',
+        description='Check Contrail API',
+        check_cmd=check_api_cmd
+    )
+
+    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    nrpe_compat.add_check(
+        shortname=ctl_status_shortname,
+        description='Check contrail-status',
+        check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    nrpe_compat.write()

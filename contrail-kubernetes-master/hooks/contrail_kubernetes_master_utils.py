@@ -1,8 +1,6 @@
 import time
 import os
 import base64
-from socket import inet_aton
-import struct
 
 from charmhelpers.core.hookenv import (
     Hooks,
@@ -13,18 +11,16 @@ from charmhelpers.core.hookenv import (
     related_units,
     relation_ids,
     status_set,
-    is_leader,
     leader_get,
     leader_set,
     charm_dir,
 )
+from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 
 import common_utils
 import docker_utils
-from subprocess import (
-    check_output,
-)
+from subprocess import check_output
 
 
 config = config()
@@ -179,3 +175,19 @@ def update_charm_status():
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
+
+
+def update_nrpe_config():
+    plugins_dir = '/usr/local/lib/nagios/plugins'
+    nrpe_compat = nrpe.NRPE()
+    common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.add_nagios_to_sudoers()
+
+    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    nrpe_compat.add_check(
+        shortname=ctl_status_shortname,
+        description='Check contrail-status',
+        check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    nrpe_compat.write()

@@ -10,10 +10,10 @@ This charm provides the Contrail Controller role that includes
 configuration API server, control API server, WebUI and required third-party
 components.
 
-Only OpenStack Mitaka or newer is supported.
-Only for Contrail 4.0 for now.
+Only OpenStack Ocata or newer is supported.
+Only for Contrail 5.0 or above.
 Juju 2.0 is required.
-No TFTP or any other service should be listening port 69.
+No TFTP or any other service should be on port 69.
 
 Usage
 -----

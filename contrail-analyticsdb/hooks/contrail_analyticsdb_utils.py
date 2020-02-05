@@ -1,6 +1,3 @@
-from socket import inet_aton
-import struct
-
 from charmhelpers.core.hookenv import (
     config,
     related_units,
@@ -9,6 +6,7 @@ from charmhelpers.core.hookenv import (
     status_set,
     log,
 )
+from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
@@ -32,11 +30,14 @@ IMAGES = {
     '5.1': [
         "contrail-node-init",
         "contrail-nodemgr",
-        "contrail-provisioner",
         "contrail-analytics-query-engine",
         "contrail-external-cassandra",
     ],
 }
+# images for new versions that can be absent in previous releases
+IMAGES_OPTIONAL = [
+    "contrail-provisioner",
+]
 SERVICES = {
     '5.0': {
         "database": [
@@ -81,8 +82,6 @@ def analyticsdb_ctx():
                 analyticsdb_ip_list.append(ip)
     # add it's own ip address
     analyticsdb_ip_list.append(common_utils.get_ip())
-    sort_key = lambda ip: struct.unpack("!L", inet_aton(ip))[0]
-    analyticsdb_ip_list = sorted(analyticsdb_ip_list, key=sort_key)
     return {"analyticsdb_servers": analyticsdb_ip_list}
 
 
@@ -127,6 +126,11 @@ def update_charm_status():
             status_set('blocked',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+    for image in IMAGES_OPTIONAL:
+        try:
+            docker_utils.pull(image, tag)
+        except Exception as e:
+            log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
         return
@@ -163,3 +167,19 @@ def update_charm_status():
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES[cver])
+
+
+def update_nrpe_config():
+    plugins_dir = '/usr/local/lib/nagios/plugins'
+    nrpe_compat = nrpe.NRPE()
+    common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.add_nagios_to_sudoers()
+
+    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    nrpe_compat.add_check(
+        shortname=ctl_status_shortname,
+        description='Check contrail-status',
+        check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    nrpe_compat.write()
