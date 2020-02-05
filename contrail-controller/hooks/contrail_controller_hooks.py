@@ -89,7 +89,7 @@ def leader_settings_changed():
 
 
 @hooks.hook("controller-cluster-relation-joined")
-def cluster_joined():
+def cluster_joined(rel_id=None):
     ip = common_utils.get_ip()
     settings = {
         "unit-address": ip,
@@ -112,7 +112,7 @@ def cluster_joined():
         if ip and rabbit_hostname:
             utils.update_hosts_file(ip, rabbit_hostname)
 
-    relation_set(relation_settings=settings)
+    relation_set(relation_id=rel_id, relation_settings=settings)
     utils.update_charm_status()
 
 
@@ -141,6 +141,7 @@ def cluster_changed():
     _address_changed(unit, data_ip, 'data_ip')
     update_northbound_relations()
     update_southbound_relations()
+    update_issu_relations()
     utils.update_charm_status()
 
 
@@ -188,6 +189,7 @@ def cluster_departed():
 
     update_northbound_relations()
     update_southbound_relations()
+    update_issu_relations()
     utils.update_charm_status()
 
 
@@ -248,6 +250,7 @@ def config_changed():
 
     update_northbound_relations()
     update_southbound_relations()
+    update_issu_relations()
 
 
 def update_northbound_relations(rid=None):
@@ -285,6 +288,8 @@ def update_southbound_relations(rid=None):
         "ca-cert": config.get("ca_cert"),
         "controller_ips": leader_get("controller_ip_list"),
         "controller_data_ips": leader_get("controller_data_ip_list"),
+        "issu_controller_ips": config.get("issu_controller_ips"),
+        "issu_controller_data_ips": config.get("issu_controller_data_ips"),
         "rabbitmq_connection_details": json.dumps(utils.get_rabbitmq_connection_details()),
         "cassandra_connection_details": json.dumps(utils.get_cassandra_connection_details()),
         "zookeeper_connection_details": json.dumps(utils.get_zookeeper_connection_details()),
@@ -294,10 +299,22 @@ def update_southbound_relations(rid=None):
         relation_set(relation_id=rid, relation_settings=settings)
 
 
+def update_issu_relations(rid=None):
+    # controller_ips/data_ips are already dumped json
+    settings = {
+        "maintenance": config.get("maintenance"),
+        "issu_controller_ips": leader_get("controller_ip_list"),
+        "issu_controller_data_ips": leader_get("controller_data_ip_list"),
+    }
+
+    for rid in ([rid] if rid else relation_ids("contrail-issu")):
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
 @hooks.hook("contrail-controller-relation-joined")
-def contrail_controller_joined():
+def contrail_controller_joined(rel_id=None):
     if is_leader():
-        update_southbound_relations(rid=relation_id())
+        update_southbound_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -307,6 +324,8 @@ def contrail_controller_changed():
         config["orchestrator_info"] = data["orchestrator-info"]
     if data.get("unit-type") == 'issu':
         config["maintenance"] = 'issu'
+        config["issu_controller_ips"] = data.get("issu_controller_ips")
+        config["issu_controller_data_ips"] = data.get("issu_controller_data_ips")
     # TODO: set error if orchestrator is changed and container was started
     # with another orchestrator
     if is_leader() and "dpdk" in data:
@@ -350,12 +369,12 @@ def contrail_controller_departed():
 
 
 @hooks.hook("contrail-analytics-relation-joined")
-def analytics_joined():
+def analytics_joined(rel_id=None):
     ip = common_utils.get_ip()
     settings = {'unit-type': 'controller'}
-    relation_set(relation_settings=settings)
+    relation_set(relation_id=rel_id, relation_settings=settings)
     if is_leader():
-        update_northbound_relations(rid=relation_id())
+        update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
         update_southbound_relations()
     utils.update_charm_status()
 
@@ -369,12 +388,12 @@ def analytics_changed_departed():
 
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
-def analyticsdb_joined():
+def analyticsdb_joined(rel_id=None):
     ip = common_utils.get_ip()
     settings = {'unit-type': 'controller'}
-    relation_set(relation_settings=settings)
+    relation_set(relation_id=rel_id, relation_settings=settings)
     if is_leader():
-        update_northbound_relations(rid=relation_id())
+        update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook("contrail-auth-relation-changed")
@@ -402,16 +421,6 @@ def contrail_auth_departed():
     if is_leader():
         update_northbound_relations()
         update_southbound_relations()
-    utils.update_charm_status()
-
-
-@hooks.hook("update-status")
-def update_status():
-    utils.update_charm_status()
-
-
-@hooks.hook("upgrade-charm")
-def upgrade_charm():
     utils.update_charm_status()
 
 
@@ -573,9 +582,11 @@ def nrpe_external_master_relation_changed():
 
 
 @hooks.hook("contrail-issu-relation-joined")
-def contrail_issu_relation_joined():
+def contrail_issu_relation_joined(rel_id=None):
     settings = {'unit-type': 'issu'}
-    relation_set(relation_settings=settings)
+    relation_set(relation_id=rel_id, relation_settings=settings)
+    if is_leader():
+        update_issu_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook('contrail-issu-relation-changed')
@@ -592,6 +603,32 @@ def contrail_issu_relation_changed():
     for name in ["rabbitmq_connection_details", "cassandra_connection_details", "zookeeper_connection_details"]:
         issu_data.update(common_utils.json_loads(rel_data.get(name), dict()))
     utils.update_issu_state(issu_data)
+
+
+@hooks.hook("update-status")
+def update_status():
+    utils.update_charm_status()
+
+
+@hooks.hook("upgrade-charm")
+def upgrade_charm():
+    utils.update_charm_status()
+    config_changed()
+    for rid in relation_ids("contrail-analytics"):
+        if related_units(rid):
+            analytics_joined(rel_id=rid)
+    for rid in relation_ids("contrail-analyticsdb"):
+        if related_units(rid):
+            analyticsdb_joined(rel_id=rid)
+    for rid in relation_ids("contrail-controller"):
+        if related_units(rid):
+            contrail_controller_joined(rel_id=rid)
+    for rid in relation_ids("contrail-issu"):
+        if related_units(rid):
+            contrail_issu_relation_joined(rel_id=rid)
+    for rid in relation_ids("controller-cluster"):
+        if related_units(rid):
+            cluster_joined(rel_id=rid)
 
 
 def update_nrpe_config():
