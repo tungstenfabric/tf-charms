@@ -150,11 +150,10 @@ def _update_config(data, key, data_key):
     if data_key in data:
         changed = config.get(key) != data[data_key]
         config[key] = data[data_key]
-        return changed
-    # absence of key in relation means that this key was not set in the relation
-    # non-leader may send not all data
-    # and it doesn't mean that key was unset
-    return False
+    else:
+        changed = key in config
+        config.pop(key, None)
+    return changed
 
 
 def _notify_contrail_kubernetes_node():

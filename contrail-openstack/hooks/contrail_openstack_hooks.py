@@ -87,6 +87,8 @@ def contrail_controller_changed():
                 config[key] = val
             else:
                 config.pop(key, None)
+        else:
+            config.pop(key, None)
 
     _update_config("auth_info", "auth-info")
     _update_config("auth_mode", "auth-mode")

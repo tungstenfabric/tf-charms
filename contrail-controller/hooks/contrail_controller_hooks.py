@@ -129,12 +129,11 @@ def cluster_changed():
         if ip and rabbit_hostname:
             utils.update_hosts_file(ip, rabbit_hostname)
 
-    if not is_leader():
-        return
+    if is_leader():
+        unit = remote_unit()
+        _address_changed(unit, ip, 'ip')
+        _address_changed(unit, data_ip, 'data_ip')
 
-    unit = remote_unit()
-    _address_changed(unit, ip, 'ip')
-    _address_changed(unit, data_ip, 'data_ip')
     update_northbound_relations()
     update_southbound_relations()
     update_issu_relations()
@@ -165,23 +164,22 @@ def _address_changed(unit, ip, var_name):
 
 @hooks.hook("controller-cluster-relation-departed")
 def cluster_departed():
-    if not is_leader():
-        return
-    unit = remote_unit()
-    for var_name in ["ip", "data_ip"]:
-        ips = common_utils.json_loads(leader_get("controller_{}s".format(var_name)), dict())
-        if unit not in ips:
-            return
-        old_ip = ips.pop(unit)
-        ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name)), list())
-        ip_list.remove(old_ip)
-        log("{}_LIST: {}    {}S: {}".format(var_name.upper(), str(ip_list), var_name.upper(), str(ips)))
+    if is_leader():
+        unit = remote_unit()
+        for var_name in ["ip", "data_ip"]:
+            ips = common_utils.json_loads(leader_get("controller_{}s".format(var_name)), dict())
+            if unit not in ips:
+                return
+            old_ip = ips.pop(unit)
+            ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name)), list())
+            ip_list.remove(old_ip)
+            log("{}_LIST: {}    {}S: {}".format(var_name.upper(), str(ip_list), var_name.upper(), str(ips)))
 
-        settings = {
-            "controller_{}_list".format(var_name): json.dumps(ip_list),
-            "controller_{}s".format(var_name): json.dumps(ips)
-        }
-        leader_set(settings=settings)
+            settings = {
+                "controller_{}_list".format(var_name): json.dumps(ip_list),
+                "controller_{}s".format(var_name): json.dumps(ips)
+            }
+            leader_set(settings=settings)
 
     update_northbound_relations()
     update_southbound_relations()
@@ -241,9 +239,6 @@ def config_changed():
     utils.update_charm_status()
     _notify_haproxy_services()
 
-    if not is_leader():
-        return
-
     update_northbound_relations()
     update_southbound_relations()
     update_issu_relations()
@@ -252,6 +247,7 @@ def config_changed():
 def update_northbound_relations(rid=None):
     # controller_ips/data_ips are already dumped json
     settings = {
+        "unit-type": "controller",
         "maintenance": config.get("maintenance"),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
@@ -298,6 +294,7 @@ def update_southbound_relations(rid=None):
 def update_issu_relations(rid=None):
     # controller_ips/data_ips are already dumped json
     settings = {
+        "unit-type": "issu",
         "maintenance": config.get("maintenance"),
         "issu_controller_ips": leader_get("controller_ip_list"),
         "issu_controller_data_ips": leader_get("controller_data_ip_list"),
@@ -309,8 +306,7 @@ def update_issu_relations(rid=None):
 
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined(rel_id=None):
-    if is_leader():
-        update_southbound_relations(rid=(rel_id if rel_id else relation_id()))
+    update_southbound_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -324,16 +320,16 @@ def contrail_controller_changed():
         config["issu_controller_data_ips"] = data.get("issu_controller_data_ips")
     # TODO: set error if orchestrator is changed and container was started
     # with another orchestrator
-    if is_leader() and "dpdk" in data:
+    if "dpdk" in data:
         # remote unit is an agent
         address = data["private-address"]
         flags = common_utils.json_loads(config.get("agents-info"), dict())
         flags[address] = data["dpdk"]
         config["agents-info"] = json.dumps(flags)
     config.save()
-    if is_leader():
-        update_southbound_relations()
-        update_northbound_relations()
+
+    update_southbound_relations()
+    update_northbound_relations()
     utils.update_charm_status()
 
 
@@ -358,38 +354,30 @@ def contrail_controller_departed():
     if not issu_present and config.get("maintenance") == 'issu':
         # TODO: finish ISSU process
         config.pop("maintenance", None)
+        config.pop("issu_controller_ips", None)
+        config.pop("issu_controller_data_ips", None)
         changed = True
-    if changed and is_leader():
+    if changed:
         update_northbound_relations()
         update_southbound_relations()
 
 
 @hooks.hook("contrail-analytics-relation-joined")
 def analytics_joined(rel_id=None):
-    ip = common_utils.get_ip()
-    settings = {'unit-type': 'controller'}
-    relation_set(relation_id=rel_id, relation_settings=settings)
-    if is_leader():
-        update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
-        update_southbound_relations()
-    utils.update_charm_status()
+    update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
+    update_southbound_relations()
 
 
 @hooks.hook("contrail-analytics-relation-changed")
 @hooks.hook("contrail-analytics-relation-departed")
 def analytics_changed_departed():
     utils.update_charm_status()
-    if is_leader():
-        update_southbound_relations()
+    update_southbound_relations()
 
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined(rel_id=None):
-    ip = common_utils.get_ip()
-    settings = {'unit-type': 'controller'}
-    relation_set(relation_id=rel_id, relation_settings=settings)
-    if is_leader():
-        update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
+    update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook("contrail-auth-relation-changed")
@@ -400,9 +388,8 @@ def contrail_auth_changed():
     else:
         config.pop("auth_info", None)
 
-    if is_leader():
-        update_northbound_relations()
-        update_southbound_relations()
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
@@ -414,9 +401,8 @@ def contrail_auth_departed():
         return
     config.pop("auth_info", None)
 
-    if is_leader():
-        update_northbound_relations()
-        update_southbound_relations()
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
@@ -579,10 +565,7 @@ def nrpe_external_master_relation_changed():
 
 @hooks.hook("contrail-issu-relation-joined")
 def contrail_issu_relation_joined(rel_id=None):
-    settings = {'unit-type': 'issu'}
-    relation_set(relation_id=rel_id, relation_settings=settings)
-    if is_leader():
-        update_issu_relations(rid=(rel_id if rel_id else relation_id()))
+    update_issu_relations(rid=(rel_id if rel_id else relation_id()))
 
 
 @hooks.hook('contrail-issu-relation-changed')
@@ -590,9 +573,10 @@ def contrail_issu_relation_changed():
     rel_data = relation_get()
     if "orchestrator-info" in rel_data:
         config["orchestrator_info"] = rel_data["orchestrator-info"]
-        config.save()
-        if is_leader():
-            update_northbound_relations()
+    else:
+        config.pop("orchestrator_info", None)
+    config.save()
+    update_northbound_relations()
     utils.update_charm_status()
 
     issu_data = dict()
