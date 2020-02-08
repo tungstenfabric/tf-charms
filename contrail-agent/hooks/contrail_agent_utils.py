@@ -128,12 +128,9 @@ def get_context():
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
 
-    ips = common_utils.json_loads(config.get("controller_ips"), list())
-    data_ips = common_utils.json_loads(config.get("controller_data_ips"), list())
-    ctx["controller_servers"] = ips
-    ctx["control_servers"] = data_ips
-    ips = common_utils.json_loads(config.get("analytics_servers"), list())
-    ctx["analytics_servers"] = ips
+    ctx["controller_servers"] = common_utils.json_loads(config.get("controller_ips"), list())
+    ctx["control_servers"] = common_utils.json_loads(config.get("controller_data_ips"), list())
+    ctx["analytics_servers"] = common_utils.json_loads(config.get("analytics_servers"), list())
 
     if "plugin-ips" in config:
         plugin_ips = common_utils.json_loads(config["plugin-ips"], dict())
@@ -172,6 +169,20 @@ def update_charm_status():
     fix_dns_settings()
 
     ctx = get_context()
+    _update_charm_status(ctx)
+
+
+def update_charm_status_for_upgrade():
+    ctx = get_context()
+    if config.get('maintenance') == 'issu':
+        ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
+        ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
+        ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
+        # orchestrator_info and auth_info can be taken from old relation
+    _update_charm_status(ctx)
+
+
+def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")

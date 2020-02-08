@@ -1,0 +1,2 @@
+upgrade:
+    description: Do unit upgrade in case of maintenace mode (ISSU or ZIU). New image-tag should be set before.

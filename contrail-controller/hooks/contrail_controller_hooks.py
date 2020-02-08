@@ -282,6 +282,7 @@ def update_southbound_relations(rid=None):
         "controller_data_ips": leader_get("controller_data_ip_list"),
         "issu_controller_ips": config.get("issu_controller_ips"),
         "issu_controller_data_ips": config.get("issu_controller_data_ips"),
+        "issu_analytics_ips": config.get("issu_analytics_ips"),
         "rabbitmq_connection_details": json.dumps(utils.get_rabbitmq_connection_details()),
         "cassandra_connection_details": json.dumps(utils.get_cassandra_connection_details()),
         "zookeeper_connection_details": json.dumps(utils.get_zookeeper_connection_details()),
@@ -298,6 +299,7 @@ def update_issu_relations(rid=None):
         "maintenance": config.get("maintenance"),
         "issu_controller_ips": leader_get("controller_ip_list"),
         "issu_controller_data_ips": leader_get("controller_data_ip_list"),
+        "issu_analytics_ips": json.dumps(utils.get_analytics_list()),
     }
 
     for rid in ([rid] if rid else relation_ids("contrail-issu")):

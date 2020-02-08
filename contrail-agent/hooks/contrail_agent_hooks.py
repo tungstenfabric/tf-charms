@@ -79,6 +79,7 @@ def contrail_controller_changed():
     _update_config("controller_data_ips", "controller_data_ips")
     _update_config("issu_controller_ips", "issu_controller_ips")
     _update_config("issu_controller_data_ips", "issu_controller_data_ips")
+    _update_config("issu_analytics_ips", "issu_analytics_ips")
     config.save()
 
     utils.update_charm_status()
@@ -90,6 +91,8 @@ def contrail_controller_node_departed():
                   for unit in related_units(rid)]
     if units:
         return
+
+    # for ISSU case here should not be any removal
 
     utils.update_charm_status()
     status_set("blocked", "Missing relation to contrail-controller")
