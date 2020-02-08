@@ -320,6 +320,7 @@ def contrail_controller_changed():
         config["maintenance"] = 'issu'
         config["issu_controller_ips"] = data.get("issu_controller_ips")
         config["issu_controller_data_ips"] = data.get("issu_controller_data_ips")
+        config["issu_analytics_ips"] = data.get("issu_analytics_ips")
     # TODO: set error if orchestrator is changed and container was started
     # with another orchestrator
     if "dpdk" in data:
@@ -358,6 +359,7 @@ def contrail_controller_departed():
         config.pop("maintenance", None)
         config.pop("issu_controller_ips", None)
         config.pop("issu_controller_data_ips", None)
+        config.pop("issu_analytics_ips", None)
         changed = True
     if changed:
         update_northbound_relations()
