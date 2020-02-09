@@ -14,6 +14,10 @@ options:
     type: boolean
     default: false
     description: Use user space DPDK vRouter
+  hostname-use-fqdn:
+    type: boolean
+    default: true
+    description: Use user space DPDK vRouter
   dpdk-driver:
     type: string
     default: uio_pci_generic

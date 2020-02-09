@@ -111,6 +111,8 @@ def get_context():
     ctx["sriov_numvfs"] = config.get("sriov-numvfs")
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
+    # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
+    ctx["hostname"] = socket.getfqdn() if config.get("hostname-use-fqdn", True) else socket.gethostname()
     iface = config.get("physical-interface")
     ctx["physical_interface"] = iface
     gateway_ip = config.get("vhost-gateway")
@@ -131,15 +133,14 @@ def get_context():
     ctx["controller_servers"] = common_utils.json_loads(config.get("controller_ips"), list())
     ctx["control_servers"] = common_utils.json_loads(config.get("controller_data_ips"), list())
     ctx["analytics_servers"] = common_utils.json_loads(config.get("analytics_servers"), list())
+    ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
 
     if "plugin-ips" in config:
         plugin_ips = common_utils.json_loads(config["plugin-ips"], dict())
         my_ip = unit_get("private-address")
         if my_ip in plugin_ips:
             ctx["plugin_settings"] = plugin_ips[my_ip]
-    ctx["hostname"] = socket.getfqdn()
 
-    ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
     ctx["logging"] = docker_utils.render_logging()
     log("CTX: " + str(ctx))
 
