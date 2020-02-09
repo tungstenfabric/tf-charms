@@ -164,6 +164,7 @@ def update_charm_status():
             log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
+        common_utils.update_services_status(MODULE, SERVICES)
         return
 
     fix_dns_settings()
