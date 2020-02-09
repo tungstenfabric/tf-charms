@@ -17,7 +17,11 @@ options:
   hostname-use-fqdn:
     type: boolean
     default: true
-    description: Use user space DPDK vRouter
+    description: |
+      Use fqdn for vrouter_hostname or use gethostname instead.
+      fqdn is used in R5.1 and in further releases.
+      R5.0 releases used hostname that doesn’t always return
+      the fully qualified domain name.
   dpdk-driver:
     type: string
     default: uio_pci_generic
