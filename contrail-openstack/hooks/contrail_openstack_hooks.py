@@ -21,6 +21,7 @@ from charmhelpers.core.hookenv import (
     unit_private_ip,
 )
 
+import common_utils
 import contrail_openstack_utils as utils
 import docker_utils
 
@@ -206,9 +207,15 @@ def heat_plugin_joined(rel_id=None):
             ("password", ctx.get("keystone_admin_password")),
             ("tenant", ctx.get("keystone_admin_tenant")),
             ("api_server", " ".join(ctx.get("api_servers"))),
-            ("auth_host_ip", ctx.get("keystone_ip"))
+            ("auth_host_ip", ctx.get("keystone_ip")),
+            ("use_ssl", ctx.get("ssl_enabled")),
         ]
     }
+
+    if ctx.get("ssl_enabled") and "ca_cert_data" in ctx:
+        ca_file_path = "/etc/heat/contrail-ca-cert.pem"
+        common_utils.save_file(ca_file_path, ctx["ca_cert_data"], perms=0o644)
+        sections["clients_contrail"].append(("cafile", ca_file_path))
 
     conf = {
         "heat": {
