@@ -397,3 +397,106 @@ def update_nrpe_config():
     )
 
     nrpe_compat.write()
+
+
+# ZUI code block
+
+stages = { 
+    0: ziu_stage_0,
+    1: ziu_stage_1,
+    2: ziu_stage_2,
+    3: ziu_stage_3,
+    4: ziu_stage_4
+}
+
+ziu_relations = (
+    "contrail-analytics",
+    "contrail-analyticsdb",
+    "controller-cluster",
+    "contrail-controller"
+)
+
+
+def config_set(key, value):
+    config[key] = value
+    config.save()
+
+
+def signal_ziu(key, value):
+    config_set(key, value)
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            relation_set(relation_id=rid, relation_settings={key: value})
+
+
+def check_ziu_stage_done(stage)
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            for unit in related_units(rid):
+                if relation_get("ziu_done", unit, rid) != stage):
+                    return False
+    return True
+
+
+def sequential_ziu_stage(stage, action)
+    prev_ziu_done = stage
+    # TODO: probably some of the lists here should be first sorted to scan through them (in case juju mix them up)
+    for rid in relation_ids("controller-cluster"):
+        for unit in related_units(rid):
+            ziu_done = relation_get("ziu_done", unit, rid):
+            if unit == local_unit() and prev_ziu_done and prev_ziu_done = stage and ziu_done and ziu_done < ziu_stage:
+                action()
+                signal_ziu("ziu_done")
+                return
+            prev_ziu_done = ziu_done
+
+
+def update_ziu(trigger):
+    ziu_stage = relation_get("ziu"):
+    if ziu_stage:
+        config_set("ziu", ziu_stage)
+        log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+        stages[ziu_stage](ziu_stage, trigger)
+        # This code is on controller only
+        if is_leader()
+            check_ziu_stage_done(ziu_stage):
+                signal_ziu("ziu", ziu_stage+1)
+
+
+def ziu_stage_0(ziu_stage, trigger):
+    if trigger == "image-tag":
+        signal_ziu("ziu_done": ziu_stage)
+
+
+def ziu_stage_1(ziu_stage, trigger):
+    #ziu_stop_controller()
+    signal_ziu("ziu_done": ziu_stage)
+
+
+def ziu_stage_2(ziu_stage, trigger):
+    ziu_start_controller()
+    signal_ziu("ziu_done": ziu_stage)
+
+
+def ziu_stage_3(ziu_stage, trigger):
+    sequential_ziu_stage(ziu_stage, ziu_restart_control)
+
+
+def ziu_stage_4(ziu_stage, trigger):
+    sequential_ziu_stage(ziu_stage, ziu_restart_db)
+
+
+def ziu_stop_controller():
+    pass
+
+
+def ziu_start_controller():
+    pass
+
+
+def ziu_restart_control():
+    pass
+
+
+def ziu_restart_db():
+    pass

@@ -47,6 +47,9 @@ def config_changed():
     config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     config.save()
 
+    if config.changed("image-tag"):
+        utils.update_ziu("image-tag")
+
     docker_utils.config_changed()
     utils.update_charm_status()
 
@@ -85,6 +88,7 @@ def analyticsdb_changed():
     # TODO: set error if orchestrator is changing and container was started
     if changed:
         utils.update_charm_status()
+    utils.update_ziu("analyticsdb-changed")
 
 
 @hooks.hook("contrail-analyticsdb-relation-departed")
@@ -104,6 +108,11 @@ def analyticsdb_departed():
 def analyticsdb_cluster_joined():
     settings = {'private-address': common_utils.get_ip()}
     relation_set(relation_settings=settings)
+
+
+@hooks.hook("analyticsdb-cluster-relation-changed")
+def analyticsdb_cluster_changed():
+    utils.update_ziu("cluster-changed")
 
 
 @hooks.hook('tls-certificates-relation-joined')

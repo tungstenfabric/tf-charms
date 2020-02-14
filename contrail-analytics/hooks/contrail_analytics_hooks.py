@@ -54,6 +54,9 @@ def config_changed():
     config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     config.save()
 
+    if config.changed("image-tag"):
+        utils.update_ziu("image-tag")
+
     docker_utils.config_changed()
     utils.update_charm_status()
 
@@ -96,6 +99,7 @@ def contrail_analytics_changed():
     if changed:
         utils.update_charm_status()
         _notify_proxy_services()
+    utils.update_ziu("analytics-changed")
 
 
 @hooks.hook("contrail-analytics-relation-departed")
@@ -120,6 +124,7 @@ def contrail_analyticsdb_joined():
 @hooks.hook("contrail-analyticsdb-relation-changed")
 def contrail_analyticsdb_changed():
     utils.update_charm_status()
+    utils.update_ziu("analyticsdb-changed")
 
 
 @hooks.hook("contrail-analyticsdb-relation-departed")
@@ -133,6 +138,11 @@ def analytics_cluster_joined():
     relation_set(relation_settings=settings)
 
     utils.update_charm_status()
+
+
+@hooks.hook("analytics-cluster-relation-changed")
+def analytics_cluster_changed():
+    utils.update_ziu("cluster-changed")
 
 
 @hooks.hook('tls-certificates-relation-joined')

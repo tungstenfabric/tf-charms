@@ -138,6 +138,7 @@ def cluster_changed():
     update_southbound_relations()
     update_issu_relations()
     utils.update_charm_status()
+    utils.update_ziu("cluster-changed")
 
 
 def _address_changed(unit, ip, var_name):
@@ -234,6 +235,9 @@ def config_changed():
 
     config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     config.save()
+
+    if config.changed("image-tag"):
+        utils.update_ziu("image-tag")
 
     docker_utils.config_changed()
     utils.update_charm_status()
@@ -377,11 +381,17 @@ def analytics_joined(rel_id=None):
 def analytics_changed_departed():
     utils.update_charm_status()
     update_southbound_relations()
+    utils.update_ziu("analytics-changed")
 
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined(rel_id=None):
     update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
+
+
+@hooks.hook("contrail-analyticsdb-relation-changed")
+def analyticsdb_changed_departed():
+    utils.update_ziu("analyticsdb-changed")
 
 
 @hooks.hook("contrail-auth-relation-changed")
