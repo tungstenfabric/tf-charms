@@ -46,7 +46,7 @@ options:
       Kubernetes service subnets
   ip_fabric_forwarding:
     type: boolean
-    default: false
+    default: true
     description: |
       Kubernetes IP fabric forwarding
   ip_fabric_snat:
