@@ -49,6 +49,70 @@ def install():
     utils.update_charm_status()
 
 
+@hooks.hook("config-changed")
+def config_changed():
+    utils.update_nrpe_config()
+    auth_mode = config.get("auth-mode")
+    if auth_mode not in ("rbac", "cloud-admin", "no-auth"):
+        raise Exception("Config is invalid. auth-mode must one of: "
+                        "rbac, cloud-admin, no-auth.")
+
+    if config.changed("control-network") or config.changed("data-network"):
+        ip = common_utils.get_ip()
+        data_ip = common_utils.get_ip(config_param="data-network", fallback=ip)
+
+        rel_settings = {"private-address": ip}
+        for rname in ("http-services", "https-services"):
+            for rid in relation_ids(rname):
+                relation_set(relation_id=rid, relation_settings=rel_settings)
+
+        cluster_settings = {"unit-address": ip, "data-address": data_ip}
+        if config.get('local-rabbitmq-hostname-resolution'):
+            cluster_settings.update({
+                "rabbitmq-hostname": utils.get_contrail_rabbit_hostname(),
+            })
+            # this will also take care of updating the hostname in case
+            # control-network changes to something different although
+            # such host reconfiguration is unlikely
+            utils.update_rabbitmq_cluster_hostnames()
+        for rid in relation_ids("controller-cluster"):
+            relation_set(relation_id=rid, relation_settings=cluster_settings)
+
+        if is_leader():
+            _address_changed(local_unit(), ip, 'ip')
+            _address_changed(local_unit(), data_ip, 'data_ip')
+
+    if config.changed("local-rabbitmq-hostname-resolution"):
+        if config.get("local-rabbitmq-hostname-resolution"):
+            # enabling this option will trigger events on other units
+            # so their hostnames will be added as -changed events fire
+            # we just need to set our hostname
+            utils.update_rabbitmq_cluster_hostnames()
+        else:
+            kvstore = kv()
+            rabbitmq_hosts = kvstore.get(key='rabbitmq_hosts', default={})
+            for ip, hostname in rabbitmq_hosts:
+                utils.update_hosts_file(ip, hostname, remove_hostname=True)
+
+    config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
+    config.save()
+
+    docker_utils.config_changed()
+    utils.update_charm_status()
+
+    # leave it after update_charm_status - in case of exception in previous steps
+    # config.changed doesn't work sometimes...
+    if config.get("saved-image-tag") != config["image-tag"]:
+        utils.update_ziu("image-tag")
+        config["saved-image-tag"] = config["image-tag"]
+        config.save()
+
+    _notify_haproxy_services()
+    update_northbound_relations()
+    update_southbound_relations()
+    update_issu_relations()
+
+
 @hooks.hook("leader-elected")
 def leader_elected():
     for var_name in [("ip", "unit-address", "control-network"),
@@ -137,6 +201,7 @@ def cluster_changed():
     update_northbound_relations()
     update_southbound_relations()
     update_issu_relations()
+    utils.update_ziu("cluster-changed")
     utils.update_charm_status()
 
 
@@ -185,63 +250,6 @@ def cluster_departed():
     update_southbound_relations()
     update_issu_relations()
     utils.update_charm_status()
-
-
-@hooks.hook("config-changed")
-def config_changed():
-    utils.update_nrpe_config()
-    auth_mode = config.get("auth-mode")
-    if auth_mode not in ("rbac", "cloud-admin", "no-auth"):
-        raise Exception("Config is invalid. auth-mode must one of: "
-                        "rbac, cloud-admin, no-auth.")
-
-    if config.changed("control-network") or config.changed("data-network"):
-        ip = common_utils.get_ip()
-        data_ip = common_utils.get_ip(config_param="data-network", fallback=ip)
-
-        rel_settings = {"private-address": ip}
-        for rname in ("http-services", "https-services"):
-            for rid in relation_ids(rname):
-                relation_set(relation_id=rid, relation_settings=rel_settings)
-
-        cluster_settings = {"unit-address": ip, "data-address": data_ip}
-        if config.get('local-rabbitmq-hostname-resolution'):
-            cluster_settings.update({
-                "rabbitmq-hostname": utils.get_contrail_rabbit_hostname(),
-            })
-            # this will also take care of updating the hostname in case
-            # control-network changes to something different although
-            # such host reconfiguration is unlikely
-            utils.update_rabbitmq_cluster_hostnames()
-        for rid in relation_ids("controller-cluster"):
-            relation_set(relation_id=rid, relation_settings=cluster_settings)
-
-        if is_leader():
-            _address_changed(local_unit(), ip, 'ip')
-            _address_changed(local_unit(), data_ip, 'data_ip')
-
-    if config.changed("local-rabbitmq-hostname-resolution"):
-        if config.get("local-rabbitmq-hostname-resolution"):
-            # enabling this option will trigger events on other units
-            # so their hostnames will be added as -changed events fire
-            # we just need to set our hostname
-            utils.update_rabbitmq_cluster_hostnames()
-        else:
-            kvstore = kv()
-            rabbitmq_hosts = kvstore.get(key='rabbitmq_hosts', default={})
-            for ip, hostname in rabbitmq_hosts:
-                utils.update_hosts_file(ip, hostname, remove_hostname=True)
-
-    config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    config.save()
-
-    docker_utils.config_changed()
-    utils.update_charm_status()
-    _notify_haproxy_services()
-
-    update_northbound_relations()
-    update_southbound_relations()
-    update_issu_relations()
 
 
 def update_northbound_relations(rid=None):
@@ -375,13 +383,19 @@ def analytics_joined(rel_id=None):
 @hooks.hook("contrail-analytics-relation-changed")
 @hooks.hook("contrail-analytics-relation-departed")
 def analytics_changed_departed():
-    utils.update_charm_status()
     update_southbound_relations()
+    utils.update_ziu("analytics-changed")
+    utils.update_charm_status()
 
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined(rel_id=None):
     update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
+
+
+@hooks.hook("contrail-analyticsdb-relation-changed")
+def analyticsdb_changed_changed():
+    utils.update_ziu("analyticsdb-changed")
 
 
 @hooks.hook("contrail-auth-relation-changed")
@@ -591,6 +605,7 @@ def contrail_issu_relation_changed():
 
 @hooks.hook("update-status")
 def update_status():
+    utils.update_ziu("update-status")
     utils.update_charm_status()
 
 

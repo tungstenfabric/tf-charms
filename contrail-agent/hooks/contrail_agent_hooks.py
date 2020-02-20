@@ -74,12 +74,18 @@ def contrail_controller_changed():
     _update_config("analytics_servers", "analytics-server")
     _update_config("auth_info", "auth-info")
     _update_config("orchestrator_info", "orchestrator-info")
-    _update_config("maintenance", "maintenance")
     _update_config("controller_ips", "controller_ips")
     _update_config("controller_data_ips", "controller_data_ips")
     _update_config("issu_controller_ips", "issu_controller_ips")
     _update_config("issu_controller_data_ips", "issu_controller_data_ips")
     _update_config("issu_analytics_ips", "issu_analytics_ips")
+
+    maintenance = "maintenance" in data or "ziu" in data or "ziu_done" in "data"
+    if maintenance:
+        config["maintenance"] = True
+    else:
+        config.pop("maintenance", None)
+
     config.save()
 
     utils.update_charm_status()

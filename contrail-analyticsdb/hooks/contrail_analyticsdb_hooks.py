@@ -50,6 +50,13 @@ def config_changed():
     docker_utils.config_changed()
     utils.update_charm_status()
 
+    # leave it as latest - in case of exception in previous steps
+    # config.changed doesn't work sometimes...
+    if config.get("saved-image-tag") != config["image-tag"]:
+        utils.update_ziu("image-tag")
+        config["saved-image-tag"] = config["image-tag"]
+        config.save()
+
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined():
@@ -75,16 +82,15 @@ def _value_changed(rel_data, rel_key, cfg_key):
 @hooks.hook("contrail-analyticsdb-relation-changed")
 def analyticsdb_changed():
     data = relation_get()
-    changed = False
-    changed |= _value_changed(data, "auth-info", "auth_info")
-    changed |= _value_changed(data, "orchestrator-info", "orchestrator_info")
-    changed |= _value_changed(data, "maintenance", "maintenance")
-    changed |= _value_changed(data, "controller_ips", "controller_ips")
-    changed |= _value_changed(data, "controller_data_ips", "controller_data_ips")
+    _value_changed(data, "auth-info", "auth_info")
+    _value_changed(data, "orchestrator-info", "orchestrator_info")
+    _value_changed(data, "maintenance", "maintenance")
+    _value_changed(data, "controller_ips", "controller_ips")
+    _value_changed(data, "controller_data_ips", "controller_data_ips")
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
-    if changed:
-        utils.update_charm_status()
+    utils.update_ziu("analyticsdb-changed")
+    utils.update_charm_status()
 
 
 @hooks.hook("contrail-analyticsdb-relation-departed")
@@ -104,6 +110,11 @@ def analyticsdb_departed():
 def analyticsdb_cluster_joined():
     settings = {'private-address': common_utils.get_ip()}
     relation_set(relation_settings=settings)
+
+
+@hooks.hook("analyticsdb-cluster-relation-changed")
+def analyticsdb_cluster_changed():
+    utils.update_ziu("cluster-changed")
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -126,6 +137,7 @@ def tls_certificates_relation_departed():
 
 @hooks.hook("update-status")
 def update_status():
+    utils.update_ziu("update-status")
     utils.update_charm_status()
 
 

@@ -1,7 +1,10 @@
 from charmhelpers.core.hookenv import (
     config,
+    in_relation_hook,
+    local_unit,
     related_units,
     relation_get,
+    relation_set,
     relation_ids,
     status_set,
     log,
@@ -24,7 +27,7 @@ ANALYTICS_SNMP_CONFIGS_PATH = BASE_CONFIGS_PATH + "/analytics_snmp"
 REDIS_CONFIGS_PATH = BASE_CONFIGS_PATH + "/redis"
 
 IMAGES = {
-    '5.0': [
+    500: [
         "contrail-node-init",
         "contrail-nodemgr",
         "contrail-analytics-api",
@@ -35,7 +38,7 @@ IMAGES = {
         "contrail-analytics-topology",
         "contrail-external-redis",
     ],
-    '5.1': [
+    9999: [
         "contrail-node-init",
         "contrail-nodemgr",
         "contrail-analytics-api",
@@ -45,14 +48,14 @@ IMAGES = {
         "contrail-analytics-snmp-topology",
         "contrail-external-redis",
     ],
-}  
+}
 # images for new versions that can be absent in previous releases
 IMAGES_OPTIONAL = [
     "contrail-provisioner",
 ]
 
 SERVICES = {
-    '5.0': {
+    500: {
         "analytics": [
             "snmp-collector",
             "query-engine",
@@ -63,7 +66,7 @@ SERVICES = {
             "topology",
         ]
     },
-    '5.1': {
+    9999: {
         "analytics": [
             "api",
             "nodemgr",
@@ -150,12 +153,11 @@ def get_context():
 
 
 def update_charm_status():
+    ctx = get_context()
     tag = config.get('image-tag')
-    cver = '5.1'
-    if '5.0' in tag:
-        cver = '5.0'
 
-    for image in IMAGES[cver]:
+    images = IMAGES.get(ctx["contrail_version"], IMAGES.get(9999))
+    for image in images:
         try:
             docker_utils.pull(image, tag)
         except Exception as e:
@@ -170,9 +172,19 @@ def update_charm_status():
             log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
+        log("ISSU Maintenance is in progress")
+        status_set('maintenance', 'issu is in progress')
+        return
+    if int(config.get("ziu", -1)) > -1:
+        log("ZIU Maintenance is in progress")
+        status_set('maintenance',
+                   'ziu is in progress - stage/done = {}/{}'.format(config.get("ziu"), config.get("ziu_done")))
         return
 
-    ctx = get_context()
+    _update_charm_status(ctx)
+
+
+def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
@@ -193,34 +205,54 @@ def update_charm_status():
         return
     # TODO: what should happens if relation departed?
 
-    changed = common_utils.apply_keystone_ca(MODULE, ctx)
-    changed |= common_utils.render_and_log(cver + "/analytics.env",
-        BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
-    if ctx["contrail_version"] >= 2002:
-        changed |= common_utils.render_and_log(cver + "/defaults.env",
-            BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
+    changed_dict = _render_configs(ctx)
+    changed = changed_dict["common"]
 
-    changed |= common_utils.render_and_log(cver + "/analytics.yaml",
-        ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed)
+    service_changed = changed_dict["analytics"]
+    docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    if cver == '5.1':
-        changed |= common_utils.render_and_log(cver + "/analytics-alarm.yaml",
-            ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-        docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed)
+    if ctx["contrail_version"] >= 510:
+        service_changed = changed_dict["analytics-alarm"]
+        docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-        changed |= common_utils.render_and_log(cver + "/analytics-snmp.yaml",
-            ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-        docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", changed)
+        service_changed = changed_dict["analytics-snmp"]
+        docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     # redis is a common service that needs own synchronized env
-    changed = common_utils.render_and_log("redis.env",
-        BASE_CONFIGS_PATH + "/redis.env", ctx)
-    changed |= common_utils.render_and_log("redis.yaml",
-        REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed)
+    service_changed = changed_dict["redis"]
+    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    common_utils.update_services_status(MODULE, SERVICES[cver])
+    common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
+
+
+def _render_configs(ctx):
+    result = dict()
+
+    tfolder = '5.0' if ctx["contrail_version"] == 500 else '5.1'
+    result["common"] = common_utils.apply_keystone_ca(MODULE, ctx)
+    result["common"] |= common_utils.render_and_log(tfolder + "/analytics.env",
+        BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
+    if ctx["contrail_version"] >= 2002:
+        result["common"] |= common_utils.render_and_log(tfolder + "/defaults.env",
+            BASE_CONFIGS_PATH + "/defaults_analytics.env", ctx)
+
+    result["analytics"] = common_utils.render_and_log(tfolder + "/analytics.yaml",
+        ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    if ctx["contrail_version"] >= 510:
+        result["analytics-alarm"] = common_utils.render_and_log(tfolder + "/analytics-alarm.yaml",
+            ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+        result["analytics-snmp"] = common_utils.render_and_log(tfolder + "/analytics-snmp.yaml",
+            ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    # redis is a common service that needs own synchronized env
+    result["redis"] = common_utils.render_and_log("redis.env",
+        BASE_CONFIGS_PATH + "/redis.env", ctx)
+    result["redis"] |= common_utils.render_and_log("redis.yaml",
+        REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    return result
 
 
 def update_nrpe_config():
@@ -245,3 +277,119 @@ def update_nrpe_config():
     )
 
     nrpe_compat.write()
+
+
+# ZUI code block
+
+ziu_relations = [
+    "contrail-analytics",
+    "contrail-analyticsdb",
+    "analytics-cluster",
+]
+
+
+def config_set(key, value):
+    if value is not None:
+        config[key] = value
+    else:
+        config.pop(key, None)
+    config.save()
+
+
+def get_int_from_relation(name, unit=None, rid=None):
+    value = relation_get(name, unit, rid)
+    return int(value if value else -1)
+
+
+def signal_ziu(key, value):
+    log("ZIU: signal {} = {}".format(key, value))
+    config_set(key, value)
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            relation_set(relation_id=rid, relation_settings={key: value})
+
+
+def sequential_ziu_stage(stage, action):
+    prev_ziu_done = stage
+    units = [(local_unit(), int(config.get("ziu_done", -1)))]
+    for rid in relation_ids("analytics-cluster"):
+        for unit in related_units(rid):
+            units.append((unit, get_int_from_relation("ziu_done", unit, rid)))
+    units.sort(key=lambda x: x[0])
+    log("ZIU: sequental stage status {}".format(units))
+    for unit in units:
+        if unit[0] == local_unit() and prev_ziu_done == stage and unit[1] < stage:
+            action(stage)
+            return
+        prev_ziu_done = unit[1]
+
+
+def update_ziu(trigger):
+    if in_relation_hook():
+        ziu_stage = relation_get("ziu")
+        log("ZIU: stage from relation {}".format(ziu_stage))
+    else:
+        ziu_stage = config.get("ziu")
+        log("ZIU: stage from config {}".format(ziu_stage))
+    if ziu_stage is None:
+        return
+    ziu_stage = int(ziu_stage)
+    config_set("ziu", ziu_stage)
+    if ziu_stage > int(config.get("ziu_done", -1)):
+        log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+        stages[ziu_stage](ziu_stage, trigger)
+
+
+def ziu_stage_0(ziu_stage, trigger):
+    if trigger == "image-tag":
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_1(ziu_stage, trigger):
+    cver = common_utils.get_contrail_version()
+    docker_utils.compose_stop(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    if cver >= 510:
+        docker_utils.compose_stop(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_stop(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_2(ziu_stage, trigger):
+    ctx = get_context()
+    _render_configs(ctx)
+    docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    if ctx["contrail_version"] >= 510:
+        docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+
+    result = common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
+    if result:
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_3(ziu_stage, trigger):
+    # nothing to do on stage 3 for analytics
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_4(ziu_stage, trigger):
+    # nothing to do on stage 4 for analytics
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_5(ziu_stage, trigger):
+    signal_ziu("ziu", None)
+    signal_ziu("ziu_done", None)
+
+
+stages = {
+    0: ziu_stage_0,
+    1: ziu_stage_1,
+    2: ziu_stage_2,
+    3: ziu_stage_3,
+    4: ziu_stage_4,
+    5: ziu_stage_5,
+}
