@@ -161,7 +161,7 @@ def pull(image, tag):
     check_call([DOCKER_CLI, "pull", get_image_id(image, tag)])
 
 
-def compose_run(path, config_changed):
+def compose_run(path, config_changed=True):
     do_update = config_changed
     if not do_update:
         # check count of services
@@ -177,8 +177,15 @@ def compose_run(path, config_changed):
         check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"])
 
 
-def remove_container_by_image(image):
-    output = check_output([DOCKER_CLI, "ps", "-a"]).decode('UTF-8')
+def compose_stop(path):
+    check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+
+
+def _do_op_for_container_by_image(image, all_containers, op, op_args=[]):
+    cmd = [DOCKER_CLI, "ps"]
+    if all_containers:
+        cmd.append("-a")
+    output = check_output(cmd).decode('UTF-8')
     containers = [line.split() for line in output.splitlines()][1:]
     for cnt in containers:
         if len(cnt) < 2:
@@ -189,7 +196,16 @@ def remove_container_by_image(image):
         if index < 0 or (index > 0 and cnt_image[index - 1] != '/'):
             # TODO: there is a case when image name just a prefix...
             continue
-        check_call([DOCKER_CLI, "rm", cnt[0]])
+        cmd = [DOCKER_CLI, op] + op_args + [cnt[0]]
+        check_call(cmd)
+
+
+def remove_container_by_image(image):
+    _do_op_for_container_by_image(image, True, "rm")
+
+
+def stop_container_by_image(image):
+    _do_op_for_container_by_image(image, False, "stop")
 
 
 def run(image, tag, volumes, remove=False, env_dict=None):

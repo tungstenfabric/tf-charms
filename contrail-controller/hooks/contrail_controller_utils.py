@@ -4,14 +4,17 @@ import socket
 
 from charmhelpers.core.hookenv import (
     config,
+    is_leader,
+    in_relation_hook,
+    local_unit,
     related_units,
     relation_ids,
     relation_get,
+    relation_set,
     status_set,
     leader_get,
     log,
     INFO,
-    local_unit,
 )
 from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
@@ -149,9 +152,21 @@ def update_charm_status():
             log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
+        log("ISSU Maintenance is in progress")
+        status_set('maintenance', 'issu is in progress')
+        return
+    if int(config.get("ziu", -1)) > -1:
+        log("ZIU Maintenance is in progress")
+        status_set('maintenance',
+                   'ziu is in progress - stage/done = {}/{}'.format(config.get("ziu"), config.get("ziu_done")))
         return
 
     ctx = get_context()
+    _update_charm_status(ctx)
+
+
+def _update_charm_status(ctx, services_to_run=None):
+    # services to run: config-api, control, config-database, webui, redis
     missing_relations = []
     if not ctx.get("analytics_servers"):
         missing_relations.append("contrail-analytics")
@@ -171,39 +186,59 @@ def update_charm_status():
         return
     # TODO: what should happens if relation departed?
 
-    changed = common_utils.apply_keystone_ca(MODULE, ctx)
-    changed |= common_utils.render_and_log("config.env",
-        BASE_CONFIGS_PATH + "/common_config.env", ctx)
-    if ctx["contrail_version"] >= 2002:
-        changed |= common_utils.render_and_log("defaults.env",
-            BASE_CONFIGS_PATH + "/defaults_controller.env", ctx)
+    changed_dict = _render_configs(ctx)
+    changed = changed_dict["common"]
 
-    service_changed = common_utils.render_and_log("config-api.yaml",
-        CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    service_changed = changed_dict["config-api"]
     docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    service_changed = common_utils.render_and_log("config-database.yaml",
-        CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    service_changed = changed_dict["config-database"]
     docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    service_changed = common_utils.render_and_log("control.yaml",
-        CONTROL_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    service_changed = changed_dict["control"]
     docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    service_changed = common_utils.render_and_log("webui.yaml",
-        WEBUI_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    service_changed |= common_utils.render_and_log("web.env",
-        BASE_CONFIGS_PATH + "/common_web.env", ctx)
+    service_changed = changed_dict["webui"]
     docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     # redis is a common service that needs own synchronized env
-    service_changed = common_utils.render_and_log("redis.env",
-        BASE_CONFIGS_PATH + "/redis.env", ctx)
-    service_changed |= common_utils.render_and_log("redis.yaml",
-        REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    service_changed = changed_dict["redis"]
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
+
+
+def _render_configs(ctx):
+    result = dict()
+
+    result['common'] = common_utils.apply_keystone_ca(MODULE, ctx)
+    result['common'] |= common_utils.render_and_log("config.env",
+        BASE_CONFIGS_PATH + "/common_config.env", ctx)
+    if ctx["contrail_version"] >= 2002:
+        result['common'] |= common_utils.render_and_log("defaults.env",
+            BASE_CONFIGS_PATH + "/defaults_controller.env", ctx)
+
+    result['config-api'] = common_utils.render_and_log("config-api.yaml",
+        CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    result['config-database'] = common_utils.render_and_log("config-database.yaml",
+        CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    result['control'] = common_utils.render_and_log("control.yaml",
+        CONTROL_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    result['webui'] = common_utils.render_and_log("webui.yaml",
+        WEBUI_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['webui'] |= common_utils.render_and_log("web.env",
+        BASE_CONFIGS_PATH + "/common_web.env", ctx)
+
+    # redis is a common service that needs own synchronized env
+    result['redis'] = common_utils.render_and_log("redis.env",
+        BASE_CONFIGS_PATH + "/redis.env", ctx)
+    result['redis'] |= common_utils.render_and_log("redis.yaml",
+        REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    return result
 
 
 def update_hosts_file(ip, hostname, remove_hostname=False):
@@ -397,3 +432,168 @@ def update_nrpe_config():
     )
 
     nrpe_compat.write()
+
+
+# ZUI code block
+
+ziu_relations = [
+    "contrail-analytics",
+    "contrail-analyticsdb",
+    "controller-cluster",
+]
+
+
+def config_set(key, value):
+    if value is not None:
+        config[key] = value
+    else:
+        config.pop(key, None)
+    config.save()
+
+
+def get_int_from_relation(name, unit=None, rid=None):
+    value = relation_get(name, unit, rid)
+    return int(value if value else -1)
+
+
+def signal_ziu(key, value):
+    log("ZIU: signal {} = {}".format(key, value))
+    config_set(key, value)
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            relation_set(relation_id=rid, relation_settings={key: value})
+    for rid in relation_ids("contrail-controller"):
+        relation_set(relation_id=rid, relation_settings={key: value})
+
+
+def check_ziu_stage_done(stage):
+    log("ZIU: check stage({}) is done".format(stage))
+    if int(config.get("ziu_done", -1)) != stage:
+        log("ZIU: stage is not ready on local unit")
+        return False
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            for unit in related_units(rid):
+                value = relation_get("ziu_done", unit, rid)
+                if value is None or int(value) != stage:
+                    log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
+                    return False
+    log("ZIU: stage done")
+    return True
+
+
+def sequential_ziu_stage(stage, action):
+    prev_ziu_done = stage
+    units = [(local_unit(), int(config.get("ziu_done", -1)))]
+    for rid in relation_ids("controller-cluster"):
+        for unit in related_units(rid):
+            units.append((unit, get_int_from_relation("ziu_done", unit, rid)))
+    units.sort(key=lambda x: x[0])
+    log("ZIU: sequental stage status {}".format(units))
+    for unit in units:
+        if unit[0] == local_unit() and prev_ziu_done == stage and unit[1] < stage:
+            action(stage)
+            return
+        prev_ziu_done = unit[1]
+
+
+def update_ziu(trigger):
+    if in_relation_hook():
+        ziu_stage = relation_get("ziu")
+        log("ZIU: stage from relation {}".format(ziu_stage))
+    else:
+        ziu_stage = config.get("ziu")
+        log("ZIU: stage from config {}".format(ziu_stage))
+    if ziu_stage is not None:
+        ziu_stage = int(ziu_stage)
+        config_set("ziu", ziu_stage)
+        if ziu_stage > int(config.get("ziu_done", -1)):
+            log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+            stages[ziu_stage](ziu_stage, trigger)
+
+    # This code is on controller only
+    if not is_leader():
+        return
+    ziu_stage = config.get("ziu")
+    if ziu_stage is None:
+        return
+    ziu_stage = int(ziu_stage)
+    if not check_ziu_stage_done(ziu_stage):
+        return
+    # move to next stage
+    ziu_stage += 1
+    signal_ziu("ziu", ziu_stage)
+    # run next stage on self to avoid waiting for update_status
+    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+    # last stage must be called immediately to provide ziu=max_stage to all
+    # all other stages can call stage handler immediately to not wait for update_status
+    max_stage = max(stages.keys())
+    if ziu_stage != max_stage:
+        stages[ziu_stage](ziu_stage, trigger)
+
+
+def ziu_stage_0(ziu_stage, trigger):
+    if trigger == "image-tag":
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_1(ziu_stage, trigger):
+    docker_utils.compose_stop(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_stop(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_2(ziu_stage, trigger):
+    ctx = get_context()
+    _render_configs(ctx)
+    docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+
+    result = common_utils.update_services_status(MODULE, SERVICES)
+    if result:
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_3(ziu_stage, trigger):
+    sequential_ziu_stage(ziu_stage, ziu_restart_control)
+
+
+def ziu_stage_4(ziu_stage, trigger):
+    sequential_ziu_stage(ziu_stage, ziu_restart_db)
+
+
+def ziu_stage_5(ziu_stage, trigger):
+    signal_ziu("ziu", None)
+    signal_ziu("ziu_done", None)
+
+
+def ziu_restart_control(stage):
+    ctx = get_context()
+    _render_configs(ctx)
+    docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+
+    result = common_utils.update_services_status(MODULE, SERVICES)
+    if result:
+        signal_ziu("ziu_done", stage)
+
+
+def ziu_restart_db(stage):
+    ctx = get_context()
+    _render_configs(ctx)
+    docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+
+    result = common_utils.update_services_status(MODULE, SERVICES)
+    if result:
+        signal_ziu("ziu_done", stage)
+
+
+stages = {
+    0: ziu_stage_0,
+    1: ziu_stage_1,
+    2: ziu_stage_2,
+    3: ziu_stage_3,
+    4: ziu_stage_4,
+    5: ziu_stage_5,
+}
