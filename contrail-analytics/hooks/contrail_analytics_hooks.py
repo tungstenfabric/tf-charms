@@ -57,6 +57,13 @@ def config_changed():
     docker_utils.config_changed()
     utils.update_charm_status()
 
+    # leave it as latest - in case of exception in previous steps
+    # config.changed doesn't work sometimes...
+    if config.get("saved-image-tag") != config["image-tag"]:
+        utils.update_ziu("image-tag")
+        config["saved-image-tag"] = config["image-tag"]
+        config.save()
+
 
 def _value_changed(rel_data, rel_key, cfg_key):
     if rel_key not in rel_data:
@@ -82,20 +89,19 @@ def contrail_analytics_joined():
 @hooks.hook("contrail-analytics-relation-changed")
 def contrail_analytics_changed():
     data = relation_get()
-    changed = False
-    changed |= _value_changed(data, "auth-mode", "auth_mode")
-    changed |= _value_changed(data, "auth-info", "auth_info")
-    changed |= _value_changed(data, "orchestrator-info", "orchestrator_info")
-    changed |= _value_changed(data, "rabbitmq_hosts", "rabbitmq_hosts")
-    changed |= _value_changed(data, "maintenance", "maintenance")
-    changed |= _value_changed(data, "controller_ips", "controller_ips")
-    changed |= _value_changed(data, "controller_data_ips", "controller_data_ips")
+    _value_changed(data, "auth-mode", "auth_mode")
+    _value_changed(data, "auth-info", "auth_info")
+    _value_changed(data, "orchestrator-info", "orchestrator_info")
+    _value_changed(data, "rabbitmq_hosts", "rabbitmq_hosts")
+    _value_changed(data, "maintenance", "maintenance")
+    _value_changed(data, "controller_ips", "controller_ips")
+    _value_changed(data, "controller_data_ips", "controller_data_ips")
     config.save()
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
-    if changed:
-        utils.update_charm_status()
-        _notify_proxy_services()
+    utils.update_ziu("analytics-changed")
+    utils.update_charm_status()
+    _notify_proxy_services()
 
 
 @hooks.hook("contrail-analytics-relation-departed")
@@ -119,6 +125,7 @@ def contrail_analyticsdb_joined():
 
 @hooks.hook("contrail-analyticsdb-relation-changed")
 def contrail_analyticsdb_changed():
+    utils.update_ziu("analyticsdb-changed")
     utils.update_charm_status()
 
 
@@ -133,6 +140,11 @@ def analytics_cluster_joined():
     relation_set(relation_settings=settings)
 
     utils.update_charm_status()
+
+
+@hooks.hook("analytics-cluster-relation-changed")
+def analytics_cluster_changed():
+    utils.update_ziu("cluster-changed")
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -155,6 +167,7 @@ def tls_certificates_relation_departed():
 
 @hooks.hook("update-status")
 def update_status():
+    utils.update_ziu("update-status")
     utils.update_charm_status()
 
 

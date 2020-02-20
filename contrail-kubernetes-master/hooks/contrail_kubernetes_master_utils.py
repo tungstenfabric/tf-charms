@@ -151,7 +151,7 @@ def update_charm_status():
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
-    if config.get("maintenance"):
+    if config.get("maintenance") or config.get("ziu"):
         return
 
     ctx = get_context()

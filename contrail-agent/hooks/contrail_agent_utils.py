@@ -165,7 +165,12 @@ def update_charm_status():
             log("Can't load optional image {}".format(e))
 
     if config.get("maintenance"):
+        log("ISSU is in progress")
         common_utils.update_services_status(MODULE, SERVICES)
+        return
+    if int(config.get("ziu", -1)) > -1:
+        log("ZIU Maintenance is in progress")
+        status_set('maintenance', 'ziu is in progress')
         return
 
     fix_dns_settings()

@@ -104,7 +104,7 @@ def update_services_status(module, services):
     except Exception as e:
         log("Container is not ready to get contrail-status: " + str(e))
         status_set("waiting", "Waiting services to run in container")
-        return
+        return False
 
     statuses = dict()
     group = None
@@ -125,18 +125,18 @@ def update_services_status(module, services):
         if group not in statuses:
             status_set("waiting",
                        "POD " + group + " is absent in the contrail-status")
-            return
+            return False
         for srv in services[group]:
             if srv not in statuses[group]:
                 status_set("waiting",
                            srv + " is absent in the contrail-status")
-                return
+                return False
             status, desc = statuses[group].get(srv)
             if status not in ["active", "backup"]:
                 workload = "waiting" if status == "initializing" else "blocked"
                 status_set(workload, "{} is not ready. Reason: {}"
                            .format(srv, desc if desc else status))
-                return
+                return False
 
     status_set("active", "Unit is ready")
     try:
@@ -146,6 +146,7 @@ def update_services_status(module, services):
         application_version_set(version)
     except CalledProcessError as e:
         log("Couldn't detect installed application version: " + str(e))
+    return True
 
 
 def json_loads(data, default=None):

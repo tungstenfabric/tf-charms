@@ -75,6 +75,7 @@ def contrail_controller_changed():
     _update_config("auth_info", "auth-info")
     _update_config("orchestrator_info", "orchestrator-info")
     _update_config("maintenance", "maintenance")
+    _update_config("ziu", "ziu")
     _update_config("controller_ips", "controller_ips")
     _update_config("controller_data_ips", "controller_data_ips")
     _update_config("issu_controller_ips", "issu_controller_ips")
