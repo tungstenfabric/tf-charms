@@ -267,31 +267,23 @@ def update_ziu(trigger):
         stages[ziu_stage](ziu_stage, trigger)
 
 
+def ziu_stage_noop(ziu_stage, trigger):
+    signal_ziu("ziu_done", ziu_stage)
+
+
 def ziu_stage_0(ziu_stage, trigger):
+    # update images
     if trigger == "image-tag":
         signal_ziu("ziu_done", ziu_stage)
 
 
-def ziu_stage_1(ziu_stage, trigger):
-    # nothing to do on stage 1 for analyticsdb
-    signal_ziu("ziu_done", ziu_stage)
-
-
-def ziu_stage_2(ziu_stage, trigger):
-    # nothing to do on stage 2 for analyticsdb
-    signal_ziu("ziu_done", ziu_stage)
-
-
-def ziu_stage_3(ziu_stage, trigger):
-    # nothing to do on stage 3 for analyticsdb
-    signal_ziu("ziu_done", ziu_stage)
-
-
 def ziu_stage_4(ziu_stage, trigger):
+    # restart DB
     sequential_ziu_stage(ziu_stage, ziu_restart_db)
 
 
-def ziu_stage_5(ziu_stage, trigger):
+def ziu_stage_6(ziu_stage, trigger):
+    # finish
     signal_ziu("ziu", None)
     signal_ziu("ziu_done", None)
 
@@ -308,9 +300,10 @@ def ziu_restart_db(stage):
 
 stages = {
     0: ziu_stage_0,
-    1: ziu_stage_1,
-    2: ziu_stage_2,
-    3: ziu_stage_3,
+    1: ziu_stage_noop,
+    2: ziu_stage_noop,
+    3: ziu_stage_noop,
     4: ziu_stage_4,
-    5: ziu_stage_5,
+    5: ziu_stage_noop,
+    6: ziu_stage_6,
 }

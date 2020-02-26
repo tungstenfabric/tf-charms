@@ -53,6 +53,13 @@ def config_changed():
     docker_utils.config_changed()
     utils.update_charm_status()
 
+    # leave it as latest - in case of exception in previous steps
+    # config.changed doesn't work sometimes...
+    if config.get("saved-image-tag") != config["image-tag"]:
+        utils.update_ziu("image-tag")
+        config["saved-image-tag"] = config["image-tag"]
+        config.save()
+
 
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined():
@@ -80,14 +87,19 @@ def contrail_controller_changed():
     _update_config("issu_controller_data_ips", "issu_controller_data_ips")
     _update_config("issu_analytics_ips", "issu_analytics_ips")
 
-    maintenance = "maintenance" in data or "ziu" in data or "ziu_done" in data
+    maintenance = None
+    if "maintenance" in data:
+        maintenance = "issu"
+    if "ziu" in data or "ziu_done" in data:
+        maintenance = "ziu"
     if maintenance:
-        config["maintenance"] = True
+        config["maintenance"] = maintenance
     else:
         config.pop("maintenance", None)
 
     config.save()
 
+    utils.update_ziu("controller-changed")
     utils.update_charm_status()
 
 
@@ -140,6 +152,7 @@ def vrouter_plugin_changed():
 
 @hooks.hook("update-status")
 def update_status():
+    utils.update_ziu("update-status")
     utils.update_charm_status()
 
 

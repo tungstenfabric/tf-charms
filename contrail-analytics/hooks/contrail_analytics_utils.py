@@ -296,32 +296,12 @@ def config_set(key, value):
     config.save()
 
 
-def get_int_from_relation(name, unit=None, rid=None):
-    value = relation_get(name, unit, rid)
-    return int(value if value else -1)
-
-
 def signal_ziu(key, value):
     log("ZIU: signal {} = {}".format(key, value))
     config_set(key, value)
     for rname in ziu_relations:
         for rid in relation_ids(rname):
             relation_set(relation_id=rid, relation_settings={key: value})
-
-
-def sequential_ziu_stage(stage, action):
-    prev_ziu_done = stage
-    units = [(local_unit(), int(config.get("ziu_done", -1)))]
-    for rid in relation_ids("analytics-cluster"):
-        for unit in related_units(rid):
-            units.append((unit, get_int_from_relation("ziu_done", unit, rid)))
-    units.sort(key=lambda x: x[0])
-    log("ZIU: sequental stage status {}".format(units))
-    for unit in units:
-        if unit[0] == local_unit() and prev_ziu_done == stage and unit[1] < stage:
-            action(stage)
-            return
-        prev_ziu_done = unit[1]
 
 
 def update_ziu(trigger):
@@ -340,12 +320,18 @@ def update_ziu(trigger):
         stages[ziu_stage](ziu_stage, trigger)
 
 
+def ziu_stage_noop(ziu_stage, trigger):
+    signal_ziu("ziu_done", ziu_stage)
+
+
 def ziu_stage_0(ziu_stage, trigger):
+    # update images
     if trigger == "image-tag":
         signal_ziu("ziu_done", ziu_stage)
 
 
 def ziu_stage_1(ziu_stage, trigger):
+    # stop API services
     cver = common_utils.get_contrail_version()
     docker_utils.compose_stop(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
@@ -357,6 +343,7 @@ def ziu_stage_1(ziu_stage, trigger):
 
 
 def ziu_stage_2(ziu_stage, trigger):
+    # start API services
     ctx = get_context()
     _render_configs(ctx)
     docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
@@ -370,17 +357,8 @@ def ziu_stage_2(ziu_stage, trigger):
         signal_ziu("ziu_done", ziu_stage)
 
 
-def ziu_stage_3(ziu_stage, trigger):
-    # nothing to do on stage 3 for analytics
-    signal_ziu("ziu_done", ziu_stage)
-
-
-def ziu_stage_4(ziu_stage, trigger):
-    # nothing to do on stage 4 for analytics
-    signal_ziu("ziu_done", ziu_stage)
-
-
-def ziu_stage_5(ziu_stage, trigger):
+def ziu_stage_6(ziu_stage, trigger):
+    # finish
     signal_ziu("ziu", None)
     signal_ziu("ziu_done", None)
 
@@ -389,7 +367,8 @@ stages = {
     0: ziu_stage_0,
     1: ziu_stage_1,
     2: ziu_stage_2,
-    3: ziu_stage_3,
-    4: ziu_stage_4,
-    5: ziu_stage_5,
+    3: ziu_stage_noop,
+    4: ziu_stage_noop,
+    5: ziu_stage_noop,
+    6: ziu_stage_6,
 }

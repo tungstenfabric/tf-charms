@@ -8,8 +8,12 @@ import netifaces
 from charmhelpers.core.hookenv import (
     config,
     log,
+    in_relation_hook,
     status_set,
     unit_get,
+    relation_ids,
+    relation_get,
+    relation_set,
     WARNING,
 )
 
@@ -182,7 +186,12 @@ def update_charm_status_for_upgrade():
         ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
         ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
         # orchestrator_info and auth_info can be taken from old relation
+    
     _update_charm_status(ctx)
+
+    if config.get('maintenance') == 'ziu':
+        config["upgraded"] = True
+        config.save()
 
 
 def _update_charm_status(ctx):
@@ -316,3 +325,77 @@ def update_nrpe_config():
     )
 
     nrpe_compat.write()
+
+
+# ZUI code block
+
+ziu_relations = [
+    "contrail-controller",
+]
+
+
+def config_set(key, value):
+    if value is not None:
+        config[key] = value
+    else:
+        config.pop(key, None)
+    config.save()
+
+
+def signal_ziu(key, value):
+    log("ZIU: signal {} = {}".format(key, value))
+    config_set(key, value)
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            relation_set(relation_id=rid, relation_settings={key: value})
+
+
+def update_ziu(trigger):
+    if in_relation_hook():
+        ziu_stage = relation_get("ziu")
+        log("ZIU: stage from relation {}".format(ziu_stage))
+    else:
+        ziu_stage = config.get("ziu")
+        log("ZIU: stage from config {}".format(ziu_stage))
+    if ziu_stage is None:
+        return
+    ziu_stage = int(ziu_stage)
+    config_set("ziu", ziu_stage)
+    if ziu_stage > int(config.get("ziu_done", -1)):
+        log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+        stages[ziu_stage](ziu_stage, trigger)
+
+
+def ziu_stage_noop(ziu_stage, trigger):
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_0(ziu_stage, trigger):
+    # update images
+    config_set("upgraded", None)
+    if trigger == "image-tag":
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_5(ziu_stage, trigger):
+    # wait for upgrade action and then signal
+    if config.get("upgraded"):
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_6(ziu_stage, trigger):
+    # finish
+    signal_ziu("ziu", None)
+    signal_ziu("ziu_done", None)
+    config_set("upgraded", None)
+
+
+stages = {
+    0: ziu_stage_0,
+    1: ziu_stage_noop,
+    2: ziu_stage_noop,
+    3: ziu_stage_noop,
+    4: ziu_stage_noop,
+    5: ziu_stage_5,
+    6: ziu_stage_6,
+}

@@ -341,6 +341,7 @@ def contrail_controller_changed():
 
     update_southbound_relations()
     update_northbound_relations()
+    utils.update_ziu("controller-changed")
     utils.update_charm_status()
 
 

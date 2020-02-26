@@ -478,6 +478,16 @@ def check_ziu_stage_done(stage):
                 if value is None or int(value) != stage:
                     log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
                     return False
+    # special case for contrail-agents
+    for rid in relation_ids("contrail-controller"):
+        for unit in related_units(rid):
+            unit_type = relation_get("unit-type", unit, rid)
+            if unit_type != "agent":
+                continue
+            value = relation_get("ziu_done", unit, rid)
+            if value is None or int(value) != stage:
+                log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
+                return False
     log("ZIU: stage done")
     return True
 
@@ -532,12 +542,18 @@ def update_ziu(trigger):
         stages[ziu_stage](ziu_stage, trigger)
 
 
+def ziu_stage_noop(ziu_stage, trigger):
+    signal_ziu("ziu_done", ziu_stage)
+
+
 def ziu_stage_0(ziu_stage, trigger):
+    # update images
     if trigger == "image-tag":
         signal_ziu("ziu_done", ziu_stage)
 
 
 def ziu_stage_1(ziu_stage, trigger):
+    # stop API services
     docker_utils.compose_stop(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_stop(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
@@ -545,6 +561,7 @@ def ziu_stage_1(ziu_stage, trigger):
 
 
 def ziu_stage_2(ziu_stage, trigger):
+    # start API services
     ctx = get_context()
     _render_configs(ctx)
     docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
@@ -557,14 +574,17 @@ def ziu_stage_2(ziu_stage, trigger):
 
 
 def ziu_stage_3(ziu_stage, trigger):
+    # restart control one by one
     sequential_ziu_stage(ziu_stage, ziu_restart_control)
 
 
 def ziu_stage_4(ziu_stage, trigger):
+    # restart DB containers
     sequential_ziu_stage(ziu_stage, ziu_restart_db)
 
 
-def ziu_stage_5(ziu_stage, trigger):
+def ziu_stage_6(ziu_stage, trigger):
+    # finish
     signal_ziu("ziu", None)
     signal_ziu("ziu_done", None)
 
@@ -595,5 +615,6 @@ stages = {
     2: ziu_stage_2,
     3: ziu_stage_3,
     4: ziu_stage_4,
-    5: ziu_stage_5,
+    5: ziu_stage_noop,
+    6: ziu_stage_6,
 }
