@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a119e71_dbc5ddbd",
+        "filename": "ziu.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-02-27T15:59:38Z",
+      "side": 1,
+      "message": "all services of control plane (controller, analytics, analyticsdb) ...",
+      "revId": "f908fa2c680ea4aec890da55dbd7fadab5415616",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aaeccf04_0d3ae5d0",
+        "filename": "ziu.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-02-27T15:59:38Z",
+      "side": 1,
+      "message": "extra space",
+      "revId": "f908fa2c680ea4aec890da55dbd7fadab5415616",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8651c4c_fe52a246",
+        "filename": "ziu.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-02-27T15:59:38Z",
+      "side": 1,
+      "message": "6 stages.\n(contrail-agent)",
+      "revId": "f908fa2c680ea4aec890da55dbd7fadab5415616",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
