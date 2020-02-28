@@ -70,12 +70,13 @@ def leader_settings_changed():
 
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined():
-    settings = {'unit-type': 'openstack'}
+    settings = {
+        'unit-type': 'openstack',
+        'use-internal-endpoints': config.get('use-internal-endpoints')}
     relation_set(relation_settings=settings)
     if is_leader():
         data = _get_orchestrator_info()
         relation_set(**data)
-
 
 @hooks.hook("contrail-controller-relation-changed")
 def contrail_controller_changed():
@@ -331,7 +332,9 @@ def upgrade_charm():
     _notify_nova()
     _notify_neutron()
     _notify_heat()
-
+    for rid in relation_ids("contrail-controller"):
+        if related_units(rid):
+            contrail_controller_joined(rel_id=rid)
 
 def main():
     try:
