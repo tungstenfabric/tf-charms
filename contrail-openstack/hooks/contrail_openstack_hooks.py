@@ -50,7 +50,8 @@ def config_changed():
     if is_leader():
         _configure_metadata_shared_secret()
         notify_nova = True
-        _notify_controller()
+
+    _notify_controller()
 
     if notify_nova:
         _notify_nova()
@@ -69,12 +70,14 @@ def leader_settings_changed():
 
 
 @hooks.hook("contrail-controller-relation-joined")
-def contrail_controller_joined():
-    settings = {'unit-type': 'openstack'}
-    relation_set(relation_settings=settings)
+def contrail_controller_joined(rel_id=None):
+    settings = {
+        'unit-type': 'openstack',
+        'use-internal-endpoints': config.get('use-internal-endpoints')}
+    relation_set(relation_id=rel_id, relation_settings=settings)
     if is_leader():
         data = _get_orchestrator_info()
-        relation_set(**data)
+        relation_set(relation_id=rel_id, **data)
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -118,10 +121,8 @@ def contrail_controller_changed():
     status_set("active", "Unit is ready")
 
     # auth_info can affect endpoints
-    if is_leader():
-        changed = utils.update_service_ips()
-        if changed:
-            _notify_controller()
+    if utils.update_service_ips():
+        _notify_controller()
 
 
 @hooks.hook("contrail-controller-relation-departed")
@@ -152,10 +153,9 @@ def _configure_metadata_shared_secret():
 
 
 def _notify_controller():
-    data = _get_orchestrator_info()
     for rid in relation_ids("contrail-controller"):
         if related_units(rid):
-            relation_set(relation_id=rid, **data)
+            contrail_controller_joined(rid)
 
 
 def _notify_nova():
@@ -317,11 +317,7 @@ def nova_compute_joined(rel_id=None):
 @hooks.hook("update-status")
 def update_status():
     # TODO: try to deploy openstack code again if it was not done
-
-    if not is_leader():
-        return
-    changed = utils.update_service_ips()
-    if changed:
+    if utils.update_service_ips():
         _notify_controller()
 
 
@@ -331,6 +327,7 @@ def upgrade_charm():
     _notify_nova()
     _notify_neutron()
     _notify_heat()
+    _notify_controller()
 
 
 def main():
