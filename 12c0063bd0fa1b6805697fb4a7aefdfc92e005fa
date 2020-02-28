@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04bf884a_3e333efb",
+        "filename": "contrail-openstack/hooks/contrail_openstack_hooks.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-02-28T19:08:38Z",
+      "side": 1,
+      "message": "i told you that config_changed also should be updated",
+      "revId": "12c0063bd0fa1b6805697fb4a7aefdfc92e005fa",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
