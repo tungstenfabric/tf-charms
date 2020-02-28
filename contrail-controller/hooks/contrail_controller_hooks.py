@@ -329,6 +329,14 @@ def contrail_controller_changed():
         config["issu_controller_ips"] = data.get("issu_controller_ips")
         config["issu_controller_data_ips"] = data.get("issu_controller_data_ips")
         config["issu_analytics_ips"] = data.get("issu_analytics_ips")
+    use_internal_endpoints = data.get("use-internal-endpoints")
+    if use_internal_endpoints:
+        if not isinstance(use_internal_endpoints, bool):
+            use_internal_endpoints = yaml.load(use_internal_endpoints)
+            if not isinstance(use_internal_endpoints, bool):
+                use_internal_endpoints = False
+        config["use_internal_endpoints"] = use_internal_endpoints
+
     # TODO: set error if orchestrator is changed and container was started
     # with another orchestrator
     if "dpdk" in data:
