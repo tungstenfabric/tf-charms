@@ -1,4 +1,5 @@
 import base64
+import copy
 import json
 import os
 import platform
@@ -69,7 +70,7 @@ def install():
     apt_install(docker_package)
     apt_install(DOCKER_ADD_PACKAGES)
     _render_config()
-    _apply_insecure()
+    _update_docker_settings()
     _login()
 
 
@@ -87,29 +88,35 @@ def _save_json_file(filepath, data):
         os.mkdir(os.path.dirname(filepath))
     except OSError:
         pass
-    with open(filepath, "w") as f:
+    temp_file = os.path.join(os.path.dirname(filepath), str(uuid.uuid4()))
+    with open(temp_file, "w") as f:
         json.dump(data, f)
+    os.replace(temp_file, filepath)
 
 
-def _apply_insecure():
-    if not config.get("docker-registry-insecure"):
-        return
-    # NOTE: take just host and port from registry definition
-    docker_registry = config.get("docker-registry").split('/')[0]
+def _update_docker_settings():
+    docker_config = "/etc/docker/daemon.json"
+    initial_settings = _load_json_file(docker_config)
 
-    log("Re-configure docker daemon")
-    dc = _load_json_file("/etc/docker/daemon.json")
+    new_settings = copy.deepcopy(initial_settings)
+    docker_registry = new_settings.get("insecure-registries", list())
+    if config.get("docker-opts"):
+        docker_opts = json.loads(config["docker-opts"])
+        new_settings.update(docker_opts)
+        if docker_opts.get("insecure-registries"):
+            docker_registry.extend(docker_opts["insecure-registries"])
+    if config.get("docker-registry-insecure") and config.get("docker-registry"):
+        # NOTE: take just host and port from registry definition
+        docker_registry.append(config["docker-registry"].split('/')[0])
+    if docker_registry:
+        new_settings["insecure-registries"] = sorted(set(docker_registry))
+        initial_settings["insecure-registries"] = sorted(set(initial_settings.get("insecure-registries", list())))
 
-    cv = dc.get("insecure-registries", list())
-    if docker_registry in cv:
-        return
-    cv.append(docker_registry)
-    dc["insecure-registries"] = cv
-
-    _save_json_file("/etc/docker/daemon.json", dc)
-
-    log("Restarting docker service")
-    service_restart('docker')
+    if initial_settings != new_settings:
+        log("Re-configure docker daemon")
+        _save_json_file(docker_config, new_settings)
+        log("Restarting docker service")
+        service_restart('docker')
 
 
 def _login():
@@ -257,8 +264,8 @@ def config_changed():
     if config.changed("http_proxy") or config.changed("https_proxy") or config.changed("no_proxy"):
         _render_config()
         changed = True
-    if config.changed("docker-registry") or config.changed("docker-registry-insecure"):
-        _apply_insecure()
+    if config.changed("docker-registry") or config.changed("docker-registry-insecure") or config.changed("docker-opts"):
+        _update_docker_settings()
         changed = True
     if config.changed("docker-user") or config.changed("docker-password"):
         _login()
