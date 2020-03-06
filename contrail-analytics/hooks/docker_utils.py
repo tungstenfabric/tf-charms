@@ -16,6 +16,8 @@ from charmhelpers.core.host import service_restart
 from charmhelpers.core.templating import render
 from charmhelpers.fetch import apt_install, apt_update
 
+import common_utils
+
 config = config()
 
 DOCKER_ADD_PACKAGES = ["docker-compose"]
@@ -69,7 +71,7 @@ def install():
     apt_install(docker_package)
     apt_install(DOCKER_ADD_PACKAGES)
     _render_config()
-    _apply_insecure()
+    _update_docker_settings()
     _login()
 
 
@@ -88,26 +90,29 @@ def _save_json_file(filepath, data):
     except OSError:
         pass
     with open(filepath, "w") as f:
+        try:
+            if data == json.load(f):
+                return
+        except (IOError, ValueError):
+            pass
         json.dump(data, f)
 
 
-def _apply_insecure():
-    if not config.get("docker-registry-insecure"):
-        return
-    # NOTE: take just host and port from registry definition
-    docker_registry = config.get("docker-registry").split('/')[0]
-
+def _update_docker_settings():
     log("Re-configure docker daemon")
-    dc = _load_json_file("/etc/docker/daemon.json")
-
-    cv = dc.get("insecure-registries", list())
-    if docker_registry in cv:
-        return
-    cv.append(docker_registry)
-    dc["insecure-registries"] = cv
-
-    _save_json_file("/etc/docker/daemon.json", dc)
-
+    daemon_config = "/etc/docker/daemon.json"
+    settings = _load_json_file(daemon_config)
+    docker_opts = common_utils.json_loads(config.get("docker-opts"), dict())
+    settings.update(docker_opts)
+    docker_registry = str()
+    if docker_opts.get("insecure-registries"):
+        docker_registry = docker_opts["insecure-registries"] + ", "
+    if (config.get("docker-registry-insecure") and config.get("docker-registry")):
+        docker_registry += config["docker-registry"]
+    if docker_registry:
+        # NOTE: take just host and port from registry definition
+        settings["insecure-registries"] = list(set([item.split('/')[0].strip() for item in docker_registry.split(',')]))
+    _save_json_file(daemon_config, settings)
     log("Restarting docker service")
     service_restart('docker')
 
@@ -257,8 +262,8 @@ def config_changed():
     if config.changed("http_proxy") or config.changed("https_proxy") or config.changed("no_proxy"):
         _render_config()
         changed = True
-    if config.changed("docker-registry") or config.changed("docker-registry-insecure"):
-        _apply_insecure()
+    if (config.changed("docker-registry") or config.changed("docker-registry-insecure") or config.changed("docker-opts")):
+        _update_docker_settings()
         changed = True
     if config.changed("docker-user") or config.changed("docker-password"):
         _login()

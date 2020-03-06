@@ -109,6 +109,11 @@ options:
     default: false
     description: |
       Is it docker-registry insecure and should docker be configured for it
+  docker-opts:
+    type: string
+    default: "{}"
+    description: |
+      Extra options to pass to the Docker daemon config file. e.g. {"iptables": false}.
   docker-user:
     type: string
     description: |
