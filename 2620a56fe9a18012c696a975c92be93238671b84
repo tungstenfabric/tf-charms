@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "106711b2_382cb082",
+        "filename": "contrail-agent/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "why do we need non-null default?\nin description it would be good to write full example - what exact file, exact format, ...",
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6700b39_40117be6",
+        "filename": "contrail-agent/hooks/docker_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "docker_utils must not use common_utils",
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be1361b8_a90150f4",
+        "filename": "contrail-agent/hooks/docker_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "what is it???",
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee980c59_5be405cb",
+        "filename": "contrail-agent/hooks/docker_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "-\u003e docker_config",
+      "range": {
+        "startLine": 103,
+        "startChar": 4,
+        "endLine": 103,
+        "endChar": 17
+      },
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6194da32_ef719f41",
+        "filename": "contrail-agent/hooks/docker_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "logic is too complex",
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9c35fca_27de0432",
+        "filename": "contrail-agent/hooks/docker_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-06T15:06:25Z",
+      "side": 1,
+      "message": "why do we need additional quotes?",
+      "revId": "2620a56fe9a18012c696a975c92be93238671b84",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
