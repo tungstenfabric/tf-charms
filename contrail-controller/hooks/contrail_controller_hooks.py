@@ -157,20 +157,7 @@ def cluster_joined(rel_id=None):
     }
 
     if config.get('local-rabbitmq-hostname-resolution'):
-        settings.update({
-            "rabbitmq-hostname": utils.get_contrail_rabbit_hostname(),
-        })
-
-        # a remote unit might have already set rabbitmq-hostname if
-        # it came up before this unit was provisioned so the -changed
-        # event will not fire for it and we have to handle it here
-        data = relation_get()
-        log("Joined the peer relation with {}: {}".format(
-            remote_unit(), data))
-        ip = data.get("unit-address")
-        rabbit_hostname = data.get('rabbitmq-hostname')
-        if ip and rabbit_hostname:
-            utils.update_hosts_file(ip, rabbit_hostname)
+        settings["rabbitmq-hostname"] = utils.get_contrail_rabbit_hostname()
 
     relation_set(relation_id=rel_id, relation_settings=settings)
     utils.update_charm_status()
