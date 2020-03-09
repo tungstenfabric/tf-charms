@@ -92,6 +92,8 @@ services:
       - node-init
 {% if contrail_version >= 2002 %}
       - dnsmasq
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 {% endif %}
     depends_on:
       - node-init
