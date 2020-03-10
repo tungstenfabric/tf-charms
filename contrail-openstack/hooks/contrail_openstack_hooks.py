@@ -59,6 +59,7 @@ def config_changed():
 
 @hooks.hook("leader-elected")
 def leader_elected():
+    utils.update_service_ips()
     _configure_metadata_shared_secret()
     _notify_nova()
     _notify_controller()
@@ -121,7 +122,7 @@ def contrail_controller_changed():
     status_set("active", "Unit is ready")
 
     # auth_info can affect endpoints
-    if utils.update_service_ips():
+    if is_leader() and utils.update_service_ips():
         _notify_controller()
 
 
@@ -317,12 +318,15 @@ def nova_compute_joined(rel_id=None):
 @hooks.hook("update-status")
 def update_status():
     # TODO: try to deploy openstack code again if it was not done
-    if utils.update_service_ips():
+    # update_service_ips can be called only on leader. notify controller only if something was updated
+    if is_leader() and utils.update_service_ips():
         _notify_controller()
 
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    if is_leader():
+        utils.update_service_ips()
     # apply information to base charms
     _notify_nova()
     _notify_neutron()
