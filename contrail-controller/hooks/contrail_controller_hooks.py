@@ -426,8 +426,8 @@ def _http_services(vip):
 
     mode = config.get("haproxy-http-mode", "http")
 
-    config_analytics_ssl_available = config.get("config_analytics_ssl_available", False)
-    if config_analytics_ssl_available:
+    ssl_on_backend = config.get("ssl_enabled", False) and config.get("config_analytics_ssl_available", False)
+    if ssl_on_backend:
         servers = [[name, addr, 8082, "check inter 2000 rise 2 fall 3 ssl verify none"]]
     else:
         servers = [[name, addr, 8082, "check inter 2000 rise 2 fall 3"]]
