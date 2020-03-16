@@ -130,6 +130,9 @@ def get_context():
         ctx["dpdk_driver"] = config.get("dpdk-driver")
         ctx["dpdk_coremask"] = config.get("dpdk-coremask")
         ctx["dpdk_hugepages"] = _get_hugepages()
+    else:
+        ctx["hugepages_1g"] = config.get("kernel-hugepages-1g")
+        ctx["hugepages_2m"] = config.get("kernel-hugepages-2m")
 
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
