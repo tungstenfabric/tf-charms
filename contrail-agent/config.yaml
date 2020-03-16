@@ -36,6 +36,14 @@ options:
       instances.
       Value can be specified as percentage of system memory e.g. 70% or as
       number of huge pages e.g. 1434.
+  kernel-hugepages:
+    type: string
+    default: 70%
+    description: |
+      Number of huge pages to reserve for use with DPDK vRouter and OpenStack
+      instances.
+      Value can be specified as percentage of system memory e.g. 70% or as
+      number of huge pages e.g. 1434.
   dpdk-coremask:
     type: string
     default: "1"

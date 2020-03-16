@@ -74,7 +74,10 @@ def _get_dpdk_args():
 
 
 def _get_hugepages():
-    pages = config.get("dpdk-hugepages")
+    if config["dpdk"]:
+        pages = config.get("dpdk-hugepages")
+    else:
+        pages = config.get("kernel-hugepages")
     if not pages:
         return None
     if not pages.endswith("%"):
@@ -129,7 +132,7 @@ def get_context():
         ctx["dpdk_additional_args"] = _get_dpdk_args()
         ctx["dpdk_driver"] = config.get("dpdk-driver")
         ctx["dpdk_coremask"] = config.get("dpdk-coremask")
-        ctx["dpdk_hugepages"] = _get_hugepages()
+        ctx["hugepages"] = _get_hugepages()
 
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
