@@ -36,6 +36,25 @@ options:
       instances.
       Value can be specified as percentage of system memory e.g. 70% or as
       number of huge pages e.g. 1434.
+  use-hp-1g:
+    type: boolean
+    default: true
+    description: |
+      Hugepages is enabled only as 1gb or 2mb, not both. If false use 2mb size. 
+  kernel-hugepages-1g:
+    type: string
+    default: 2
+    description: |
+      Number of 1 GB huge pages to reserve for use with vRouter in kernel mode  and OpenStack
+      instances.
+      Value can be specified as number of huge pages e.g. 1434.
+  kernel-hugepages-2m:
+    type: string
+    default: 1024
+    description: |
+      Number of 2 MB huge pages to reserve for use with vRouter in kernel mode  and OpenStack
+      instances.
+      Value can be specified as number of huge pages e.g. 1434.
   dpdk-coremask:
     type: string
     default: "1"
