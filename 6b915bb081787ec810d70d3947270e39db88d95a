@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebe04b3f_b78597b6",
+        "filename": "contrail-agent/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-03-18T06:32:25Z",
+      "side": 1,
+      "message": "please add info about priority - if both specified then 1g will be passed to config.\n\nbtw, if we pass both values to agent - what it will use?",
+      "revId": "6b915bb081787ec810d70d3947270e39db88d95a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
