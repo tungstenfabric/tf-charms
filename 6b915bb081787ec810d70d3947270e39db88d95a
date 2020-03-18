@@ -16,6 +16,24 @@
       "revId": "6b915bb081787ec810d70d3947270e39db88d95a",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25db2cfb_28285e65",
+        "filename": "contrail-agent/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 846
+      },
+      "writtenOn": "2020-03-18T11:10:56Z",
+      "side": 1,
+      "message": "there is the conditional within .env file",
+      "parentUuid": "ebe04b3f_b78597b6",
+      "revId": "6b915bb081787ec810d70d3947270e39db88d95a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
