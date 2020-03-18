@@ -34,6 +34,29 @@
       "revId": "6b915bb081787ec810d70d3947270e39db88d95a",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c36b62bb_a2cbb93a",
+        "filename": "contrail-agent/templates/vrouter.env",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 437
+      },
+      "writtenOn": "2020-03-18T12:59:59Z",
+      "side": 1,
+      "message": "do we need to put it under own  \n {% if hugepages_2m %}\n \n  ?",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 33
+      },
+      "revId": "6b915bb081787ec810d70d3947270e39db88d95a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
