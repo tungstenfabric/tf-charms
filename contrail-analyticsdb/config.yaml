@@ -1,4 +1,9 @@
 options:
+  min-cluster-size:
+    type: int
+    default: 1
+    description: |
+      Minimum number of units expected to exist before charm will attempt to form a cluster.
   control-network:
     type: string
     description: |

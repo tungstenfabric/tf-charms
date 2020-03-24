@@ -194,6 +194,12 @@ def _update_charm_status(ctx):
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
         return
+    if len(ctx.get("analyticsdb_servers")) < config.get("min-cluster-size"):
+        status_set('blocked',
+                   'Count of cluster nodes is not enough ({} < {}).'.format(
+                       len(ctx.get("analyticsdb_servers")), config.get("min-cluster-size")
+                   ))
+        return
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',
                    'Missing cloud_orchestrator info in relation '
