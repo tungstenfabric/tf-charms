@@ -107,6 +107,13 @@ Manual installation
 
 7. HA configuration (optional).
 
+    contrail-controller, contrail-analytics, contrail-analyticsdb must have min-cluster-size set for HA mode. They must be deployed with this option to prevent cluster issues:
+    ```
+    juju deploy contrail-controller --config min-cluster-size=3
+    juju deploy contrail-analytics --config min-cluster-size=3
+    juju deploy contrail-analyticsdb --config min-cluster-size=3
+    ```
+
     If you are using several controllers and want to expose just one IP(VIP) for config API or analytics API to client then we suggest the following HA solution using haproxy and keepalived.
 
     Deploy haproxy and keepalived services. Haproxy is deployed on the machines with contrail-controllers.

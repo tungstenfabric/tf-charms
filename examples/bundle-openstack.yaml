@@ -131,12 +131,15 @@ services:
     charm: ./contrail-analytics
     num_units: 3
     series: xenial
+    options:
+      min-cluster-size: 3
     to: [ "1", "2", "3" ]
   contrail-analyticsdb:
     charm: ./contrail-analyticsdb
     num_units: 3
     series: xenial
     options:
+      min-cluster-size: 3
       log-level: "SYS_DEBUG"
       cassandra-minimum-diskgb: "4"
       cassandra-jvm-extra-opts: "-Xms1g -Xmx2g"
@@ -145,6 +148,7 @@ services:
     charm: ./contrail-controller
     series: xenial
     options:
+      min-cluster-size: 3
       vip: 192.168.1.254
       log-level: "SYS_DEBUG"
       cassandra-minimum-diskgb: "4"
