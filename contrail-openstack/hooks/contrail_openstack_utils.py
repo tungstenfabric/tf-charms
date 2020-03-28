@@ -37,37 +37,43 @@ config = config()
 
 PACKAGE_CODENAMES = {
     'nova': {
-        '12': 'liberty',
-        '13': 'mitaka',
-        '14': 'newton',
-        '15': 'ocata',
-        '16': 'pike',
-        '17': 'queens',
-        '18': 'rocky',
-        '19': 'stein',
-        '20': 'train',
+        12: 'liberty',
+        13: 'mitaka',
+        14: 'newton',
+        15: 'ocata',
+        16: 'pike',
+        17: 'queens',
+        18: 'rocky',
+        19: 'stein',
+        20: 'train',
+        21: 'ussuri',
+        22: 'victoria',
     },
     'neutron': {
-        '7': 'liberty',
-        '8': 'mitaka',
-        '9': 'newton',
-        '10': 'ocata',
-        '11': 'pike',
-        '12': 'queens',
-        '13': 'rocky',
-        '14': 'stein',
-        '15': 'train',
+        7: 'liberty',
+        8: 'mitaka',
+        9: 'newton',
+        10: 'ocata',
+        11: 'pike',
+        12: 'queens',
+        13: 'rocky',
+        14: 'stein',
+        15: 'train',
+        16: 'ussuri',
+        17: 'victoria',
     },
     'heat': {
-        '5': 'liberty',
-        '6': 'mitaka',
-        '7': 'newton',
-        '8': 'ocata',
-        '9': 'pike',
-        '10': 'queens',
-        '11': 'rocky',
-        '12': 'stein',
-        '13': 'train',
+        5: 'liberty',
+        6: 'mitaka',
+        7: 'newton',
+        8: 'ocata',
+        9: 'pike',
+        10: 'queens',
+        11: 'rocky',
+        12: 'stein',
+        13: 'train',
+        14: 'ussuri',
+        15: 'victoria',
     },
 }
 
@@ -309,7 +315,7 @@ def deploy_openstack_code(image, component, env_dict=None):
 
 def nova_patch():
     version = get_openstack_version_codename('nova')
-    if version != 'ocata':
+    if version != 15:
         # patch is required only for Ocata.
         # lower versions are not supported.
         # next versions do not requires the patch
@@ -342,7 +348,7 @@ def get_openstack_version_codename(dist):
         if not version:
             log("Version of {} couldn't be derived: {}".format(dist, e), level=WARNING)
             return None
-        return PACKAGE_CODENAMES[dist][version.split('.')[0]]
+        return int(version.split('.')[0])
     except Exception as e:
         # nova is not installed
         log("Version of {} couldn't be derived: {}".format(dist, e), level=WARNING)
