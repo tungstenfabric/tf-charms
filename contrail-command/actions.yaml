@@ -1,0 +1,31 @@
+import-cluster:
+    description: import cluster to contrail command
+    params:
+        juju-controller:
+            type: string
+            description: |
+                IP address of JuJu controller
+                may be found by command `juju show-controller` (api-endpoints)
+        juju-ca-cert:
+            type: string
+            description: |
+                base64-encoded SSL CA to Juju controller
+                CA cert may be found by command `juju show-controller` (ca-cert)
+                save it to file and encode by command
+                `cat cert.pem | base64 > "cert.pem.b64"`
+        juju-model-id:
+            type: string
+            description: |
+                ID of JuJu model
+                may be found by command `juju show-controller` (model-uuid)
+        juju-controller-password:
+            type: string
+            description: |
+                password to JuJu controller
+                should be set with `juju change-user-password` if is not set
+        juju-controller-user:
+            type: string
+            description:
+                JuJu controller user
+            default: 'admin'
+    required: [juju-controller, juju-ca-cert, juju-model-id, juju-controller-password]
