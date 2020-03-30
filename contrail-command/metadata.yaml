@@ -1,0 +1,11 @@
+name: contrail-command
+summary: Contrail Command
+maintainer: Anastasia Nappelbaum <rtikitavi@gmail.com>
+description: |
+  Contral command component within docker container.
+series:
+  - xenial
+  - bionic
+requires:
+  contrail-controller:
+    interface: contrail-controller
