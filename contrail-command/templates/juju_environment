@@ -1,0 +1,11 @@
+export HOME=/root
+export orchestrator=juju
+export action=import_cluster
+export delete_db={{ delete_db }}
+export persist_rules={{ persist_rules }}
+export juju_controller={{ juju_controller }}
+export juju_login_type=wss
+export juju_cacert_path={{ juju_cacert_path }}
+export juju_model_id={{ juju_model_id }}
+export juju_controller_password={{ juju_controller_password }}
+export juju_controller_user={{ juju_controller_user }}
