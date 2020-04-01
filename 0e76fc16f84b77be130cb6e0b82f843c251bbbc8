@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43fffa98_b8d39b8f",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "change to control-network",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdb583f7_be9bb7a4",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "remove it.",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e36a0a5_c3d9bb9d",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "remove it.",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2325766_891f6f68",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "remove it.",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80b0aecc_47521108",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "please check why it\u0027s required and can they be changed (persist-rules)",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2eee0f40_4b7dd7ce",
+        "filename": "contrail-command/config.yaml",
+        "patchSetId": 5
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "please remove docker log options",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e2777db_829171bf",
+        "filename": "contrail-command/hooks/contrail_command_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-01T18:30:50Z",
+      "side": 1,
+      "message": "please remove it.",
+      "revId": "0e76fc16f84b77be130cb6e0b82f843c251bbbc8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
