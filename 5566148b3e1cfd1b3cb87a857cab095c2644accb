@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0faa4e1a_cb0c7ba2",
+        "filename": "contrail-command/hooks/contrail_command_hooks.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-04-03T12:14:14Z",
+      "side": 1,
+      "message": "this is not needed now.",
+      "range": {
+        "startLine": 42,
+        "startChar": 12,
+        "endLine": 42,
+        "endChar": 23
+      },
+      "revId": "5566148b3e1cfd1b3cb87a857cab095c2644accb",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
