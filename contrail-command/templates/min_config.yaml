@@ -1,0 +1,8 @@
+command_ip: {{ command_ip }}
+ntpserver: time.google.com
+vrouter_gateway:
+container_registry: {{ container_registry }}
+container_tag: {{ container_tag }}
+contrail_container_tag: {{ contrail_container_tag }}
+install_docker: false
+ccd_connection: local
