@@ -61,6 +61,14 @@ def config_changed():
         config.save()
 
 
+@hooks.hook("agent-cluster-relation-joined")
+def agent_cluster_joined():
+    settings = {"vhost-address": utils.get_vhost_ip()}
+    relation_set(relation_settings=settings)
+
+    utils.update_charm_status()
+
+
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined():
     settings = {'dpdk': config["dpdk"], 'unit-type': 'agent'}
