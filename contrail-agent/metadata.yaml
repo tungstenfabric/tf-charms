@@ -13,6 +13,9 @@ provides:
   nrpe-external-master:
     interface: nrpe-external-master
     scope: container
+peers:
+  agent-cluster:
+    interface: contrail-agent-cluster
 requires:
   juju-info:
     interface: juju-info
