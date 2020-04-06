@@ -11,6 +11,7 @@ from charmhelpers.core.hookenv import (
     in_relation_hook,
     status_set,
     unit_get,
+    related_units,
     relation_ids,
     relation_get,
     relation_set,
@@ -134,6 +135,10 @@ def get_context():
         ctx["hugepages_1g"] = config.get("kernel-hugepages-1g")
         ctx["hugepages_2m"] = config.get("kernel-hugepages-2m")
 
+    ctx["csn_mode"] = config.get("csn-mode")
+    if config.get("csn-mode"):
+        ctx["csn_nodes"] = get_vhost_ip()
+
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
 
@@ -141,6 +146,8 @@ def get_context():
     ctx["control_servers"] = common_utils.json_loads(config.get("controller_data_ips"), list())
     ctx["analytics_servers"] = common_utils.json_loads(config.get("analytics_servers"), list())
     ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
+
+    ctx.update(csn_ctx())
 
     if "plugin-ips" in config:
         plugin_ips = common_utils.json_loads(config["plugin-ips"], dict())
@@ -313,6 +320,20 @@ def get_vhost_ip():
         return addr[netifaces.AF_INET][0]["addr"]
 
     return None
+
+
+def csn_ctx():
+    """Get the ipaddress of all vrouter nodes"""
+    csn_ip_list = []
+    for rid in relation_ids("csn-cluster"):
+        for unit in related_units(rid):
+            ip = relation_get("private-address", unit, rid)
+            if ip:
+                csn_ip_list.append(ip)
+    # add it's own ip address
+    csn_ip_list.append(get_vhost_ip())
+    return {"csn_nodes": csn_ip_list}
+
 
 def update_nrpe_config():
     plugins_dir = '/usr/local/lib/nagios/plugins'
