@@ -11,6 +11,7 @@ from charmhelpers.core.hookenv import (
     in_relation_hook,
     status_set,
     unit_get,
+    related_units,
     relation_ids,
     relation_get,
     relation_set,
@@ -133,6 +134,10 @@ def get_context():
     else:
         ctx["hugepages_1g"] = config.get("kernel-hugepages-1g")
         ctx["hugepages_2m"] = config.get("kernel-hugepages-2m")
+
+    ctx["csn_mode"] = config.get("csn-mode")
+    if config.get("csn-mode") and config.get("csn-mode") != "vrouter-agent":
+        ctx.update(tsn_ctx())
 
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
@@ -313,6 +318,20 @@ def get_vhost_ip():
         return addr[netifaces.AF_INET][0]["addr"]
 
     return None
+
+
+def tsn_ctx():
+    """Get the ipaddress of all vrouter nodes"""
+    tsn_ip_list = []
+    for rid in relation_ids("agent-cluster"):
+        for unit in related_units(rid):
+            ip = relation_get("vhost-address", unit, rid)
+            if ip:
+                tsn_ip_list.append(ip)
+    # add it's own ip address
+    tsn_ip_list.append(get_vhost_ip())
+    return {"tsn_nodes": tsn_ip_list}
+
 
 def update_nrpe_config():
     plugins_dir = '/usr/local/lib/nagios/plugins'
