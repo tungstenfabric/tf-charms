@@ -83,6 +83,11 @@ options:
     description: |
       NumVFS for specified device. This parameter and sriov-physical-interface
       will be passed into agent container that will configure SR-IOV.
+  csn-mode:
+    type: string
+    description: |
+      The vrouter agent mode. The valid values are 'tor'/'tsn'/'tsn-no-forwarding' or empty.
+    default: ''
   log-level:
     type: string
     default: SYS_NOTICE
