@@ -21,8 +21,12 @@ from charmhelpers.core.host import (
     service_restart,
     get_total_ram,
     lsb_release,
+    mkdir,
+    write_file,
 )
+from charmhelpers.core import fstab
 from charmhelpers.contrib.charmsupport import nrpe
+from charmhelpers.core.hugepage import hugepage_support
 from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
@@ -295,6 +299,61 @@ def fix_libvirt():
 
     service_restart("apparmor")
     check_call(["/etc/init.d/apparmor",  "reload"])
+
+
+def _get_hp_options(name):
+    nr = config.get(name, "")
+    return int(nr) if nr and nr != "" else 0
+
+
+def _add_hp_fstab_mount(pagesize):
+    mnt_point = '/dev/hugepages{}'.format(pagesize)
+    mkdir(mnt_point, perms=0o755)
+    lfstab = fstab.Fstab()
+    fstab_entry = lfstab.get_entry_by_attr('mountpoint', mnt_point)
+    if fstab_entry:
+        lfstab.remove_entry(fstab_entry)
+    entry = lfstab.Entry('nodev', mnt_point, 'hugetlbfs',
+                         'pagesize={}'.format(pagesize), 0, 0)
+    lfstab.add_entry(entry)
+
+
+def reboot():
+    log("Schedule rebooting the node")
+    check_call(["juju-reboot"])
+
+
+def prepare_hugepages_kernel_mode():
+    p_1g = _get_hp_options("kernel-hugepages-1g")
+    p_2m = _get_hp_options("kernel-hugepages-2m")
+    if p_1g == 0 and p_2m == 0:
+        log("No hugepages set for kernel mode")
+        return
+    if p_1g == 0:
+        log("Allocate {} x {} hugepages via sysctl".format(p_2m, '2MB'))
+        hugepage_support('root', nr_hugepages=p_2m, mnt_point='/dev/hugepages2M')
+        return
+    # 1gb avalable only on boot time, so change kernel boot options 
+    boot_opts = "default_hugepagesz=1G hugepagesz=1G hugepages={}".format(p_1g)
+    _add_hp_fstab_mount('1G')
+    if p_2m != 0:
+        boot_opts += " hugepagesz=2M hugepages={}".format(p_2m)
+        _add_hp_fstab_mount('2M')
+    log("Update grub config for hugepages: {}".format(boot_opts))
+    mkdir('/etc/default/grub.d', perms=0o744)
+    new_content = 'GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {}"'.format(boot_opts)
+    cfg_file = '/etc/default/grub.d/50-contrail-agent.cfg'
+    try:
+        old_content = check_output(['cat', cfg_file])
+        log("Old kernel boot paramters: {}".format(old_content))
+        if old_content == new_content:
+            log("Kernel boot parameters are not changed")
+            return
+    except:
+        pass
+    log("New kernel boot paramters: {}".format(new_content))
+    write_file(cfg_file, new_content, perms=0o644)
+    check_call(["update-grub"])
 
 
 def get_vhost_ip():
