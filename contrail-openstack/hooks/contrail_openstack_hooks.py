@@ -235,18 +235,30 @@ def heat_plugin_joined(rel_id=None):
 @hooks.hook("neutron-api-relation-joined")
 def neutron_api_joined(rel_id=None):
     version = utils.get_openstack_version_codename('neutron')
+    contrail_version = common_utils.get_contrail_version()
     utils.deploy_openstack_code(
         "contrail-openstack-neutron-init", "neutron",
         {"OPENSTACK_VERSION": utils.PACKAGE_CODENAMES['neutron'][version]})
 
     # create plugin config
     plugin_path = utils.get_component_sys_paths("neutron")
-    base = "neutron_plugin_contrail.plugins.opencontrail"
-    plugin = base + ".contrail_plugin.NeutronPluginContrailCoreV2"
-    # pass just separator to prevent setting of default list
-    service_plugins = ","
-    if version < 15:
-        service_plugins = base + ".loadbalancer.v2.plugin.LoadBalancerPluginV2"
+    if contrail_version >= 2005:
+        service_plugins = "contrail-timestamp"
+        if version < 15:
+            service_plugins = "contrail-timestamp,contrail-lbaasv2"
+        plugin = "contrail"
+        quota_driver = "neutron_plugin_contrail.quota.driver.QuotaDriver"
+        paste_filter_factory = "neutron_plugin_contrail.plugin.middlewares.user_token:token_factory"
+    else:
+        base = "neutron_plugin_contrail.plugins.opencontrail"
+        # pass just separator to prevent setting of default list
+        service_plugins = ","
+        if version < 15:
+            service_plugins = base + ".loadbalancer.v2.plugin.LoadBalancerPluginV2"
+        plugin = base + ".contrail_plugin.NeutronPluginContrailCoreV2"
+        quota_driver = base + ".quota.driver.QuotaDriver"
+        paste_filter_factory = base + ".neutron_middleware:token_factory"
+
     contrail_plugin_extension = plugin_path + "/neutron_plugin_contrail/extensions"
     neutron_lbaas_extensions = plugin_path + "/neutron_lbaas/extensions"
     extensions = [
@@ -270,7 +282,7 @@ def neutron_api_joined(rel_id=None):
         "neutron-plugin-config":
             "/etc/neutron/plugins/opencontrail/ContrailPlugin.ini",
         "service-plugins": service_plugins,
-        "quota-driver": base + ".quota.driver.QuotaDriver",
+        "quota-driver": quota_driver,
         "subordinate_configuration": json.dumps(conf),
     }
     auth_mode = config.get("auth_mode", "cloud-admin")
@@ -279,8 +291,7 @@ def neutron_api_joined(rel_id=None):
             "name": "user_token",
             "type": "filter",
             "config": {
-                "paste.filter_factory":
-                    base + ".neutron_middleware:token_factory"
+                "paste.filter_factory": paste_filter_factory
             }
         }]
     relation_set(relation_id=rel_id, relation_settings=settings)
