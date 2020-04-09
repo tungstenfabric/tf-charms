@@ -34,6 +34,10 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
+    if not config["dpdk"]:
+        utils.prepare_hugepages_kernel_mode()
+        utils.reboot()
+
     docker_utils.install()
     if config["dpdk"]:
         utils.fix_libvirt()
@@ -47,9 +51,13 @@ def config_changed():
     if config.changed("dpdk"):
         raise Exception("Configuration parameter dpdk couldn't be changed")
 
+    if config.changed('kernel-hugepages-1g'):
+        raise Exception("Configuration parameter kernel-hugepages-1g couldn't be changed")
+
     config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     config.save()
 
+    utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()
     utils.update_charm_status()
 
