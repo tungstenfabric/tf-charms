@@ -34,6 +34,9 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
+    if not config["dpdk"]:
+        utils.prepare_hugepages_kernel_mode()
+
     docker_utils.install()
     if config["dpdk"]:
         utils.fix_libvirt()
