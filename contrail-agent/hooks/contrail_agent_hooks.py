@@ -69,6 +69,11 @@ def config_changed():
         config.save()
 
 
+@hooks.hook("agent-cluster-relation-changed")
+def agent_cluster_changed():
+    utils.update_charm_status()
+
+
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined():
     settings = {'dpdk': config["dpdk"], 'unit-type': 'agent'}
@@ -94,6 +99,11 @@ def contrail_controller_changed():
     _update_config("issu_controller_ips", "issu_controller_ips")
     _update_config("issu_controller_data_ips", "issu_controller_data_ips")
     _update_config("issu_analytics_ips", "issu_analytics_ips")
+
+    if "controller_data_ips" in data:
+        settings = {"vhost-address": utils.get_vhost_ip()}
+        for rid in relation_ids("agent-cluster"):
+            relation_set(relation_id=rid, relation_settings=settings)
 
     maintenance = None
     if "maintenance" in data:
