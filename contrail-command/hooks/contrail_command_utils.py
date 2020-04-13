@@ -107,6 +107,9 @@ def update_charm_status():
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
+    deployer_image = "contrail-command-deployer"
+    deploy_ccd_code(deployer_image, tag)
+
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',
                     'Missing cloud orchestrator info in relations.')
@@ -116,15 +119,12 @@ def update_charm_status():
                     'Contrail command works with openstack only now')
         return
 
-    deployer_image = "contrail-command-deployer"
     changed = common_utils.render_and_log("min_config.yaml",
                                           '/cluster_config.yml', ctx)
 
     if changed or not config.get("command_deployed"):
-        deploy_ccd_code(deployer_image, tag)
-        dst = '/' + deployer_image
-        check_call('export HOME=/root ; ' + dst + '/docker/deploy_contrail_command',
-                shell=True)
+        dst = '/' + deployer_image + '/docker/deploy_contrail_command'
+        check_call('./files/deploy_contrail_command.sh ' + dst, shell=True)
         config["command_deployed"] = True
 
     update_status()
@@ -134,13 +134,13 @@ def import_cluster(juju_params):
     if not update_status():
         return False, 'Unit is not ready, try later'
 
-    deployer_image = "contrail-command-deployer"
-    dst = '/' + deployer_image
     env = common_utils.render_and_log("juju_environment",
                                         '/tmp/juju_environment', juju_params)
+    deployer_image = "contrail-command-deployer"
+    dst = '/' + deployer_image + '/docker/deploy_contrail_command'
     try:
-        check_call('. /tmp/juju_environment ; ' + dst + '/docker/deploy_contrail_command',
-                   shell=True)
+        check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst,
+                    shell=True)
         status_set('active',
                     'Cluster is imported')
     except Exception as e:
