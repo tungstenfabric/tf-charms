@@ -2,7 +2,7 @@
 # Wrapper to deal with newer Ubuntu versions that don't have py2 installed
 # by default.
 
-declare -a DEPS=('apt' 'netaddr' 'netifaces' 'pip' 'yaml' 'dnspython' 'iproute' 'backports.ssl-match-hostname')
+declare -a DEPS=('apt' 'netaddr' 'netifaces' 'pip' 'yaml' 'dnspython')
 
 check_and_install() {
     pkg="${1}-${2}"
@@ -11,14 +11,12 @@ check_and_install() {
     fi
 }
 
-PYTHON="python"
+PYTHON="python3"
 
 for dep in ${DEPS[@]}; do
     check_and_install ${PYTHON} ${dep}
 done
 
-apt -y install sshpass docker
-pip install ansible==2.7.11
-cp -r /usr/lib/python2.7/dist-packages/backports/ssl_match_hostname /usr/local/lib/python2.7/dist-packages/backports/
+apt-get -y install python-virtualenv
 
 exec ./hooks/install.real
