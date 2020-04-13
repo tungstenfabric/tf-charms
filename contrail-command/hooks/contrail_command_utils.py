@@ -122,9 +122,7 @@ def update_charm_status():
 
     if changed or not config.get("command_deployed"):
         deploy_ccd_code(deployer_image, tag)
-        dst = '/' + deployer_image
-        check_call('export HOME=/root ; ' + dst + '/docker/deploy_contrail_command',
-                shell=True)
+        check_call('./files/deploy_contrail_command.sh', shell=True)
         config["command_deployed"] = True
 
     update_status()
@@ -134,13 +132,10 @@ def import_cluster(juju_params):
     if not update_status():
         return False, 'Unit is not ready, try later'
 
-    deployer_image = "contrail-command-deployer"
-    dst = '/' + deployer_image
     env = common_utils.render_and_log("juju_environment",
                                         '/tmp/juju_environment', juju_params)
     try:
-        check_call('. /tmp/juju_environment ; ' + dst + '/docker/deploy_contrail_command',
-                   shell=True)
+        check_call('./files/deploy_contrail_command.sh import', shell=True)
         status_set('active',
                     'Cluster is imported')
     except Exception as e:
