@@ -357,6 +357,7 @@ def prepare_hugepages_kernel_mode():
     log("New kernel boot paramters: {}".format(new_content))
     write_file(cfg_file, new_content, perms=0o644)
     check_call(["update-grub"])
+    return 'reboot_required'
 
 
 def get_vhost_ip():

@@ -35,8 +35,8 @@ def install():
     common_utils.fix_hostname()
 
     if not config["dpdk"]:
-        utils.prepare_hugepages_kernel_mode()
-        utils.reboot()
+        if utils.prepare_hugepages_kernel_mode() == 'reboot_required':
+            utils.reboot()
 
     docker_utils.install()
     if config["dpdk"]:
