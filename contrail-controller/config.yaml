@@ -204,4 +204,9 @@ options:
     default: "MPLSoUDP,MPLSoGRE,VXLAN"
     type: string
     description: |
-      --
+      List of Encapsulation priority
+  vxlan-vn-id-mode:
+    default: "automatic"
+    type: string
+    description: |
+      Virtual Network id type to be used

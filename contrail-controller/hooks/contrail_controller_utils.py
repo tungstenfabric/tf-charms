@@ -111,6 +111,7 @@ def get_context():
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     ctx["bgp_asn"] = config.get("bgp-asn", "64512")
     ctx["encap_priority"] = config.get("encap-priority")
+    ctx["vxlan_vn_id_mode"] = config.get("vxlan-vn-id-mode")
     ctx["flow_export_rate"] = config.get("flow-export-rate")
     ctx["auth_mode"] = config.get("auth-mode")
     ctx["cloud_admin_role"] = config.get("cloud-admin-role")
