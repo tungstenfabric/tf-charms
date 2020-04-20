@@ -339,11 +339,11 @@ def ziu_stage_0(ziu_stage, trigger):
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
     cver = common_utils.get_contrail_version()
-    docker_utils.compose_stop(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     if cver >= 510:
-        docker_utils.compose_stop(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
-        docker_utils.compose_stop(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
     signal_ziu("ziu_done", ziu_stage)
 

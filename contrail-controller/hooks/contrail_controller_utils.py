@@ -561,9 +561,9 @@ def ziu_stage_0(ziu_stage, trigger):
 
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
-    docker_utils.compose_stop(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_stop(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_stop(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     signal_ziu("ziu_done", ziu_stage)
 
 
