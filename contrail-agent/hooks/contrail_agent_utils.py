@@ -248,12 +248,27 @@ def _update_charm_status(ctx):
     changed |= common_utils.render_and_log("vrouter.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    # TODO: exctract init part of compose file to separate file, run it before main
+    # and wait for finish (maybe asynchonous)
 
     # local file for vif utility
     common_utils.render_and_log("contrail-vrouter-agent.conf",
            "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
 
     common_utils.update_services_status(MODULE, SERVICES)
+
+
+def stop_agent():
+    path = CONFIGS_PATH + "/docker-compose.yaml"
+    docker_utils.compose_run(path, "SIGQUIT", "vrouter-agent")
+    # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
+    for i in range(0, 12):
+        status = docker_utils.get_compose_container_status(path, "vrouter-agent")
+        if status == 'exited':
+            break
+    else:
+        raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and run update-status.")
+    docker_utils.compose_down(path)
 
 
 def fix_dns_settings():

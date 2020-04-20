@@ -185,8 +185,31 @@ def compose_run(path, config_changed=True):
         check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"])
 
 
-def compose_stop(path):
+def compose_down(path):
     check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+
+
+def compose_kill(path, signal, service=None):
+    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "-s", signal]
+    if service:
+        cmd.append(service)
+    check_call(cmd)
+
+
+def get_compose_container_status(path, service):
+    cmd = [DOCKER_CLI, "ps", "-q", service]
+    try:
+        output = check_output(cmd).decode('UTF-8')
+    except Exception:
+        # there is no compose/container/service
+        return 'exited'
+    cnt_id = output
+    try:
+        args = [DOCKER_CLI, "inspect", "--format='{{.State.Status}}'", cnt_id]
+        status = check_output(args).decode("UTF-8").rstrip().strip("'")
+        return status
+    except Exception:
+        return 'exited'
 
 
 def _do_op_for_container_by_image(image, all_containers, op, op_args=[]):
