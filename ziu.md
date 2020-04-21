@@ -70,6 +70,7 @@ In general the rule for reboot is :
 
 Reboot the compute nodes manually.
 
+
 `sudo reboot`
 
 ### The end
