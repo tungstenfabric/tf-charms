@@ -186,30 +186,38 @@ def compose_run(path, config_changed=True):
 
 
 def compose_down(path):
-    check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+    try:
+        check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+    except Exception as e:
+        log("Error during compose down: {}".format(e))
 
 
 def compose_kill(path, signal, service=None):
-    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "-s", signal]
+    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "kill", "-s", signal]
     if service:
         cmd.append(service)
     check_call(cmd)
 
 
-def get_compose_container_status(path, service):
-    cmd = [DOCKER_CLI, "ps", "-q", service]
+def get_container_state(path, service):
+    # returns None or State dict from docker
+    # status must be None when compose returns error or empty ID for service
+    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "ps", "-q", service]
     try:
-        output = check_output(cmd).decode('UTF-8')
+        cnt_id = check_output(cmd).decode('UTF-8').rstrip().strip("'")
+        if len(cnt_id) < 2:
+            # there is no compose/container/service
+            return None
     except Exception:
         # there is no compose/container/service
-        return 'exited'
-    cnt_id = output
+        return None
     try:
-        args = [DOCKER_CLI, "inspect", "--format='{{.State.Status}}'", cnt_id]
-        status = check_output(args).decode("UTF-8").rstrip().strip("'").lower()
-        return status
+        args = [DOCKER_CLI, "inspect", "--format='{{json .State}}'", cnt_id]
+        state_json = check_output(args).decode("UTF-8").rstrip().strip("'")
+        return json.loads(state_json)
     except Exception:
-        return 'exited'
+        # let's return None when docker fails to return status by ID or we failed to read provided JSON
+        return None
 
 
 def _do_op_for_container_by_image(image, all_containers, op, op_args=[]):

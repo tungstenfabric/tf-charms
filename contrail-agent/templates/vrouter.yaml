@@ -48,32 +48,6 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
 {% endif %}
-  vrouter-kernel-init:
-{%- if agent_mode == 'dpdk' %}
-    image: "{{ container_registry }}/contrail-vrouter-kernel-init-dpdk:{{ contrail_version_tag }}"
-{%- else %}
-    image: "{{ container_registry }}/contrail-vrouter-kernel-build-init:{{ contrail_version_tag }}"
-{%- endif %}
-    network_mode: host
-    privileged: true
-    env_file: /etc/contrail/common_vrouter.env
-    pid: host
-    volumes:
-      - /lib/modules:/lib/modules
-      - /bin:/host/bin
-{%- if agent_mode != 'dpdk' %}
-      - /usr/src:/usr/src
-{%- else %}
-      - /var/run:/var/run
-      - /etc/os-release:/etc/os-release
-      - /etc/lsb-release:/etc/lsb-release
-      - /dev:/dev
-{%- endif %}
-    volumes_from:
-      - node-init
-    depends_on:
-      - node-init
-{{ logging | indent(4,True) }}
 {%- if agent_mode == 'dpdk' %}
   vrouter-agent-dpdk:
     image: "{{ container_registry }}/contrail-vrouter-agent-dpdk:{{ contrail_version_tag }}"
@@ -91,7 +65,6 @@ services:
     volumes_from:
       - node-init
     depends_on:
-      - vrouter-kernel-init
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
@@ -117,8 +90,6 @@ services:
     depends_on:
 {%- if agent_mode == 'dpdk' %}
       - vrouter-agent-dpdk
-{%- else %}
-      - vrouter-kernel-init
 {%- endif %}
       - node-init
     restart: always
