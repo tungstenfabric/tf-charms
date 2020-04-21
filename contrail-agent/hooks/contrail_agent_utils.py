@@ -36,7 +36,9 @@ import docker_utils
 MODULE = "agent"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
-CONFIGS_PATH = BASE_CONFIGS_PATH + "/vrouter"
+VROUTER_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter/docker-compose.yaml"
+VROUTER_INIT_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter-init/docker-compose.yaml"
+
 IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
@@ -239,32 +241,45 @@ def _update_charm_status(ctx):
 
     # TODO: what should happens if relation departed?
 
+    # local file for vif utility
+    common_utils.render_and_log("contrail-vrouter-agent.conf",
+           "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
+
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log("vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
     if ctx["contrail_version"] >= 2002:
         changed |= common_utils.render_and_log("defaults.env",
             BASE_CONFIGS_PATH + "/defaults_vrouter.env", ctx)
-    changed |= common_utils.render_and_log("vrouter.yaml",
-        CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
-    # TODO: exctract init part of compose file to separate file, run it before main
-    # and wait for finish (maybe asynchonous)
+    changed |= common_utils.render_and_log("vrouter.yaml", VROUTER_COMPOSE_PATH, ctx)
+    changed |= common_utils.render_and_log("vrouter-init.yaml", VROUTER_INIT_COMPOSE_PATH, ctx)
 
-    # local file for vif utility
-    common_utils.render_and_log("contrail-vrouter-agent.conf",
-           "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
+    if is_vrouter_init_successfully_passed():
+        docker_utils.compose_run(VROUTER_COMPOSE_PATH, changed)
+    else:
+        # let's down this compose. it will not fail but this will guarantee next run
+        docker_utils.compose_down(VROUTER_INIT_COMPOSE_PATH)
+        docker_utils.compose_run(VROUTER_INIT_COMPOSE_PATH, True)
 
     common_utils.update_services_status(MODULE, SERVICES)
 
 
+def is_vrouter_init_successfully_passed():
+    init_state = docker_utils.get_container_state(VROUTER_INIT_COMPOSE_PATH, "vrouter-kernel-init")
+    if not init_state:
+        return False
+    if init_state.get('Status').lower() == 'running':
+        return False
+    if init_state.get('ExitCode') != 0:
+        return False
+    return True
+
 def stop_agent():
-    path = CONFIGS_PATH + "/docker-compose.yaml"
-    docker_utils.compose_run(path, "SIGQUIT", "vrouter-agent")
+    docker_utils.compose_run(VROUTER_COMPOSE_PATH, "SIGQUIT", "vrouter-agent")
     # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
     for i in range(0, 12):
-        status = docker_utils.get_compose_container_status(path, "vrouter-agent")
-        if status == 'exited':
+        state = docker_utils.get_container_state(path, "vrouter-agent")
+        if not state or state.get('Status', '').lower() != 'running':
             break
     else:
         raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and run update-status.")
