@@ -4,6 +4,7 @@ import json
 import os
 import platform
 from subprocess import check_call, check_output
+import time
 import uuid
 import yaml
 
@@ -64,8 +65,18 @@ def install():
     arch = "amd64"
     dist = platform.linux_distribution()[2].strip()
     if docker_repo:
-        cmd = ("add-apt-repository \"{}\"".format(docker_repo.replace("{ARCH}", arch).replace("{CODE}", dist)))
-        check_output(cmd, shell=True)
+        exc = None
+        for i in range(5):
+            try:
+                cmd = ("add-apt-repository \"{}\"".format(docker_repo.replace("{ARCH}", arch).replace("{CODE}", dist)))
+                check_output(cmd, shell=True)
+                break
+            except Exception as e:
+                exc = e
+            # retry
+            time.sleep(10)
+        else:
+            raise exc
     apt_update()
     apt_install(docker_package)
     apt_install(DOCKER_ADD_PACKAGES)
