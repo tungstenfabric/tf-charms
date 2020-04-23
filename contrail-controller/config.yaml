@@ -200,3 +200,13 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  encap-priority:
+    default: "MPLSoUDP,MPLSoGRE,VXLAN"
+    type: string
+    description: |
+      List of Encapsulation priority
+  vxlan-vn-id-mode:
+    default: "automatic"
+    type: string
+    description: |
+      Virtual Network id type to be used
