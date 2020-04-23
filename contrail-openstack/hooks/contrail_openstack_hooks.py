@@ -240,13 +240,18 @@ def neutron_api_joined(rel_id=None):
         {"OPENSTACK_VERSION": utils.PACKAGE_CODENAMES['neutron'][version]})
 
     # create plugin config
+    contrail_version = common_utils.get_contrail_version()
     plugin_path = utils.get_component_sys_paths("neutron")
     base = "neutron_plugin_contrail.plugins.opencontrail"
     plugin = base + ".contrail_plugin.NeutronPluginContrailCoreV2"
     # pass just separator to prevent setting of default list
-    service_plugins = ","
+    service_plugins = "contrail-timestamp,"
+    if contrail_version >= 1909:
+        service_plugins += "contrail-trunk,"
+    if contrail_version >= 2005 and version > 12:
+        service_plugins += "contrail-tags,"
     if version < 15:
-        service_plugins = base + ".loadbalancer.v2.plugin.LoadBalancerPluginV2"
+        service_plugins += base + ".loadbalancer.v2.plugin.LoadBalancerPluginV2,"
     contrail_plugin_extension = plugin_path + "/neutron_plugin_contrail/extensions"
     neutron_lbaas_extensions = plugin_path + "/neutron_lbaas/extensions"
     extensions = [
