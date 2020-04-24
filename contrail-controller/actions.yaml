@@ -2,3 +2,5 @@ upgrade-ziu:
     description: Initiates ZIU upgrade.
 cancel-ziu:
     description: Initiates ZIU upgrade.
+apply-defaults:
+    description: --

@@ -140,6 +140,9 @@ def get_context():
 
 def update_charm_status():
     tag = config.get('image-tag')
+    status = docker_utils.get_compose_container_status(path, "provisioner")
+    if status == 'exited':
+        config['apply-defaults'] = false
     for image in IMAGES:
         try:
             docker_utils.pull(image, tag)
