@@ -23,6 +23,7 @@ options:
     type: string
     default: "64512"
     description: |
+      [default parameter, use action apply-defaults to change]
       Default router ASN
   auth-mode:
     type: string
@@ -200,3 +201,15 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  encap-priority:
+    default: "MPLSoUDP,MPLSoGRE,VXLAN"
+    type: string
+    description: |
+      [default parameter, use action apply-defaults to change]
+      List of Encapsulation priority
+  vxlan-vn-id-mode:
+    default: "automatic"
+    type: string
+    description: |
+      [default parameter, use action apply-defaults to change]
+      Virtual Network id type to be used
