@@ -188,9 +188,6 @@ def _render_configs(ctx):
     result["common"] = common_utils.apply_keystone_ca(MODULE, ctx)
     result["common"] |= common_utils.render_and_log(tfolder + "/analytics-database.env",
         BASE_CONFIGS_PATH + "/common_analyticsdb.env", ctx)
-    if ctx["contrail_version"] >= 2002:
-        result["common"] |= common_utils.render_and_log(tfolder + "/defaults.env",
-            BASE_CONFIGS_PATH + "/defaults_analyticsdb.env", ctx)
     result["analytics-database"] = common_utils.render_and_log(tfolder + "/analytics-database.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
 

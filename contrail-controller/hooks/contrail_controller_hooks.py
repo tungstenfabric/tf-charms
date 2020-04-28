@@ -38,7 +38,7 @@ config = config()
 @hooks.hook("install.real")
 def install():
     status_set("maintenance", "Installing...")
-
+    config['apply-defaults'] = True
     # TODO: try to remove this call
     common_utils.fix_hostname()
 

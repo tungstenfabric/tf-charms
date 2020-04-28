@@ -28,7 +28,13 @@ def cancel_ziu(args):
     utils.signal_ziu("ziu", 5)
 
 
-ACTIONS = {"upgrade-ziu": upgrade_ziu, "cancel-ziu": cancel_ziu}
+def apply_defaults(args):
+    config['apply-defaults'] = True
+    utils.update_charm_status()
+
+
+ACTIONS = {"upgrade-ziu": upgrade_ziu, "cancel-ziu": cancel_ziu,
+           "apply-defaults": apply_defaults}
 
 
 def main(args):
