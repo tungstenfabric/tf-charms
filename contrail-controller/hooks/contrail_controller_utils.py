@@ -110,6 +110,8 @@ def get_context():
     ctx["module"] = MODULE
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     ctx["bgp_asn"] = config.get("bgp-asn", "64512")
+    ctx["encap_priority"] = config.get("encap-priority")
+    ctx["vxlan_vn_id_mode"] = config.get("vxlan-vn-id-mode")
     ctx["flow_export_rate"] = config.get("flow-export-rate")
     ctx["auth_mode"] = config.get("auth-mode")
     ctx["cloud_admin_role"] = config.get("cloud-admin-role")
@@ -213,6 +215,14 @@ def _update_charm_status(ctx, services_to_run=None):
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
+
+    if _has_provisioning_finished():
+        config['apply-defaults'] = False
+
+
+def _has_provisioning_finished():
+    return docker_utils.execute("configapi_provisioner_1",
+        'configapi_provisioner_1 ps -a | grep -o -m 1 tail | wc -l', shell=True)
 
 
 def _render_configs(ctx):
