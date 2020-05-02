@@ -316,6 +316,7 @@ def add_nagios_to_sudoers():
     except CalledProcessError as err:
         log('Failed to run cmd: {}'.format(err.cmd))
 
+
 def get_contrail_version():
     """
     Function returns contrail version from image-tag in comparable format.
@@ -324,21 +325,20 @@ def get_contrail_version():
     version will be set to 9999
     If someone changes the naming conventions, he must make changes in this function to support these new conventions.
     """
-    cver = 9999
-
     tag = config.get("image-tag")
-    if '5.0' in tag:
-        cver = 500
-    elif '5.1' in tag:
-        cver = 510
-    else:
-        tag_date = re.findall(r"19\d\d", tag)
-        if len(tag_date) == 0:
-            tag_date = re.findall(r"20\d\d", tag)
+    for release in [r"21\d\d", r"20\d\d", r"19\d\d"]:
+        tag_date = re.findall(release, tag)
         if len(tag_date) != 0:
-            cver = int(tag_date[0])
+            return int(tag_date[0])
 
-    return cver
+    if '5.1' in tag:
+        return 510
+    elif '5.0' in tag:
+        return 500
+
+    # master/latest version
+    return 9999
+
 
 def contrail_status_cmd(name, plugins_dir):
     script_name = 'check_contrail_status_{}.py'.format(name)
