@@ -477,12 +477,12 @@ def get_int_from_relation(name, unit=None, rid=None):
 
 def signal_ziu(key, value):
     log("ZIU: signal {} = {}".format(key, value))
-    config_set(key, value)
     for rname in ziu_relations:
         for rid in relation_ids(rname):
             relation_set(relation_id=rid, relation_settings={key: value})
     for rid in relation_ids("contrail-controller"):
         relation_set(relation_id=rid, relation_settings={key: value})
+    config_set(key, value)
 
 
 def check_ziu_stage_done(stage):

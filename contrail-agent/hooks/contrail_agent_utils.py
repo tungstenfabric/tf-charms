@@ -458,10 +458,10 @@ def config_set(key, value):
 
 def signal_ziu(key, value):
     log("ZIU: signal {} = {}".format(key, value))
-    config_set(key, value)
     for rname in ziu_relations:
         for rid in relation_ids(rname):
             relation_set(relation_id=rid, relation_settings={key: value})
+    config_set(key, value)
 
 
 def update_ziu(trigger):
