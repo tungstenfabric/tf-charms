@@ -200,3 +200,8 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  max-vm-flows:
+    default: ""
+    type: string
+    description: |
+      Maximum flows allowed per VM (given as % of maximum system flows) 

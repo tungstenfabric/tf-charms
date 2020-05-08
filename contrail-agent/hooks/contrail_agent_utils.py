@@ -120,6 +120,7 @@ def get_context():
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx["sriov_physical_interface"] = config.get("sriov-physical-interface")
     ctx["sriov_numvfs"] = config.get("sriov-numvfs")
+    ctx["max_vm_flows"] = config.get("max-vm-flows")
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
     # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
