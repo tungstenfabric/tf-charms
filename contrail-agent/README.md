@@ -50,8 +50,7 @@ DPDK mode
 This charm supports DPDK mode of Contrail vrouter.
 DPDK mode requires more than one ethernet adapters. User have to configure
 control-network and physical-interface properly for correct work.
-For example system has ens3 interface with network 10.0.0.0/24 and 
-default gateway is in this network and ens4 interface.
+For example system has ens3 interface with network 10.0.0.0/24 and default gateway is in this network and ens4 interface.
 Configuration can be applied as follows:
 
     juju config dpdk=True physical-interface=ens4 control-network=10.0.0.0/24
