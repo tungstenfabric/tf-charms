@@ -32,19 +32,20 @@ config = config()
 
 
 def get_ip(config_param="control-network", fallback=None):
-    networks = config.get(config_param, '')
-    for network in networks.replace(',', ' ').split():
-        # try to get ip from CIDR
-        try:
-            ip = get_address_in_network(network, fatal=True)
-            return ip
-        except Exception:
-            pass
-        # try to get ip from interface name
-        try:
-            return get_iface_addr(network, fatal=True)[0]
-        except Exception:
-            pass
+    networks = config.get(config_param)
+    if networks:
+        for network in networks.replace(',', ' ').split():
+            # try to get ip from CIDR
+            try:
+                ip = get_address_in_network(network, fatal=True)
+                return ip
+            except Exception:
+                pass
+            # try to get ip from interface name
+            try:
+                return get_iface_addr(network, fatal=True)[0]
+            except Exception:
+                pass
 
     return fallback if fallback else _get_default_ip()
 
