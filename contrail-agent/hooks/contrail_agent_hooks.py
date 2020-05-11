@@ -17,8 +17,6 @@ from charmhelpers.core.hookenv import (
     unit_get,
 )
 
-from subprocess import check_output
-
 import contrail_agent_utils as utils
 import common_utils
 import docker_utils
@@ -35,7 +33,8 @@ def install():
     common_utils.fix_hostname()
 
     if not config["dpdk"]:
-        if utils.prepare_hugepages_kernel_mode() == 'reboot_required':
+        utils.prepare_hugepages_kernel_mode()
+        if utils.is_reboot_required():
             utils.reboot()
 
     docker_utils.install()
@@ -51,13 +50,11 @@ def config_changed():
     if config.changed("dpdk"):
         raise Exception("Configuration parameter dpdk couldn't be changed")
 
-    if config.changed('kernel-hugepages-1g'):
-        raise Exception("Configuration parameter kernel-hugepages-1g couldn't be changed")
-
     config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     config.save()
 
-    utils.prepare_hugepages_kernel_mode()
+    if not config["dpdk"]:
+        utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()
     utils.update_charm_status()
 
