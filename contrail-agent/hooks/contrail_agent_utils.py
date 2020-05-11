@@ -1,5 +1,6 @@
 import os
 import socket
+import yaml
 from subprocess import (
     check_call,
     check_output,
@@ -19,6 +20,7 @@ from charmhelpers.core.hookenv import (
 )
 
 from charmhelpers.core.host import (
+    fstab_mount,
     service_restart,
     get_total_ram,
     lsb_release,
@@ -26,8 +28,8 @@ from charmhelpers.core.host import (
     write_file,
 )
 from charmhelpers.core import fstab
+from charmhelpers.core import sysctl
 from charmhelpers.contrib.charmsupport import nrpe
-from charmhelpers.core.hugepage import hugepage_support
 from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
@@ -258,6 +260,11 @@ def _update_charm_status(ctx):
         docker_utils.compose_down(VROUTER_INIT_COMPOSE_PATH)
         docker_utils.compose_run(VROUTER_INIT_COMPOSE_PATH, True)
 
+    if is_reboot_required():
+        status_set('blocked',
+                   'Reboot is required due to hugepages allocation.')
+        return
+
     common_utils.update_services_status(MODULE, SERVICES)
 
 
@@ -337,9 +344,39 @@ def _get_hp_options(name):
     return int(nr) if nr and nr != "" else 0
 
 
-def _add_hp_fstab_mount(pagesize):
+def reboot():
+    log("Schedule rebooting the node")
+    check_call(["juju-reboot"])
+
+
+def is_reboot_required():
+    # now checks only if 1gb hugepages is configured but not present in the system
+    # TODO: maybe check /sys/kernel/mm/hugepages/hugepages-2048kB/free_hugepages and nr_hugepages for 2mb pages
+    p_1g = _get_hp_options("kernel-hugepages-1g")
+    if p_1g == 0:
+        return False
+
+    # check current settings, for example:
+    # cat /proc/cmdline
+    # BOOT_IMAGE=/boot/vmlinuz-4.15.0-99-generic root=UUID=f343d78d-5f18-4723-a662-48db742bdc6a ro default_hugepagesz=1G hugepagesz=1G hugepages=2 hugepagesz=2M hugepages=1024
+
+    data = check_output(['cat', '/proc/cmdline']).decode('UTF-8').split()
+    i = 0
+    while i < len(data):
+        if data[i] == 'hugepagesz=1G' and i+1 < len(data) and data[i+1].startswith('hugepages='):
+            try:
+                amount = int(data[i+1].split('=')[1])
+            except ValueError:
+                amount = 0
+            return amount < p_1g
+        i += 1
+
+    return True
+
+
+def _add_hp_fstab_mount(pagesize, mount=True):
     mnt_point = '/dev/hugepages{}'.format(pagesize)
-    mkdir(mnt_point, perms=0o755)
+    mkdir(mnt_point, owner='root', group='root', perms=0o755)
     lfstab = fstab.Fstab()
     fstab_entry = lfstab.get_entry_by_attr('mountpoint', mnt_point)
     if fstab_entry:
@@ -347,23 +384,26 @@ def _add_hp_fstab_mount(pagesize):
     entry = lfstab.Entry('hugetlbfs', mnt_point, 'hugetlbfs',
                          'pagesize={}'.format(pagesize), 0, 0)
     lfstab.add_entry(entry)
-
-
-def reboot():
-    log("Schedule rebooting the node")
-    check_call(["juju-reboot"])
+    if mount:
+        fstab_mount(mnt_point)
 
 
 def prepare_hugepages_kernel_mode():
     p_1g = _get_hp_options("kernel-hugepages-1g")
     p_2m = _get_hp_options("kernel-hugepages-2m")
+
     if p_1g == 0 and p_2m == 0:
-        log("No hugepages set for kernel mode")
+        log("No hugepages set for kernel mode. Skip configuring.")
         return
+
+    sysctl_file = '/etc/sysctl.d/10-contrail-hugepage.conf'
     if p_1g == 0:
         log("Allocate {} x {} hugepages via sysctl".format(p_2m, '2MB'))
-        hugepage_support('root', nr_hugepages=p_2m, mnt_point='/dev/hugepages2M')
+        sysctl.create(yaml.dump({'vm.nr_hugepages': p_2m}), sysctl_file)
+        _add_hp_fstab_mount('2M')
         return
+
+    os.remove(sysctl_file)
     # 1gb avalable only on boot time, so change kernel boot options 
     boot_opts = "default_hugepagesz=1G hugepagesz=1G hugepages={}".format(p_1g)
     _add_hp_fstab_mount('1G')
@@ -375,7 +415,7 @@ def prepare_hugepages_kernel_mode():
     new_content = 'GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {}"'.format(boot_opts)
     cfg_file = '/etc/default/grub.d/50-contrail-agent.cfg'
     try:
-        old_content = check_output(['cat', cfg_file])
+        old_content = check_output(['cat', cfg_file]).decode('UTF-8')
         log("Old kernel boot paramters: {}".format(old_content))
         if old_content == new_content:
             log("Kernel boot parameters are not changed")
@@ -385,7 +425,6 @@ def prepare_hugepages_kernel_mode():
     log("New kernel boot paramters: {}".format(new_content))
     write_file(cfg_file, new_content, perms=0o644)
     check_call(["update-grub"])
-    return 'reboot_required'
 
 
 def get_vhost_ip():
