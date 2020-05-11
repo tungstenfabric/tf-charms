@@ -32,8 +32,8 @@ config = config()
 
 
 def get_ip(config_param="control-network", fallback=None):
-    network = config.get(config_param)
-    if network:
+    networks = config.get(config_param, '')
+    for network in networks.replace(',', ' ').split():
         # try to get ip from CIDR
         try:
             ip = get_address_in_network(network, fatal=True)

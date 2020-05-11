@@ -112,15 +112,23 @@ API/MGMT network - network where API services are listening on and for accessing
 
 By default, charms are using the default network for API/MGMT and CTRL/DATA.
 
-To specify API/MGMT network set `control-network` parameter for contrail-controller, contrail-analytics, contrail-analyticsdb and contrail-kubernetes-master if is applicable. It may be the IP address and netmask of the control network or physical device name.
+To specify API/MGMT network set `control-network` parameter for contrail-controller, contrail-analytics, contrail-analyticsdb and contrail-kubernetes-master if is applicable. It can be the IP addresses with netmasks of the control network or physical device name.
 
-To specify CTRL/DATA network set `data-network` parameter for contrail-controller. It may be the IP address and netmask of the control network or physical device name. If `data-network` isn't specified it will use the same network as `control-network`.
+To specify CTRL/DATA network set `data-network` parameter for contrail-controller. It can be the IP addresses with netmasks of the control network or physical device name. If `data-network` isn't specified it will use the same network as `control-network`.
 
 ```
 juju config contrail-controller control-network=192.168.0.0/24 data-network=ens4
 juju config contrail-analytics control-network=192.168.0.0/24
 juju config contrail-analyticsdb control-network=192.168.0.0/24
 ```
+
+When contollers are placed in different AZ/networks then it can be possible to specify like this:
+
+```
+juju config contrail-controller control-network="192.168.0.0/24 192.168.1.0/24 192.168.2.0/24" data-network=ens4
+```
+
+In this case each controller will choose the address from its own network.
 
 
 Known issues
