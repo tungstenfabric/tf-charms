@@ -42,14 +42,14 @@ SERVICES = {
 def kubernetes_token():
     try:
         account_file = os.path.join(charm_dir(), 'files', 'contrail-kubemanager-serviceaccount.yaml')
-        check_output(["snap", "run", "kubectl", "apply", "-f", account_file])
+        check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "apply", "-f", account_file])
     except Exception as e:
         log("Can't apply manifest for service account: {}".format(e))
         return None
     token_id = None
     for i in range (10):
         try:
-            token_id = check_output(["snap", "run", "kubectl", "get", "sa", "contrail-kubemanager", "-n", "contrail",
+            token_id = check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "get", "sa", "contrail-kubemanager", "-n", "contrail",
                                 "-ogo-template=\"{{(index .secrets 0).name}}\""]).decode('UTF-8').strip('\"')
         except Exception as e:
             log("Can't get SA for contrail-kubemanager {}".format(e))
@@ -60,7 +60,7 @@ def kubernetes_token():
     if not token_id:
         return None
     try:
-        token_64 = check_output(["snap", "run", "kubectl", "get", "secret", token_id, "-n", "contrail",
+        token_64 = check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "get", "secret", token_id, "-n", "contrail",
                             "-ogo-template=\"{{.data.token}}\""]).decode('UTF-8').strip('\"')
         token = base64.b64decode(token_64).decode()
         return token
