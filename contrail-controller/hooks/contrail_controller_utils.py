@@ -428,15 +428,18 @@ def update_nrpe_config():
     component_ip = common_utils.get_ip()
     common_utils.rsync_nrpe_checks(plugins_dir)
     common_utils.add_nagios_to_sudoers()
-
+    ctx = get_context()
     check_ui_cmd = 'check_http -H {} -p 8143 -S'.format(component_ip)
     nrpe_compat.add_check(
         shortname='check_contrail_web_ui',
         description='Check Contrail WebUI',
         check_cmd=check_ui_cmd
     )
-
-    check_api_cmd = 'check_http -H {} -p 8082'.format(component_ip)
+    # Check is SSL is enabled and add -S flag if so.
+    if ctx["ssl_enabled"]:
+        check_api_cmd = 'check_http -S -H {} -p 8082'.format(component_ip)
+    else:
+        check_api_cmd = 'check_http -H {} -p 8082'.format(component_ip)
     nrpe_compat.add_check(
         shortname='check_contrail_api',
         description='Check Contrail API',
