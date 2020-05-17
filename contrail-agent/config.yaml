@@ -56,12 +56,53 @@ options:
     type: string
     default: "1"
     description: |
+      Deprecated: for compatibility with releases 1912.L1 and 2002 or less.
+                  For newer use dpdk-service-coremask and dpdk-ctrl-thread-coremask
       vRouter CPU affinity mask. Determines on which CPUs DPDK vRouter will run.
       Value can be specified as either a hexidecimal bitmask e.g. 0xF or
       as a numbered list separated by commas e.g. 0,1 (ranges are also supported
       using '-' e.g. 0-2).
       It must specify only real cores cause contrail-vrouter-dpdk service will
       fail if specified core number is not present in the system.
+  dpdk-service-coremask:
+    type: string
+    default: "1"
+    description: |
+      vRouter DPDK CPU affinity mask for dpdk service threads.
+      Value can be specified as either a hexidecimal bitmask e.g. 0xF or
+      as a numbered list separated by commas e.g. 0,1 (ranges are also supported
+      using '-' e.g. 0-2).
+      It must specify only real cores cause contrail-vrouter-dpdk service will
+      fail if specified core number is not present in the system.
+  dpdk-ctrl-thread-coremask:
+    type: string
+    default: "1"
+    description: |
+      vRouter DPDK CPU affinity mask for dpdk ctrl threads.
+      Value can be specified as either a hexidecimal bitmask e.g. 0xF or
+      as a numbered list separated by commas e.g. 0,1 (ranges are also supported
+      using '-' e.g. 0-2).
+      It must specify only real cores cause contrail-vrouter-dpdk service will
+      fail if specified core number is not present in the system.
+  dpdk-rx-ring-sz:
+    type: string
+    default: ""
+    description: |
+      vRouter DPDK option to configure for forwarding lcores rx ring buffer size.
+      If not there is default in dpdk bin is used which is 1024.
+  dpdk-tx-ring-sz:
+    type: string
+    default: ""
+    description: |
+      vRouter DPDK option to configure for forwarding lcores tx ring buffer size.
+      If not there is default in dpdk bin is used which is 1024.
+  dpdk-yield-option:
+    type: string
+    default: ""
+    description: |
+      vRouter DPDK option to disable/enable yield on forwarding lcores.
+      Allowed values 0 / 1.
+      If not set the default behaviour is enalbed (1).
   dpdk-main-mempool-size:
     type: string
     description: |
