@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fbee9a3_9e6c2c73",
+        "filename": "contrail-agent/config.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-17T15:23:50Z",
+      "side": 1,
+      "message": "Deprecated",
+      "range": {
+        "startLine": 59,
+        "startChar": 6,
+        "endLine": 59,
+        "endChar": 16
+      },
+      "revId": "bc0ef414307343288d3e960feae43bd5a7ef5713",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
