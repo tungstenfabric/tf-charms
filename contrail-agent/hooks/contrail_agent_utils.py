@@ -67,7 +67,10 @@ SERVICES = {
 DPDK_ARGS = {
     "dpdk-main-mempool-size": "--vr_mempool_sz",
     "dpdk-pmd-txd-size": "--dpdk_txd_sz",
-    "dpdk-pmd-rxd-size": "--dpdk_rxd_sz"
+    "dpdk-pmd-rxd-size": "--dpdk_rxd_sz",
+    "dpdk-rx-ring-sz": "--vr_dpdk_rx_ring_sz",
+    "dpdk-tx-ring-sz": "--vr_dpdk_tx_ring_sz",
+    "dpdk-yield-option": "-–yield_option"
 }
 
 config = config()
@@ -139,6 +142,8 @@ def get_context():
         ctx["dpdk_additional_args"] = _get_dpdk_args()
         ctx["dpdk_driver"] = config.get("dpdk-driver")
         ctx["dpdk_coremask"] = config.get("dpdk-coremask")
+        ctx["dpdk_service_coremask"] = config.get("dpdk-service-coremask")
+        ctx["dpdk_ctrl_thread_coremask"] = config.get("dpdk-ctrl-thread-coremask")
         ctx["dpdk_hugepages"] = _get_hugepages()
     else:
         ctx["hugepages_1g"] = config.get("kernel-hugepages-1g")
