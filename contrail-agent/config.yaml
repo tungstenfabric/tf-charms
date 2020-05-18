@@ -56,9 +56,7 @@ options:
     type: string
     default: "1"
     description: |
-      Deprecated: for compatibility with releases 1912.L1 and 2002 or less.
-                  For newer use dpdk-service-coremask and dpdk-ctrl-thread-coremask
-      vRouter CPU affinity mask. Determines on which CPUs DPDK vRouter will run.
+      vRouter CPU affinity mask for dpdk forwarding threads.
       Value can be specified as either a hexidecimal bitmask e.g. 0xF or
       as a numbered list separated by commas e.g. 0,1 (ranges are also supported
       using '-' e.g. 0-2).
