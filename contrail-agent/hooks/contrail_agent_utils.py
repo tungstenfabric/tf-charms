@@ -115,6 +115,49 @@ def _get_iface_gateway_ip(iface):
         "from routing table for interface {}".format(iface), level=WARNING)
     return None
 
+# Convert mask like "0xABCD" to number format like "1,2,3-5,16"
+# ============================================
+# tt = {
+#   "0x01": "0",
+#   "0x03": "0,1",
+#   "0x80018001": "0,15,16,31",
+#   "0x80000000": "31",
+#   "0x0F0F0F0F": "0-3,8-11,16-19,24-27",
+#   "0xF0F0F0F0": "4-7,12-15,20-23,28-31",
+#   "0xC003B019": "0,3,4,12,13,15-17,30,31",
+#   "0,2-3": "0,2-3"
+# }
+# for k, v in tt.items():
+#     r = _convert2cpuset(k)
+#     print(k, v, r)
+#     assert(v == r)
+# ============================================
+def _convert2cpuset(cpuset):
+    if not cpuset or not cpuset.startswith("0x"):
+        return cpuset
+    cpuset_int = int(cpuset, 16)
+    cpuset = ""
+    mask = 1
+    i = 0
+    while i < 64:
+        start = i
+        while (cpuset_int & mask != 0) and i < 64:
+            i += 1
+            mask <<= 1
+        if i == start:
+            i += 1
+            mask <<= 1
+            continue
+        if cpuset:
+            cpuset += ","
+        if i - start > 2:
+            cpuset += "{}-{}".format(start, i - 1)
+        elif i - start > 1:
+            cpuset += "{},{}".format(start, i - 1)
+        else:
+            cpuset += "{}".format(start)
+    return cpuset
+
 
 def get_context():
     ctx = {}
@@ -144,6 +187,9 @@ def get_context():
         ctx["dpdk_coremask"] = config.get("dpdk-coremask")
         ctx["dpdk_service_coremask"] = config.get("dpdk-service-coremask")
         ctx["dpdk_ctrl_thread_coremask"] = config.get("dpdk-ctrl-thread-coremask")
+        cpuset = _convert2cpuset(config.get("dpdk-ctrl-thread-coremask"))
+        if cpuset:
+            ctx["agent_containers_cpuset"] = cpuset
         ctx["dpdk_hugepages"] = _get_hugepages()
     else:
         ctx["hugepages_1g"] = config.get("kernel-hugepages-1g")
