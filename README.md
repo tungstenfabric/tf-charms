@@ -11,7 +11,6 @@ This document describes how to deploy contrail 5.0 Docker containers, which woul
 
 Deploying Contrail charms
 -------------------------
-
 1. Install cloud and juju on the dedicated machine from where the deploy is started:
 ```
     sudo apt-get update
