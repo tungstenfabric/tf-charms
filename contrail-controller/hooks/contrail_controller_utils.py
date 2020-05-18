@@ -436,7 +436,12 @@ def update_nrpe_config():
         check_cmd=check_ui_cmd
     )
 
-    check_api_cmd = 'check_http -H {} -p 8082'.format(component_ip)
+    ctx = get_context()
+    if ctx["ssl_enables"]:
+        check_api_cmd = 'check_http -S -H {} -p 8082'.format(component_ip)
+    else:
+        check_api_cmd = 'check_http -H {} -p 8082'.format(component_ip)
+    
     nrpe_compat.add_check(
         shortname='check_contrail_api',
         description='Check Contrail API',
