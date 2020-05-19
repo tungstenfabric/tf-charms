@@ -46,13 +46,13 @@ services:
 # kubernetes
 
   easyrsa:
-    charm: cs:~containers/easyrsa
+    charm: cs:~containers/easyrsa-303
     num_units: 1
     to:
     - '0'
 
   etcd:
-    charm: cs:~containers/etcd
+    charm: cs:~containers/etcd-501
     num_units: 1
     options:
       channel: 3.2/stable
@@ -60,33 +60,35 @@ services:
     - '0'
 
   kubernetes-master:
-    charm: cs:~containers/kubernetes-master-696
+    charm: cs:~containers/kubernetes-master-827
     num_units: 1
     options:
-      channel: 1.14/stable
+      channel: 1.18/stable
       service-cidr: '10.96.0.0/12'
       enable-dashboard-addons: false
       enable-metrics: false
       dns-provider: 'none'
-      docker_runtime: 'custom'
-      docker_runtime_repo: 'deb [arch={ARCH}] https://download.docker.com/linux/ubuntu {CODE} stable'
-      docker_runtime_key_url: 'https://download.docker.com/linux/ubuntu/gpg'
-      docker_runtime_package: 'docker-ce'
     to:
     - '0'
 
   kubernetes-worker:
-    charm: cs:~containers/kubernetes-worker-550
+    charm: cs:~containers/kubernetes-worker-665
     num_units: 1
     options:
-      channel: 1.14/stable
+      channel: 1.18/stable
       ingress: false
+      docker_runtime: 'custom'
+    to:
+    - '5'
+
+  docker:
+    series: "bionic"
+    charm: cs:~containers/docker-59
+    options:
       docker_runtime: 'custom'
       docker_runtime_repo: 'deb [arch={ARCH}] https://download.docker.com/linux/ubuntu {CODE} stable'
       docker_runtime_key_url: 'https://download.docker.com/linux/ubuntu/gpg'
       docker_runtime_package: 'docker-ce'
-    to:
-    - '5'
 
 relations:
 
@@ -95,6 +97,8 @@ relations:
 - [ contrail-kubernetes-node:cni, kubernetes-worker:cni ]
 - [ contrail-kubernetes-master:kube-api-endpoint, kubernetes-master:kube-api-endpoint ]
 - [ contrail-kubernetes-master:contrail-kubernetes-config, contrail-kubernetes-node:contrail-kubernetes-config ]
+- [ kubernetes-master:container-runtime, docker:docker]
+- [ kubernetes-worker:container-runtime, docker:docker]
 
 # kubernetes
 - [ kubernetes-master:kube-api-endpoint, kubernetes-worker:kube-api-endpoint ]

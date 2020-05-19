@@ -23,7 +23,7 @@ services:
 
   easyrsa:
     series: "bionic"
-    charm: cs:~containers/easyrsa
+    charm: cs:~containers/easyrsa-303
     num_units: 1
     annotations:
       gui-x: '1168.1039428710938'
@@ -33,7 +33,7 @@ services:
 
   etcd:
     series: "bionic"
-    charm: cs:~containers/etcd
+    charm: cs:~containers/etcd-501
     annotations:
       gui-x: '1157.2041015625'
       gui-y: '719.1614406201691'
@@ -44,35 +44,39 @@ services:
 
   kubernetes-master:
     series: "bionic"
-    charm: cs:~containers/kubernetes-master-696
+    charm: cs:~containers/kubernetes-master-827
     annotations:
       gui-x: '877.1133422851562'
       gui-y: '325.6035540382413'
     expose: true
     num_units: 1
     options:
-      channel: '1.14/stable'
+      enable-metrics: false
+      enable-dashboard-addons: false
+      channel: '1.18/stable'
       service-cidr: '10.96.0.0/12'
-      docker_runtime: 'custom'
-      docker_runtime_repo: 'deb [arch={ARCH}] https://download.docker.com/linux/ubuntu {CODE} stable'
-      docker_runtime_key_url: 'https://download.docker.com/linux/ubuntu/gpg'
-      docker_runtime_package: 'docker-ce'
     to: [2]
 
   kubernetes-worker:
     series: "bionic"
-    charm: cs:~containers/kubernetes-worker-550
+    charm: cs:~containers/kubernetes-worker-665
     annotations:
       gui-x: '745.8510131835938'
       gui-y: '-57.369691124215706'
     num_units: 1
     options:
-      channel: '1.14/stable'
+      ingress: false
+      channel: '1.18/stable'
+    to: [0]
+
+  docker:
+    series: "bionic"
+    charm: cs:~containers/docker-59
+    options:
       docker_runtime: 'custom'
       docker_runtime_repo: 'deb [arch={ARCH}] https://download.docker.com/linux/ubuntu {CODE} stable'
       docker_runtime_key_url: 'https://download.docker.com/linux/ubuntu/gpg'
       docker_runtime_package: 'docker-ce'
-    to: [0]
 
   # contrail-kubernetes
 
@@ -175,6 +179,8 @@ relations:
 - [ kubernetes-master:etcd, etcd:db ]
 - [ kubernetes-worker:certificates,  easyrsa:client ]
 - [ etcd:certificates, easyrsa:client ]
+- [ kubernetes-master:container-runtime, docker:docker]
+- [ kubernetes-worker:container-runtime, docker:docker]
 
 # contrail
 - [ kubernetes-master, ntp ]
