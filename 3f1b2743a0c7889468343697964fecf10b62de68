@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "177c0861_eb78f75b",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 416
+      },
+      "writtenOn": "2020-05-20T13:32:40Z",
+      "side": 1,
+      "message": "remove trialing space",
+      "range": {
+        "startLine": 443,
+        "startChar": 71,
+        "endLine": 443,
+        "endChar": 73
+      },
+      "revId": "3f1b2743a0c7889468343697964fecf10b62de68",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
