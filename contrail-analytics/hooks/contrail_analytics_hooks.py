@@ -156,12 +156,14 @@ def tls_certificates_relation_joined():
 @hooks.hook('tls-certificates-relation-changed')
 def tls_certificates_relation_changed():
     if common_utils.tls_changed(utils.MODULE, relation_get()):
+        utils.update_nrpe_config()
         utils.update_charm_status()
 
 
 @hooks.hook('tls-certificates-relation-departed')
 def tls_certificates_relation_departed():
     if common_utils.tls_changed(utils.MODULE, None):
+        utils.update_nrpe_config()
         utils.update_charm_status()
 
 

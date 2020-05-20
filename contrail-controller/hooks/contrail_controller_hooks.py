@@ -562,6 +562,7 @@ def tls_certificates_relation_joined():
 def tls_certificates_relation_changed():
     if common_utils.tls_changed(utils.MODULE, relation_get()):
         update_southbound_relations()
+        utils.update_nrpe_config() 
         utils.update_charm_status()
 
 
@@ -569,6 +570,7 @@ def tls_certificates_relation_changed():
 def tls_certificates_relation_departed():
     if common_utils.tls_changed(utils.MODULE, None):
         update_southbound_relations()
+        utils.update_nrpe_config()
         utils.update_charm_status()
 
 
