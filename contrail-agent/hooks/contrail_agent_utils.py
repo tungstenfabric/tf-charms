@@ -455,7 +455,10 @@ def prepare_hugepages_kernel_mode():
         _add_hp_fstab_mount('2M')
         return
 
-    os.remove(sysctl_file)
+    try:
+        os.remove(sysctl_file)
+    except FileNotFoundError:
+        pass
     # 1gb avalable only on boot time, so change kernel boot options 
     boot_opts = "default_hugepagesz=1G hugepagesz=1G hugepages={}".format(p_1g)
     _add_hp_fstab_mount('1G')
