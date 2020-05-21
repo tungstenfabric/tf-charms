@@ -33,7 +33,7 @@ services:
       - node-init
     restart: on-failure
 {%- if agent_containers_cpuset %}
-    cpuset: {{ agent_containers_cpuset }}
+    cpuset: "{{ agent_containers_cpuset }}"
 {%- endif %}
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
@@ -97,6 +97,6 @@ services:
       - node-init
     restart: always
 {%- if agent_containers_cpuset %}
-    cpuset: {{ agent_containers_cpuset }}
+    cpuset: "{{ agent_containers_cpuset }}"
 {%- endif %}
 {{ logging | indent(4,True) }}
