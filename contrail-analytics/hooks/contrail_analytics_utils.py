@@ -265,7 +265,11 @@ def update_nrpe_config():
     common_utils.rsync_nrpe_checks(plugins_dir)
     common_utils.add_nagios_to_sudoers()
 
-    check_api_cmd = 'check_http -H {} -p 8081'.format(component_ip)
+    ssl_on_backend = config.get("ssl_enabled", False) and common_utils.is_config_analytics_ssl_available()
+    if ssl_on_backend:
+        check_api_cmd = 'check_http -S -H {} -p 8081'.format(component_ip)
+    else:
+         check_api_cmd = 'check_http -H {} -p 8081'.format(component_ip)
     nrpe_compat.add_check(
         shortname='check_analytics_api',
         description='Check Contrail Analytics API',
