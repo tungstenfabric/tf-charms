@@ -56,6 +56,10 @@ services:
       - ZOOKEEPER_NODES={{ controller_servers|sort|join(',') }}
       - ZOOKEEPER_PORT=2181
       - NODE_TYPE=analytics-alarm
+    {% if contrail_version >= 2008 %}
+    volumes:
+      - /var/log/contrail/kafka:/var/log/kafka
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
