@@ -46,6 +46,10 @@ services:
       - ZOOKEEPER_NODES={{ analyticsdb_servers|sort|join(',') }}
       - ZOOKEEPER_PORT=2182
       - NODE_TYPE=database
+    {% if contrail_version >= 2008 %}
+    volumes:
+      - /var/log/contrail/kafka:/var/log/kafka
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -65,8 +69,14 @@ services:
       - CASSANDRA_STORAGE_PORT=7010
       - CASSANDRA_JMX_LOCAL_PORT=7200
       - NODE_TYPE=database
+    {% if contrail_version >= 2008 %}
     volumes:
       - analytics_cassandra:/var/lib/cassandra/data
+      - /var/log/contrail/database:/var/log/cassandra
+    {% else %}
+    volumes:
+      - analytics_cassandra:/var/lib/cassandra/data
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -82,9 +92,16 @@ services:
       - ZOOKEEPER_PORTS=4888:5888
       - ZOOKEEPER_PORT=2182
       - NODE_TYPE=database
+    {% if contrail_version >= 2008 %}
     volumes:
       - analytics_zookeeper:/data
       - analytics_zookeeper:/datalog
+      - /var/log/contrail/analytics-zookeeper:/var/log/zookeeper
+    {% else %}
+    volumes:
+      - analytics_zookeeper:/data
+      - analytics_zookeeper:/datalog
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:

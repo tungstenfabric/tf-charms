@@ -66,8 +66,14 @@ services:
       - CASSANDRA_STORAGE_PORT=7012
       - CASSANDRA_JMX_LOCAL_PORT=7201
       - NODE_TYPE=config-database
+    {% if contrail_version >= 2008 %}
     volumes:
       - config_cassandra:/var/lib/cassandra/data
+      - /var/log/contrail/config-database:/var/log/cassandra
+    {% else %}
+    volumes:
+      - config_cassandra:/var/lib/cassandra/data
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -83,9 +89,16 @@ services:
       - ZOOKEEPER_PORTS=2888:3888
       - ZOOKEEPER_PORT=2181
       - NODE_TYPE=config-database
+    {% if contrail_version >= 2008 %}
     volumes:
       - config_zookeeper:/data
       - config_zookeeper:/datalog
+      - /var/log/contrail/zookeeper:/var/log/zookeeper
+    {% else %}
+    volumes:
+      - config_zookeeper:/data
+      - config_zookeeper:/datalog
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -100,6 +113,12 @@ services:
       - RABBITMQ_NODES={{ controller_servers|sort|join(',') }}
       - RABBITMQ_ERLANG_COOKIE=abcdefg
       - NODE_TYPE=config-database
+      - RABBITMQ_LOGS=/var/log/rabbitmq/rabbitmq.log
+      - RAMMITMQ_SASL_LOGS=/var/log/rabbitmq/rabbitmq_sasl.log
+    {% if contrail_version >= 2008 %}
+    volumes:
+      - /var/log/contrail/rabbitmq:/var/log/rabbitmq
+    {% endif %}
     volumes_from:
       - node-init
     depends_on:
