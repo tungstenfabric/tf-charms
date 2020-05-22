@@ -24,12 +24,27 @@ DOCKER_CLI = "/usr/bin/docker"
 DOCKER_COMPOSE_CLI = "docker-compose"
 
 
-def _format_curl_https_proxy_opt():
+def _format_curl_proxy_opt():
+    proxy_settings = env_proxy_settings(['no_proxy'])
+    no_proxy = None
+    if proxy_settings:
+        no_proxy = proxy_settings.get('no_proxy')
+        if no_proxy:
+            return '--noproxy {}'.format(no_proxy)
+
     proxy_settings = env_proxy_settings(['https'])
     https_proxy = None
     if proxy_settings:
         https_proxy = proxy_settings.get('https_proxy')
-        return '--proxy {}'.format(https_proxy) if https_proxy else ''
+        if https_proxy:
+            return '--proxy {}'.format(https_proxy)
+
+    proxy_settings = env_proxy_settings(['http'])
+    http_proxy = None
+    if proxy_settings:
+        http_proxy = proxy_settings.get('http_proxy')
+        if http_proxy:
+            return '--proxy {}'.format(http_proxy)
     return ''
 
 
@@ -58,7 +73,7 @@ def install():
             "set -o pipefail ; curl {} "
             "-fsSL --connect-timeout 10 "
             "{} | sudo apt-key add -"
-            "".format(_format_curl_https_proxy_opt(), docker_key_url)
+            "".format(_format_curl_proxy_opt(), docker_key_url)
         ]
         check_output(cmd)
     arch = "amd64"
