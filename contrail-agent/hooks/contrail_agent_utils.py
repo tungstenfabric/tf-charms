@@ -426,6 +426,15 @@ def is_reboot_required():
     return True
 
 
+def _del_hp_fstab_mount(pagesize):
+    log("Remove {} mountpoint from fstab".format(pagesize))
+    mnt_point = '/dev/hugepages{}'.format(pagesize)
+    lfstab = fstab.Fstab()
+    fstab_entry = lfstab.get_entry_by_attr('mountpoint', mnt_point)
+    if fstab_entry:
+        lfstab.remove_entry(fstab_entry)
+
+
 def _add_hp_fstab_mount(pagesize, mount=True):
     mnt_point = '/dev/hugepages{}'.format(pagesize)
     mkdir(mnt_point, owner='root', group='root', perms=0o755)
@@ -433,11 +442,24 @@ def _add_hp_fstab_mount(pagesize, mount=True):
     fstab_entry = lfstab.get_entry_by_attr('mountpoint', mnt_point)
     if fstab_entry:
         lfstab.remove_entry(fstab_entry)
-    entry = lfstab.Entry('hugetlbfs', mnt_point, 'hugetlbfs',
+    # use different device name for 1G and 2M.
+    # this name actually is not used by the system
+    # but add_antry filter by device name.
+    device = 'hugetlbfs{}'.format(pagesize)
+    entry = lfstab.Entry(device, mnt_point, 'hugetlbfs',
                          'pagesize={}'.format(pagesize), 0, 0)
     lfstab.add_entry(entry)
     if mount:
         fstab_mount(mnt_point)
+
+
+def _remove_file(f):
+    try:
+        log("Remove {}".format(f))
+        os.remove(f)
+    except FileNotFoundError:
+        return False
+    return True
 
 
 def prepare_hugepages_kernel_mode():
@@ -449,22 +471,29 @@ def prepare_hugepages_kernel_mode():
         return
 
     sysctl_file = '/etc/sysctl.d/10-contrail-hugepage.conf'
+    cfg_file = '/etc/default/grub.d/50-contrail-agent.cfg'
+
     if p_1g == 0:
+        _del_hp_fstab_mount('1G')
+        if _remove_file(cfg_file):
+            log("1G disabled - update grub")
+            check_call(["update-grub"])
         log("Allocate {} x {} hugepages via sysctl".format(p_2m, '2MB'))
         sysctl.create(yaml.dump({'vm.nr_hugepages': p_2m}), sysctl_file)
         _add_hp_fstab_mount('2M')
         return
 
-    try:
-        os.remove(sysctl_file)
-    except FileNotFoundError:
-        pass
+    # remove sysctl file as hugepages be allocated via kernel args
+    _remove_file(sysctl_file)
+
     # 1gb avalable only on boot time, so change kernel boot options 
     boot_opts = "default_hugepagesz=1G hugepagesz=1G hugepages={}".format(p_1g)
-    _add_hp_fstab_mount('1G')
+    _add_hp_fstab_mount('1G', mount=False)
     if p_2m != 0:
         boot_opts += " hugepagesz=2M hugepages={}".format(p_2m)
-        _add_hp_fstab_mount('2M')
+        _add_hp_fstab_mount('2M', mount=False)
+    else:
+        _del_hp_fstab_mount('2M')
     log("Update grub config for hugepages: {}".format(boot_opts))
     mkdir('/etc/default/grub.d', perms=0o744)
     new_content = 'GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT {}"'.format(boot_opts)
