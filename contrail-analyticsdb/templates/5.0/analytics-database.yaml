@@ -46,6 +46,8 @@ services:
       - ZOOKEEPER_NODES={{ analyticsdb_servers|sort|join(',') }}
       - ZOOKEEPER_PORT=2182
       - NODE_TYPE=database
+    volumes:
+      - /var/log/contrail/kafka:/var/log/kafka
     volumes_from:
       - node-init
     depends_on:
@@ -67,6 +69,7 @@ services:
       - NODE_TYPE=database
     volumes:
       - analytics_cassandra:/var/lib/cassandra/data
+      - /var/log/contrail/database:/var/log/cassandra
     volumes_from:
       - node-init
     depends_on:
@@ -85,6 +88,7 @@ services:
     volumes:
       - analytics_zookeeper:/data
       - analytics_zookeeper:/datalog
+      - /var/log/contrail/analytics-zookeeper:/var/log/zookeeper
     volumes_from:
       - node-init
     depends_on:
