@@ -74,9 +74,12 @@ services:
       - CASSANDRA_SSL_STORAGE_PORT=7011
       - CASSANDRA_STORAGE_PORT=7010
       - CASSANDRA_JMX_LOCAL_PORT=7200
-      - NODE_TYPE=database
+      - NODE_TYPE=database    
     volumes:
       - analytics_cassandra:/var/lib/cassandra/data
+    {% if contrail_version >= 2008 %}
+      - /var/log/contrail/database:/var/log/cassandra
+    {% endif %}    
     volumes_from:
       - node-init
     depends_on:
