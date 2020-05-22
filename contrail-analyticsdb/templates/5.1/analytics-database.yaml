@@ -77,6 +77,7 @@ services:
       - NODE_TYPE=database
     volumes:
       - analytics_cassandra:/var/lib/cassandra/data
+      - /var/log/contrail/cassandra:/var/log/cassandra
     volumes_from:
       - node-init
     depends_on:
