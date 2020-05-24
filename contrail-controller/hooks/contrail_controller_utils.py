@@ -84,14 +84,14 @@ SERVICES = {
 }
 
 
-def get_controller_ips(address_type, config_param):
+def get_controller_ips(address_type, own_ip):
     controller_ips = dict()
     for rid in relation_ids("controller-cluster"):
         for unit in related_units(rid):
             ip = relation_get(address_type, unit, rid)
             controller_ips[unit] = ip
     # add it's own ip address
-    controller_ips[local_unit()] = common_utils.get_ip(config_param=config_param)
+    controller_ips[local_unit()] = own_ip
     return controller_ips
 
 
