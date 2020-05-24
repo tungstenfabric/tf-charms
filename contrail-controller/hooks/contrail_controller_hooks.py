@@ -115,8 +115,10 @@ def config_changed():
 
 @hooks.hook("leader-elected")
 def leader_elected():
-    for var_name in [("ip", "unit-address", "control-network"),
-                     ("data_ip", "data-address", "data-network")]:
+    ip = common_utils.get_ip()
+    data_ip = common_utils.get_ip(config_param="data-network", fallback=ip)
+    for var_name in [("ip", "unit-address", ip),
+                     ("data_ip", "data-address", data_ip)]:
         ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name[0])), list())
         ips = utils.get_controller_ips(var_name[1], var_name[2])
         if not ip_list:
