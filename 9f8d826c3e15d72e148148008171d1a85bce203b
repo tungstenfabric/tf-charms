@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77412aeb_8079f996",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "result \u003d \u0027\u0027",
+      "range": {
+        "startLine": 30,
+        "startChar": 4,
+        "endLine": 30,
+        "endChar": 7
+      },
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8ebf2e2_29c786a9",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "this check can be omitted.",
+      "range": {
+        "startLine": 31,
+        "startChar": 4,
+        "endLine": 31,
+        "endChar": 22
+      },
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb322534_1d4380bc",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "if \u0027https\u0027 in proxy_settings:\n  result +\u003d \u0027--proxy {}\u0027.format(proxy_settings[\u0027https\u0027])\nelif \u0027http\u0027 in proxy_settings:\n  result +\u003d \u0027--proxy {}\u0027.format(proxy_settings[\u0027http\u0027])",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 42
+      },
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9881007a_1fa4853e",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "if \u0027noproxy\u0027 in proxy_settings:\n  result +\u003d \u0027 --noproxy {}\u0027.format(proxy_settings[\u0027noproxy\u0027])",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 47
+      },
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cbb57ec_7dd58071",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "return result",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 14
+      },
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f18d2778_e658d29a",
+        "filename": "contrail-analytics/hooks/docker_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-24T18:03:36Z",
+      "side": 1,
+      "message": "issues:\n1) if https is not present and http is there - \u0027--proxy\u0027 option is not present in the result\n2) there is no space between proxy and noproxy results",
+      "revId": "9f8d826c3e15d72e148148008171d1a85bce203b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
