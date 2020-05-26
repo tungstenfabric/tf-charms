@@ -309,7 +309,7 @@ def rsync_nrpe_checks(plugins_dir):
 
 
 def add_nagios_to_sudoers():
-    sudoers_content = 'nagios ALL = NOPASSWD: /usr/bin/contrail-status'
+    sudoers_content = 'nagios ALL = NOPASSWD:SETENV: /usr/bin/contrail-status'
     cmd = ('sudo bash -c \'echo \"{}\" > /etc/sudoers.d/nagios\''
            .format(sudoers_content))
     try:
