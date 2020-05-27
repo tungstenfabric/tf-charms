@@ -474,7 +474,9 @@ def prepare_hugepages_kernel_mode():
         return
 
     sysctl_file = '/etc/sysctl.d/10-contrail-hugepage.conf'
-    cfg_file = '/etc/default/grub.d/50-contrail-agent.cfg'
+    # use prefix 60- because of 
+    # https://bugs.launchpad.net/curtin/+bug/1527664
+    cfg_file = '/etc/default/grub.d/60-contrail-agent.cfg'
 
     if p_1g == 0:
         _del_hp_fstab_mount('1G')
