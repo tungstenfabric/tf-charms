@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be278b4a_6fb747de",
+        "filename": "contrail-analyticsdb/templates/5.0/analytics-database.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 437
+      },
+      "writtenOn": "2020-05-28T13:42:40Z",
+      "side": 1,
+      "message": "database\n(like in rhosp)",
+      "range": {
+        "startLine": 72,
+        "startChar": 26,
+        "endLine": 72,
+        "endChar": 35
+      },
+      "revId": "90fce2c9e682ba5c9a3b74472c27cabb9e563d00",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd19d70d_82691ab6",
+        "filename": "contrail-analyticsdb/templates/5.1/analytics-database.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 437
+      },
+      "writtenOn": "2020-05-28T13:42:40Z",
+      "side": 1,
+      "message": "database",
+      "range": {
+        "startLine": 80,
+        "startChar": 26,
+        "endLine": 80,
+        "endChar": 35
+      },
+      "revId": "90fce2c9e682ba5c9a3b74472c27cabb9e563d00",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12a5d4ef_352028d7",
+        "filename": "contrail-controller/templates/config-database.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 437
+      },
+      "writtenOn": "2020-05-28T13:42:40Z",
+      "side": 1,
+      "message": "config-database\n(like in rhosp)",
+      "range": {
+        "startLine": 71,
+        "startChar": 26,
+        "endLine": 71,
+        "endChar": 35
+      },
+      "revId": "90fce2c9e682ba5c9a3b74472c27cabb9e563d00",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
