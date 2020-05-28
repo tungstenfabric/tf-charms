@@ -7,7 +7,7 @@ my_dir="$(dirname $my_file)"
 
 charm login
 team="juniper-os-software"
-for folder in contrail-agent contrail-analytics contrail-analyticsdb contrail-controller contrail-keystone-auth contrail-openstack contrail-kubernetes-master contrail-kubernetes-node ; do
+for folder in contrail-agent contrail-analytics contrail-analyticsdb contrail-controller contrail-keystone-auth contrail-openstack contrail-kubernetes-master contrail-kubernetes-node contrail-command ; do
   id="~$team/$folder"
   res=`charm push "$my_dir/../$folder" cs:${id}`
   echo "$res"
