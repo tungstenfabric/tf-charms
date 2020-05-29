@@ -121,13 +121,19 @@ options:
   sriov-physical-interface:
     type: string
     description: |
-      Interface name for SR-IOV. This parameter and sriov-numvfs will be passed
-      into agent container that will configure SR-IOV.
+      A comma-separated list of interface names for SR-IOV.
+      The number of elements in the list should be equal to number of elements in sriov-numvfs.
+      List is supported only by R2008 release and further.
+      For previous releases only first element will be taken.
+      This parameter and sriov-numvfs will be passed into agent container that will configure SR-IOV.
   sriov-numvfs:
     type: string
     description: |
-      NumVFS for specified device. This parameter and sriov-physical-interface
-      will be passed into agent container that will configure SR-IOV.
+      A comma-separated list of NumVFS's for specified devices.
+      The number of elements in the list should be equal to number of elements in sriov-physical-interface.
+      List is supported only by R2008 release and further.
+      For previous releases only first element will be taken.
+      This parameter and sriov-physical-interface will be passed into agent container that will configure SR-IOV.
   csn-mode:
     type: string
     description: |
