@@ -12,7 +12,6 @@ from charmhelpers.core.hookenv import (
 )
 
 import contrail_command_utils as utils
-import common_utils
 import docker_utils
 
 
@@ -46,6 +45,7 @@ def upgrade_charm():
 def contrail_controller_joined():
     settings = {'unit-type': 'command'}
     relation_set(relation_settings=settings)
+
 
 @hooks.hook("contrail-controller-relation-changed")
 def contrail_controller_changed():

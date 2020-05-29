@@ -83,10 +83,10 @@ def update_status():
             "curl -k https://{}:8079 | grep '<title>'".format(command_ip),
             shell=True).decode('UTF-8')
     except Exception:
-        status_set("waiting", "Cannot curl to " + command_ip + ":8079")
+        status_set("waiting", "URL is not ready {}:8079".format(command_ip))
         return False
     if 'Contrail Command' not in output:
-        status_set("waiting", "Cannot curl to " + command_ip + ":8079")
+        status_set("waiting", "URL is not ready {}:8079".format(command_ip))
         return False
 
     status_set("active", "Unit is ready")
@@ -111,16 +111,13 @@ def update_charm_status():
     deploy_ccd_code(deployer_image, tag)
 
     if not ctx.get("cloud_orchestrator"):
-        status_set('blocked',
-                    'Missing cloud orchestrator info in relations.')
+        status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
     elif ctx.get("cloud_orchestrator") != "openstack":
-        status_set('blocked',
-                    'Contrail command works with openstack only now')
+        status_set('blocked', 'Contrail command works with openstack only now')
         return
 
-    changed = common_utils.render_and_log("min_config.yaml",
-                                          '/cluster_config.yml', ctx)
+    changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
 
     if changed or not config.get("command_deployed"):
         dst = '/' + deployer_image + '/docker/deploy_contrail_command'
@@ -134,15 +131,12 @@ def import_cluster(juju_params):
     if not update_status():
         return False, 'Unit is not ready, try later'
 
-    env = common_utils.render_and_log("juju_environment",
-                                        '/tmp/juju_environment', juju_params)
+    env = common_utils.render_and_log('juju_environment', '/tmp/juju_environment', juju_params)
     deployer_image = "contrail-command-deployer"
     dst = '/' + deployer_image + '/docker/deploy_contrail_command'
     try:
-        check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst,
-                    shell=True)
-        status_set('active',
-                    'Cluster is imported')
+        check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst, shell=True)
+        status_set('active', 'Cluster is imported')
     except Exception as e:
         return False, 'Import failed, check logs'
 
