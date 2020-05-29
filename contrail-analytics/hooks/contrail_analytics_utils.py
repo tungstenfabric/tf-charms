@@ -140,7 +140,7 @@ def get_context():
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
-    ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
+    ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["logging"] = docker_utils.render_logging()
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
