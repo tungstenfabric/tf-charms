@@ -50,9 +50,6 @@ def config_changed():
     if config.changed("dpdk"):
         raise Exception("Configuration parameter dpdk couldn't be changed")
 
-    config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    config.save()
-
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()

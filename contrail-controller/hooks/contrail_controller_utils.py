@@ -124,7 +124,7 @@ def get_context():
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
-    ctx["config_analytics_ssl_available"] = config.get("config_analytics_ssl_available", False)
+    ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["use_internal_endpoints"] = config.get("use_internal_endpoints", False)
     ctx["logging"] = docker_utils.render_logging()
 

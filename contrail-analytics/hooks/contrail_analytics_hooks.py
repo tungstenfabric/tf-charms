@@ -51,9 +51,6 @@ def config_changed():
             for rid in relation_ids(rname):
                 relation_set(relation_id=rid, relation_settings=settings)
 
-    config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    config.save()
-
     docker_utils.config_changed()
     utils.update_charm_status()
 
@@ -189,7 +186,7 @@ def _http_services(vip):
     addr = common_utils.get_ip()
 
     mode = config.get("haproxy-http-mode", "http")
-    ssl_on_backend = config.get("ssl_enabled", False) and config.get("config_analytics_ssl_available", False)
+    ssl_on_backend = config.get("ssl_enabled", False) and common_utils.is_config_analytics_ssl_available()
     if ssl_on_backend:
         servers = [[name, addr, 8081, "check inter 2000 rise 2 fall 3 ssl verify none"]]
     else:

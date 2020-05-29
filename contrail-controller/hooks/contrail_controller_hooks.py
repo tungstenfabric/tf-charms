@@ -94,9 +94,6 @@ def config_changed():
             for ip, hostname in rabbitmq_hosts:
                 utils.update_hosts_file(ip, hostname, remove_hostname=True)
 
-    config["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    config.save()
-
     docker_utils.config_changed()
     utils.update_charm_status()
 
@@ -272,7 +269,7 @@ def update_southbound_relations(rid=None):
         "auth-info": config.get("auth_info"),
         "orchestrator-info": config.get("orchestrator_info"),
         "agents-info": config.get("agents-info"),
-        "ssl-enabled": config.get("ssl_enabled") and config.get("config_analytics_ssl_available"),
+        "ssl-enabled": config.get("ssl_enabled") and common_utils.is_config_analytics_ssl_available(),
         # base64 encoded ca-cert
         "ca-cert": config.get("ca_cert"),
         "controller_ips": leader_get("controller_ip_list"),
@@ -428,7 +425,7 @@ def _http_services(vip):
 
     mode = config.get("haproxy-http-mode", "http")
 
-    ssl_on_backend = config.get("ssl_enabled", False) and config.get("config_analytics_ssl_available", False)
+    ssl_on_backend = config.get("ssl_enabled", False) and common_utils.is_config_analytics_ssl_available()
     if ssl_on_backend:
         servers = [[name, addr, 8082, "check inter 2000 rise 2 fall 3 ssl verify none"]]
     else:
