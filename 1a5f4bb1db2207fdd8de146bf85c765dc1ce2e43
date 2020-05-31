@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1214ade2_e8d2241c",
+        "filename": "contrail-agent/templates/vrouter.env",
+        "patchSetId": 8
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-05-31T18:27:47Z",
+      "side": 1,
+      "message": "{%- if contrail version \u003c 2008 %}\n\n-\u003e\n\n{%- if contrail_version|int \u003c 2008 %}",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "1a5f4bb1db2207fdd8de146bf85c765dc1ce2e43",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
