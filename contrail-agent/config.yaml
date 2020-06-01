@@ -139,6 +139,12 @@ options:
     description: |
       The vrouter agent mode. The valid values are 'tor'/'tsn'/'tsn-no-forwarding' or empty.
     default: ''
+  datapath-encryption:
+    type: boolean
+    default: false
+    description: |
+      Use datapath encryption between vRouters.
+      Is available for Contrail's version R2008 and further.
   log-level:
     type: string
     default: SYS_NOTICE

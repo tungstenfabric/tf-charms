@@ -1,5 +1,7 @@
+import binascii
 import os
 import socket
+import struct
 import yaml
 from subprocess import (
     check_call,
@@ -41,6 +43,7 @@ BASE_CONFIGS_PATH = "/etc/contrail"
 
 VROUTER_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter/docker-compose.yaml"
 VROUTER_INIT_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter-init/docker-compose.yaml"
+STRONGSWAN_PATH = BASE_CONFIGS_PATH + "/vrouter/strongswan/"
 
 IMAGES = [
     "contrail-node-init",
@@ -57,6 +60,10 @@ IMAGES_KERNEL = [
 IMAGES_DPDK = [
     "contrail-vrouter-kernel-init-dpdk",
     "contrail-vrouter-agent-dpdk",
+]
+IMAGES_STRONGSWAN = [
+    "contrail-datapath-encryption-strongswan-api",
+    "contrail-datapath-encryption-strongswan",
 ]
 SERVICES = {
     "vrouter": [
@@ -171,6 +178,8 @@ def get_context():
     ctx["sriov_physical_interface"] = config.get("sriov-physical-interface")
     ctx["sriov_numvfs"] = config.get("sriov-numvfs")
     ctx["max_vm_flows"] = config.get("max-vm-flows")
+    ctx["datapath_encryption"] = config.get("datapath-encryption")
+    ctx["vhost_ip"] = get_vhost_ip()
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
     # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
@@ -235,6 +244,15 @@ def update_charm_status():
             docker_utils.pull(image, tag)
         except Exception as e:
             log("Can't load optional image {}".format(e))
+    if config["datapath-encryption"] and common_utils.get_contrail_version() >= 2008:
+        for image in IMAGES_STRONGSWAN:
+            try:
+                docker_utils.pull(image, tag)
+            except Exception as e:
+                log("Can't load image {}".format(e))
+                status_set('blocked',
+                        'Image could not be pulled: {}:{}'.format(image, tag))
+                return
 
     if config.get("maintenance"):
         log("Maintenance is in progress")
@@ -320,6 +338,30 @@ def _update_charm_status(ctx):
         status_set('blocked',
                    'Reboot is required due to hugepages allocation.')
         return
+    if ctx["datapath_encryption"] and common_utils.get_contrail_version() >= 2008:
+        #TODO: move to function?
+        binStr=bin(struct.unpack('!I', socket.inet_aton(ctx["vhost_ip"]))[0])
+        ctx["leftid"] = binascii.hexlify(binStr.encode(encoding='UTF-8')).decode()
+
+        if not os.path.exists(STRONGSWAN_PATH + "conn/conn.conf"):
+            os.mkdir(STRONGSWAN_PATH + "conn")
+            write_file(STRONGSWAN_PATH + "conn/conn.conf", '', perms=0o644)
+        common_utils.render_and_log("stroke.conf",
+            STRONGSWAN_PATH + "stroke.conf", ctx)
+        common_utils.render_and_log("contrail-ipsec.conf",
+            STRONGSWAN_PATH + "contrail-ipsec.conf", ctx)
+        common_utils.render_and_log("strongswan.conf",
+            STRONGSWAN_PATH + "strongswan.conf", ctx)
+
+        check_call(['modprobe', 'ip_vti'])
+
+        changed = common_utils.render_and_log("ipsec.conf",
+            STRONGSWAN_PATH + "ipsec.conf", ctx)
+        changed |= common_utils.render_and_log("ipsec.secrets",
+            STRONGSWAN_PATH + "ipsec.secrets", ctx)
+        changed |= common_utils.render_and_log("strongswan.yaml",
+                                STRONGSWAN_PATH + "strongswan.yaml", ctx)
+        docker_utils.compose_run(STRONGSWAN_PATH + "strongswan.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
 
