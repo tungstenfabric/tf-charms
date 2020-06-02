@@ -3,11 +3,9 @@ import os
 import shutil
 from socket import gethostbyname
 from subprocess import CalledProcessError, check_call, check_output
-import sys
 import uuid
 
 from distutils.dir_util import copy_tree
-import pkg_resources
 import requests
 from six.moves.urllib.parse import urlparse
 
@@ -28,7 +26,6 @@ from charmhelpers.core.hookenv import (
 from charmhelpers.core.host import (
     restart_on_change,
     service_restart,
-    write_file,
 )
 from charmhelpers.core.templating import render
 
@@ -112,6 +109,7 @@ PLUGIN_FILES = {
         ])
     }
 }
+
 
 def update_service_ips():
     try:
@@ -243,7 +241,7 @@ def write_configs():
 
 def _is_related_to(rel_name):
     units = [unit for rid in relation_ids(rel_name)
-                  for unit in related_units(rid)]
+             for unit in related_units(rid)]
     return True if units else False
 
 
@@ -346,7 +344,7 @@ def get_openstack_version_codename(dist):
         version = check_output(['./files/get_openstack_version_codename.sh',
                                 dist]).decode('UTF-8')
         if not version:
-            log("Version of {} couldn't be derived: {}".format(dist, e), level=WARNING)
+            log("Version of {} couldn't be detected: {}".format(dist), level=WARNING)
             return None
         return int(version.split('.')[0])
     except Exception as e:

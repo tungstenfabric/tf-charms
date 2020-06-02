@@ -4,6 +4,7 @@ import json
 import os
 import platform
 from subprocess import check_call, check_output
+import time
 import uuid
 import yaml
 
@@ -91,7 +92,7 @@ def _load_json_file(filepath):
     try:
         with open(filepath) as f:
             return json.load(f)
-    except Exception as e:
+    except Exception:
         pass
     return dict()
 
@@ -299,7 +300,8 @@ def get_contrail_version(image, tag, pkg="python-contrail"):
             return version
     except Exception:
         pass
-    return check_output([DOCKER_CLI,
+    return check_output([
+        DOCKER_CLI,
         "run", "--rm", "--entrypoint", "rpm", image_id,
         "-q", "--qf", "%{VERSION}-%{RELEASE}", pkg]).decode("UTF-8").rstrip()
 
@@ -337,8 +339,8 @@ def render_logging():
         logging += "  driver: {}\n".format(driver)
     if options:
         logging += "  options:\n"
-        # yaml is created manually because of redis.yaml that is created by 
-        # controller and analytics and should be exactly the same to avoid 
+        # yaml is created manually because of redis.yaml that is created by
+        # controller and analytics and should be exactly the same to avoid
         # config_changed hooks starting
         options.sort()
         for opt in options:

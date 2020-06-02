@@ -1,7 +1,8 @@
+import yaml
+
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
-    local_unit,
     related_units,
     relation_get,
     relation_set,
@@ -10,7 +11,6 @@ from charmhelpers.core.hookenv import (
     log,
 )
 from charmhelpers.contrib.charmsupport import nrpe
-from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
 
@@ -236,23 +236,29 @@ def _render_configs(ctx):
 
     tfolder = '5.0' if ctx["contrail_version"] == 500 else '5.1'
     result["common"] = common_utils.apply_keystone_ca(MODULE, ctx)
-    result["common"] |= common_utils.render_and_log(tfolder + "/analytics.env",
+    result["common"] |= common_utils.render_and_log(
+        tfolder + "/analytics.env",
         BASE_CONFIGS_PATH + "/common_analytics.env", ctx)
 
-    result["analytics"] = common_utils.render_and_log(tfolder + "/analytics.yaml",
+    result["analytics"] = common_utils.render_and_log(
+        tfolder + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
     if ctx["contrail_version"] >= 510:
-        result["analytics-alarm"] = common_utils.render_and_log(tfolder + "/analytics-alarm.yaml",
+        result["analytics-alarm"] = common_utils.render_and_log(
+            tfolder + "/analytics-alarm.yaml",
             ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-        result["analytics-snmp"] = common_utils.render_and_log(tfolder + "/analytics-snmp.yaml",
+        result["analytics-snmp"] = common_utils.render_and_log(
+            tfolder + "/analytics-snmp.yaml",
             ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
     # redis is a common service that needs own synchronized env
-    result["redis"] = common_utils.render_and_log("redis.env",
+    result["redis"] = common_utils.render_and_log(
+        "redis.env",
         BASE_CONFIGS_PATH + "/redis.env", ctx)
-    result["redis"] |= common_utils.render_and_log("redis.yaml",
+    result["redis"] |= common_utils.render_and_log(
+        "redis.yaml",
         REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
     return result
@@ -269,7 +275,7 @@ def update_nrpe_config():
     if ssl_on_backend:
         check_api_cmd = 'check_http -S -H {} -p 8081'.format(component_ip)
     else:
-         check_api_cmd = 'check_http -H {} -p 8081'.format(component_ip)
+        check_api_cmd = 'check_http -H {} -p 8081'.format(component_ip)
     nrpe_compat.add_check(
         shortname='check_analytics_api',
         description='Check Contrail Analytics API',

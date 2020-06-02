@@ -65,7 +65,8 @@ def fix_hostname():
         gethostbyname(hostname)
     except gaierror:
         ip = get_ip()
-        check_call(["sed", "-E", "-i", "-e",
+        check_call([
+            "sed", "-E", "-i", "-e",
             ("/127.0.0.1[[:blank:]]+/a \\\n" + ip + " " + hostname),
             "/etc/hosts"])
 
@@ -178,7 +179,7 @@ def get_tls_settings(self_ip):
     sans_ips = []
     try:
         sans_ips.append(gethostbyname(hostname))
-    except:
+    except Exception:
         pass
     control_ip = self_ip
     if control_ip not in sans_ips:
@@ -348,10 +349,7 @@ def contrail_status_cmd(name, plugins_dir):
     if '5.0' in tag:
         cver = '5.0'
 
-    check_contrail_status_script = os.path.join(
-        plugins_dir,
-        script_name
-        )
+    check_contrail_status_script = os.path.join(plugins_dir, script_name)
     check_contrail_status_cmd = (
         '{} {}'
         .format(check_contrail_status_script, cver)

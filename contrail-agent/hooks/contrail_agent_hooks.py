@@ -13,8 +13,6 @@ from charmhelpers.core.hookenv import (
     relation_ids,
     related_units,
     status_set,
-    local_unit,
-    unit_get,
 )
 
 import contrail_agent_utils as utils
@@ -118,7 +116,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_controller_node_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                  for unit in related_units(rid)]
+             for unit in related_units(rid)]
     if units:
         return
 

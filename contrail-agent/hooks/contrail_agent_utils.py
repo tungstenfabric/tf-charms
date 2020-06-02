@@ -108,13 +108,14 @@ def _get_default_gateway_iface():
 def _get_iface_gateway_ip(iface):
     ifaces = [iface, "vhost0"]
     for line in check_output(["route", "-n"]).decode('UTF-8').splitlines()[2:]:
-        l = line.split()
-        if "G" in l[3] and l[7] in ifaces:
-            log("Found gateway {} for interface {}".format(l[1], iface))
-            return l[1]
+        items = line.split()
+        if "G" in items[3] and items[7] in ifaces:
+            log("Found gateway {} for interface {}".format(items[1], iface))
+            return items[1]
     log("vrouter-gateway set to 'auto' but gateway could not be determined "
         "from routing table for interface {}".format(iface), level=WARNING)
     return None
+
 
 # Convert mask like "0xABCD" to number format like "1,2,3-5,16"
 # ============================================
@@ -178,7 +179,7 @@ def get_context():
     ctx["physical_interface"] = iface
     gateway_ip = config.get("vhost-gateway")
     if gateway_ip == "auto":
-         gateway_ip = _get_iface_gateway_ip(iface)
+        gateway_ip = _get_iface_gateway_ip(iface)
     ctx["vrouter_gateway"] = gateway_ip if gateway_ip else ''
 
     ctx["agent_mode"] = "dpdk" if config["dpdk"] else "kernel"
@@ -253,7 +254,7 @@ def update_charm_status_for_upgrade():
         ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
         ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
         # orchestrator_info and auth_info can be taken from old relation
-    
+
     _update_charm_status(ctx)
 
     if config.get('maintenance') == 'ziu':
@@ -297,11 +298,13 @@ def _update_charm_status(ctx):
     # TODO: what should happens if relation departed?
 
     # local file for vif utility
-    common_utils.render_and_log("contrail-vrouter-agent.conf",
-           "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
+    common_utils.render_and_log(
+        "contrail-vrouter-agent.conf",
+        "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
 
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
-    changed |= common_utils.render_and_log("vrouter.env",
+    changed |= common_utils.render_and_log(
+        "vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml", VROUTER_COMPOSE_PATH, ctx)
     changed |= common_utils.render_and_log("vrouter-init.yaml", VROUTER_INIT_COMPOSE_PATH, ctx)
@@ -330,6 +333,7 @@ def is_vrouter_init_successfully_passed():
     if init_state.get('ExitCode') != 0:
         return False
     return True
+
 
 def stop_agent():
     docker_utils.compose_kill(VROUTER_COMPOSE_PATH, "SIGQUIT", "vrouter-agent")
@@ -367,10 +371,11 @@ def fix_libvirt():
     # it's not required for non-DPDK deployments
 
     # add apparmor exception for huge pages
-    check_output(["sed", "-E", "-i", "-e",
-       "\!^[[:space:]]*owner \"/run/hugepages/kvm/libvirt/qemu/\*\*\" rw"
-       "!a\\\n  owner \"/hugepages/libvirt/qemu/**\" rw,",
-       "/etc/apparmor.d/abstractions/libvirt-qemu"])
+    check_output([
+        "sed", "-E", "-i", "-e",
+        "\!^[[:space:]]*owner \"/run/hugepages/kvm/libvirt/qemu/\*\*\" rw"
+        "!a\\\n  owner \"/hugepages/libvirt/qemu/**\" rw,",
+        "/etc/apparmor.d/abstractions/libvirt-qemu"])
 
     if lsb_release()['DISTRIB_CODENAME'] == 'xenial':
         # fix libvirt tempate for xenial
@@ -389,7 +394,7 @@ def fix_libvirt():
                 f.write("\n  " + new_line + "\n")
 
     service_restart("apparmor")
-    check_call(["/etc/init.d/apparmor",  "reload"])
+    check_call(["/etc/init.d/apparmor", "reload"])
 
 
 def _get_hp_options(name):
@@ -416,9 +421,9 @@ def is_reboot_required():
     data = check_output(['cat', '/proc/cmdline']).decode('UTF-8').split()
     i = 0
     while i < len(data):
-        if data[i] == 'hugepagesz=1G' and i+1 < len(data) and data[i+1].startswith('hugepages='):
+        if data[i] == 'hugepagesz=1G' and i + 1 < len(data) and data[i + 1].startswith('hugepages='):
             try:
-                amount = int(data[i+1].split('=')[1])
+                amount = int(data[i + 1].split('=')[1])
             except ValueError:
                 amount = 0
             return amount < p_1g
@@ -474,7 +479,7 @@ def prepare_hugepages_kernel_mode():
         return
 
     sysctl_file = '/etc/sysctl.d/10-contrail-hugepage.conf'
-    # use prefix 60- because of 
+    # use prefix 60- because of
     # https://bugs.launchpad.net/curtin/+bug/1527664
     cfg_file = '/etc/default/grub.d/60-contrail-agent.cfg'
 
@@ -508,7 +513,7 @@ def prepare_hugepages_kernel_mode():
         if old_content == new_content:
             log("Kernel boot parameters are not changed")
             return
-    except:
+    except Exception:
         pass
     log("New kernel boot paramters: {}".format(new_content))
     write_file(cfg_file, new_content, perms=0o644)

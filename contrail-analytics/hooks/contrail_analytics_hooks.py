@@ -37,7 +37,7 @@ def install():
     utils.update_charm_status()
     # NOTE: do not open port until haproxy can fail
     # https://bugs.launchpad.net/charm-haproxy/+bug/1792939
-    #open_port(8081, "TCP")
+    # open_port(8081, "TCP")
 
 
 @hooks.hook("config-changed")
@@ -104,7 +104,7 @@ def contrail_analytics_changed():
 @hooks.hook("contrail-analytics-relation-departed")
 def contrail_analytics_departed():
     units = [unit for rid in relation_ids("contrail-analytics")
-                  for unit in related_units(rid)]
+             for unit in related_units(rid)]
     if not units:
         for key in ["auth_info", "auth_mode", "orchestrator_info", "rabbitmq_hosts"]:
             config.pop(key, None)
@@ -196,7 +196,7 @@ def _http_services(vip):
         "service_name": "contrail-analytics-api",
         "service_host": vip,
         "service_port": 8081,
-        "servers": servers }]
+        "servers": servers}]
     if mode == 'http':
         result[0]['service_options'] = [
             "timeout client 3m",

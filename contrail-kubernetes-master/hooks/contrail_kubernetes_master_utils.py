@@ -3,8 +3,6 @@ import os
 import base64
 
 from charmhelpers.core.hookenv import (
-    Hooks,
-    UnregisteredHookError,
     config,
     log,
     relation_get,
@@ -16,7 +14,6 @@ from charmhelpers.core.hookenv import (
     charm_dir,
 )
 from charmhelpers.contrib.charmsupport import nrpe
-from charmhelpers.core.templating import render
 
 import common_utils
 import docker_utils
@@ -42,15 +39,16 @@ SERVICES = {
 def kubernetes_token():
     try:
         account_file = os.path.join(charm_dir(), 'files', 'contrail-kubemanager-serviceaccount.yaml')
-        check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "apply", "-f", account_file])
+        check_output(["snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "apply", "-f", account_file])
     except Exception as e:
         log("Can't apply manifest for service account: {}".format(e))
         return None
     token_id = None
-    for i in range (10):
+    for i in range(10):
         try:
-            token_id = check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "get", "sa", "contrail-kubemanager", "-n", "contrail",
-                                "-ogo-template=\"{{(index .secrets 0).name}}\""]).decode('UTF-8').strip('\"')
+            token_id = check_output([
+                "snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "get", "sa", "contrail-kubemanager", "-n", "contrail",
+                "-ogo-template=\"{{(index .secrets 0).name}}\""]).decode('UTF-8').strip('\"')
         except Exception as e:
             log("Can't get SA for contrail-kubemanager {}".format(e))
             return None
@@ -60,8 +58,9 @@ def kubernetes_token():
     if not token_id:
         return None
     try:
-        token_64 = check_output(["snap", "run", "kubectl","--kubeconfig","/root/.kube/config", "get", "secret", token_id, "-n", "contrail",
-                            "-ogo-template=\"{{.data.token}}\""]).decode('UTF-8').strip('\"')
+        token_64 = check_output([
+            "snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "get", "secret", token_id, "-n", "contrail",
+            "-ogo-template=\"{{.data.token}}\""]).decode('UTF-8').strip('\"')
         token = base64.b64decode(token_64).decode()
         return token
     except Exception as e:
@@ -110,7 +109,7 @@ def get_context():
 
     ctx["cluster_name"] = config.get("cluster_name")
     ctx["cluster_project"] = config.get("cluster_project")
-    ctx["cluster_network"] =  config.get("cluster_network")
+    ctx["cluster_network"] = config.get("cluster_network")
     ctx["pod_subnets"] = config.get("pod_subnets")
     ctx["ip_fabric_subnets"] = config.get("ip_fabric_subnets")
     ctx["service_subnets"] = config.get("service_subnets")
@@ -168,9 +167,11 @@ def update_charm_status():
         status_set('waiting',
                    'Kube manager token is absent. Wait for token from kubectl run.')
         return
-    changed = common_utils.render_and_log("kubemanager.env",
+    changed = common_utils.render_and_log(
+        "kubemanager.env",
         BASE_CONFIGS_PATH + "/common_kubemanager.env", ctx)
-    changed |= common_utils.render_and_log("/contrail-kubemanager.yaml",
+    changed |= common_utils.render_and_log(
+        "/contrail-kubemanager.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 

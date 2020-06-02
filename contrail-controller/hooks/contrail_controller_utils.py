@@ -17,7 +17,6 @@ from charmhelpers.core.hookenv import (
     INFO,
 )
 from charmhelpers.contrib.charmsupport import nrpe
-from charmhelpers.core.templating import render
 from charmhelpers.core.unitdata import kv
 import common_utils
 import docker_utils
@@ -222,40 +221,42 @@ def _update_charm_status(ctx, services_to_run=None):
 
 def _has_provisioning_finished():
     try:
-        return docker_utils.execute("configapi_provisioner_1",
-            'configapi_provisioner_1 ps -a | grep -o -m 1 tail | wc -l', shell=True)
-    except Exeption as e:
+        return docker_utils.execute(
+            "configapi_provisioner_1",
+            "configapi_provisioner_1 ps -a | grep -o -m 1 tail | wc -l", shell=True)
+    except Exception:
         return True
+
 
 def _render_configs(ctx):
     result = dict()
 
     result['common'] = common_utils.apply_keystone_ca(MODULE, ctx)
-    result['common'] |= common_utils.render_and_log("config.env",
-        BASE_CONFIGS_PATH + "/common_config.env", ctx)
+    result['common'] |= common_utils.render_and_log(
+        "config.env", BASE_CONFIGS_PATH + "/common_config.env", ctx)
     if ctx["contrail_version"] >= 2002:
-        result['common'] |= common_utils.render_and_log("defaults.env",
-            BASE_CONFIGS_PATH + "/defaults_controller.env", ctx)
+        result['common'] |= common_utils.render_and_log(
+            "defaults.env", BASE_CONFIGS_PATH + "/defaults_controller.env", ctx)
 
-    result['config-api'] = common_utils.render_and_log("config-api.yaml",
-        CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['config-api'] = common_utils.render_and_log(
+        "config-api.yaml", CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    result['config-database'] = common_utils.render_and_log("config-database.yaml",
-        CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['config-database'] = common_utils.render_and_log(
+        "config-database.yaml", CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    result['control'] = common_utils.render_and_log("control.yaml",
-        CONTROL_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['control'] = common_utils.render_and_log(
+        "control.yaml", CONTROL_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    result['webui'] = common_utils.render_and_log("webui.yaml",
-        WEBUI_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    result['webui'] |= common_utils.render_and_log("web.env",
-        BASE_CONFIGS_PATH + "/common_web.env", ctx)
+    result['webui'] = common_utils.render_and_log(
+        "webui.yaml", WEBUI_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['webui'] |= common_utils.render_and_log(
+        "web.env", BASE_CONFIGS_PATH + "/common_web.env", ctx)
 
     # redis is a common service that needs own synchronized env
-    result['redis'] = common_utils.render_and_log("redis.env",
-        BASE_CONFIGS_PATH + "/redis.env", ctx)
-    result['redis'] |= common_utils.render_and_log("redis.yaml",
-        REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    result['redis'] = common_utils.render_and_log(
+        "redis.env", BASE_CONFIGS_PATH + "/redis.env", ctx)
+    result['redis'] |= common_utils.render_and_log(
+        "redis.yaml", REDIS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
     return result
 

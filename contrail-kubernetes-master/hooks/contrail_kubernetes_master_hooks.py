@@ -89,7 +89,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_cotroller_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                  for unit in related_units(rid)]
+             for unit in related_units(rid)]
     if units:
         return
 
@@ -138,7 +138,7 @@ def update_status():
         changed = utils.update_kubernetes_token()
         if changed:
             # notify clients
-           _notify_controller()
+            _notify_controller()
     # and update self
     utils.update_charm_status()
 

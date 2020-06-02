@@ -47,9 +47,11 @@ def update_charm_status():
             return
 
     ctx = get_context()
-    changed = common_utils.render_and_log("cni.env",
+    changed = common_utils.render_and_log(
+        "cni.env",
         BASE_CONFIGS_PATH + "/common_cni.env", ctx)
-    changed |= common_utils.render_and_log("/contrail-cni.yaml",
+    changed |= common_utils.render_and_log(
+        "/contrail-cni.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 

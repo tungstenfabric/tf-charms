@@ -60,7 +60,7 @@ def cni_joined(rel_id=None):
     cidr = config.get("pod_subnets")
     if not cidr:
         return
-    data = {"cidr": cidr, "cni-conf-file" : "/etc/cni/net.d/10-contrail.conf" }
+    data = {"cidr": cidr, "cni-conf-file": "/etc/cni/net.d/10-contrail.conf" }
     relation_set(relation_id=rel_id, relation_settings=data)
 
 

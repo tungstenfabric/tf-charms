@@ -1,3 +1,5 @@
+import yaml
+
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
@@ -10,7 +12,6 @@ from charmhelpers.core.hookenv import (
     log,
 )
 from charmhelpers.contrib.charmsupport import nrpe
-from charmhelpers.core.templating import render
 import common_utils
 import docker_utils
 
@@ -186,9 +187,11 @@ def _render_configs(ctx):
 
     tfolder = '5.0' if ctx["contrail_version"] == 500 else '5.1'
     result["common"] = common_utils.apply_keystone_ca(MODULE, ctx)
-    result["common"] |= common_utils.render_and_log(tfolder + "/analytics-database.env",
+    result["common"] |= common_utils.render_and_log(
+        tfolder + "/analytics-database.env",
         BASE_CONFIGS_PATH + "/common_analyticsdb.env", ctx)
-    result["analytics-database"] = common_utils.render_and_log(tfolder + "/analytics-database.yaml",
+    result["analytics-database"] = common_utils.render_and_log(
+        tfolder + "/analytics-database.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
     return result

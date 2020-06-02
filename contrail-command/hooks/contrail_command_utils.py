@@ -1,5 +1,4 @@
 import os
-import base64
 import uuid
 
 from distutils.dir_util import copy_tree
@@ -131,13 +130,13 @@ def import_cluster(juju_params):
     if not update_status():
         return False, 'Unit is not ready, try later'
 
-    env = common_utils.render_and_log('juju_environment', '/tmp/juju_environment', juju_params)
+    common_utils.render_and_log('juju_environment', '/tmp/juju_environment', juju_params)
     deployer_image = "contrail-command-deployer"
     dst = '/' + deployer_image + '/docker/deploy_contrail_command'
     try:
         check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst, shell=True)
         status_set('active', 'Cluster is imported')
     except Exception as e:
-        return False, 'Import failed, check logs'
+        return False, 'Import failed ({}). Please check logs'.format(e)
 
     return True, "Success"

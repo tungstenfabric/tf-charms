@@ -7,9 +7,11 @@ _path = os.path.dirname(os.path.realpath(__file__))
 _hooks = os.path.abspath(os.path.join(_path, '../hooks'))
 _root = os.path.abspath(os.path.join(_path, '..'))
 
+
 def _add_path(path):
     if path not in sys.path:
         sys.path.insert(1, path)
+
 
 _add_path(_hooks)
 _add_path(_root)
@@ -48,7 +50,7 @@ def import_cluster():
     res, message = utils.import_cluster(juju_params)
     if not res:
         action_fail(message)
-    action_set({'result': message })
+    action_set({'result': message})
 
 
 if __name__ == '__main__':

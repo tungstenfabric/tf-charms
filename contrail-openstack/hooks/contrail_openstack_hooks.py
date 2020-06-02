@@ -129,7 +129,7 @@ def contrail_controller_changed():
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_cotroller_departed():
     units = [unit for rid in relation_ids("contrail-controller")
-                  for unit in related_units(rid)]
+             for unit in related_units(rid)]
     if units:
         return
 
@@ -223,7 +223,7 @@ def heat_plugin_joined(rel_id=None):
             "/etc/heat/heat.conf": {
                 "sections": sections
             }
-         }
+        }
     }
     settings = {
         "plugin-dirs": plugin_dirs,
@@ -257,17 +257,17 @@ def neutron_api_joined(rel_id=None):
     extensions = [
         contrail_plugin_extension,
         neutron_lbaas_extensions
-        ]
+    ]
     conf = {
-      "neutron-api": {
-        "/etc/neutron/neutron.conf": {
-          "sections": {
-            "DEFAULT": [
-              ("api_extensions_path", ":".join(extensions))
-            ]
-          }
+        "neutron-api": {
+            "/etc/neutron/neutron.conf": {
+                "sections": {
+                    "DEFAULT": [
+                        ("api_extensions_path", ":".join(extensions))
+                    ]
+                }
+            }
         }
-      }
     }
     settings = {
         "neutron-plugin": "contrail",
@@ -311,11 +311,11 @@ def nova_compute_joined(rel_id=None):
         sections["CONTRAIL"] = [("use_userspace_vhost", "True")]
         sections["libvirt"] = [("use_huge_pages", "True")]
     conf = {
-      "nova-compute": {
-        "/etc/nova/nova.conf": {
-          "sections": sections
+        "nova-compute": {
+            "/etc/nova/nova.conf": {
+                "sections": sections
+            }
         }
-      }
     }
     settings = {
         "metadata-shared-secret": leader_get("metadata-shared-secret"),
