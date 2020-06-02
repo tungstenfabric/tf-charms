@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb2a0fe6_887f1ca7",
+        "filename": "contrail-agent/templates/vrouter.env",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-02T07:46:02Z",
+      "side": 1,
+      "message": "contrail_version",
+      "range": {
+        "startLine": 71,
+        "startChar": 7,
+        "endLine": 71,
+        "endChar": 23
+      },
+      "revId": "c1f6781e566ea6eec4fa5d887f5be172cc205ffa",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
