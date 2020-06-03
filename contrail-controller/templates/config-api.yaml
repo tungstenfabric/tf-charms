@@ -26,7 +26,11 @@ services:
 {{ logging | indent(4,True) }}
   nodemgr:
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
-    env_file: /etc/contrail/common_config.env
+    env_file:
+      - /etc/contrail/common_config.env
+{% if contrail_version < 2002 %}
+      - /etc/contrail/defaults_controller.env
+{% endif %}
     environment:
       - NODE_TYPE=config
     network_mode: "host"

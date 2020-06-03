@@ -120,6 +120,7 @@ def get_context():
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx["contrail_version"] = common_utils.get_contrail_version()
+    ctx["apply_defaults"] = config.get("apply-defaults")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)

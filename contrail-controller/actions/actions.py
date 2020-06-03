@@ -41,7 +41,8 @@ def apply_defaults(args):
 ACTIONS = {
     "upgrade-ziu": upgrade_ziu,
     "cancel-ziu": cancel_ziu,
-    "apply-defaults": apply_defaults}
+    "apply-defaults": apply_defaults
+}
 
 
 def main(args):

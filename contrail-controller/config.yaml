@@ -23,7 +23,7 @@ options:
     type: string
     default: "64512"
     description: |
-      [default parameter, use action apply-defaults to change]
+      [default parameter, use action apply-defaults to change for release 2002 and further]
       Default router ASN
   auth-mode:
     type: string
@@ -205,11 +205,11 @@ options:
     default: "MPLSoUDP,MPLSoGRE,VXLAN"
     type: string
     description: |
-      [default parameter, use action apply-defaults to change]
+      [default parameter, use action apply-defaults to change for release 2002 and further]
       List of Encapsulation priority
   vxlan-vn-id-mode:
     default: "automatic"
     type: string
     description: |
-      [default parameter, use action apply-defaults to change]
+      [default parameter, use action apply-defaults to change for release 2002 and further]
       Virtual Network id type to be used

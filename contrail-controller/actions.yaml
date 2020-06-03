@@ -1,6 +1,9 @@
 upgrade-ziu:
     description: Initiates ZIU upgrade.
 cancel-ziu:
-    description: Initiates ZIU upgrade.
+    description: Cancels ZIU upgrade. For internal usage only!
 apply-defaults:
-    description: Action which applies configuration parameters marked as [default] in their description
+    description: |
+      Action which applies configuration parameters marked as [default] in their description.
+      It has sense only for release 2002 and further.
+      Release 1912 and before may apply default parameters each restart.

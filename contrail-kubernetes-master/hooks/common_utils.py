@@ -143,8 +143,8 @@ def update_services_status(module, services):
     status_set("active", "Unit is ready")
     try:
         tag = config.get('image-tag')
-        docker_utils.pull("contrail-base", tag)
-        version = docker_utils.get_contrail_version("contrail-base", tag)
+        docker_utils.pull("contrail-node-init", tag)
+        version = docker_utils.get_contrail_version("contrail-node-init", tag)
         application_version_set(version)
     except CalledProcessError as e:
         log("Couldn't detect installed application version: " + str(e))
