@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "364f351a_aa7c2712",
+        "filename": "contrail-analyticsdb/templates/5.0/analytics-database.yaml",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 437
+      },
+      "writtenOn": "2020-06-03T18:08:18Z",
+      "side": 1,
+      "message": "analytics-zookeper\n(to avoid conflict with config)",
+      "range": {
+        "startLine": 91,
+        "startChar": 26,
+        "endLine": 91,
+        "endChar": 35
+      },
+      "revId": "3e79b51fd1728d8db659505c0d38aa4a541ec10b",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
