@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7679755_6245a414",
+        "filename": "contrail-agent/config.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "please add information that it will work only for 2008 and further",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e64f718a_ade54d6c",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "and contrail_version \u003e\u003d 2008",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b69e5b88_290c9bb4",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "and contrail_version \u003e\u003d 2008",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eabca4a2_62e5c781",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "move to get_context",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b09a3ee_1c3c95d5",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "move constant to the top of file",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b64091a2_c1e8fa43",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "why it\u0027s conditional?",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "559c925b_5da8e3a2",
+        "filename": "contrail-agent/templates/strongswan.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-04T17:58:26Z",
+      "side": 1,
+      "message": "this mount looks incorrect",
+      "revId": "8b37d8e4bd9db6ef759f0a12edbc62d4a8a48c74",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
