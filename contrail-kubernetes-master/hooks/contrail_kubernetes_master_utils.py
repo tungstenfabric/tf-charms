@@ -85,6 +85,7 @@ def get_context():
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
+    ctx["contrail_version"] = common_utils.get_contrail_version()
 
     # self IP-s
     kubemanager_ip_list = list()
