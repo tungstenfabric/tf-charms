@@ -55,7 +55,7 @@ services:
       - node-init
     depends_on:
       - node-init
-    restart: always
+    restart: on-failure
 {{ logging | indent(4,True) }}
 {% endif %}
   api:
