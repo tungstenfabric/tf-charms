@@ -54,7 +54,7 @@ def config_changed():
     utils.update_charm_status()
 
     # leave it as latest - in case of exception in previous steps
-    # config.changed doesn't work sometimes...
+    # config.changed doesn't work sometimes (when config.save was called)
     if config.get("saved-image-tag") != config["image-tag"]:
         utils.update_ziu("image-tag")
         config["saved-image-tag"] = config["image-tag"]
