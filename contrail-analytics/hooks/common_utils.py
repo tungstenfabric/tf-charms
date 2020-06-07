@@ -140,6 +140,9 @@ def update_services_status(module, services):
                            .format(srv, desc if desc else status))
                 return False
 
+    if config.get("maintenance"):
+        return
+
     status_set("active", "Unit is ready")
     try:
         tag = config.get('image-tag')
