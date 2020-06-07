@@ -214,6 +214,13 @@ def get_context():
             ctx["plugin_settings"] = plugin_ips[my_ip]
 
     ctx["logging"] = docker_utils.render_logging()
+
+    if config.get('maintenance') == 'issu':
+        ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
+        ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
+        ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
+        # orchestrator_info and auth_info can be taken from old relation
+
     log("CTX: " + str(ctx))
 
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
@@ -236,33 +243,27 @@ def update_charm_status():
         except Exception as e:
             log("Can't load optional image {}".format(e))
 
-    if config.get("maintenance"):
-        log("Maintenance is in progress")
-        common_utils.update_services_status(MODULE, SERVICES)
-        return
+    log("Maintenance is in progress")
 
     fix_dns_settings()
 
     ctx = get_context()
-    _update_charm_status(ctx)
+    if not check_readyness(ctx):
+        return
+
+    changed = False
+    if not config.get('maintenance'):
+        changed = render_configs(ctx)
+    run_containers(ctx, changed)
+
+    common_utils.update_services_status(MODULE, SERVICES)
+    # check this as latest step to let previous call to set version
+    if is_reboot_required():
+        status_set('blocked',
+                   'Reboot is required due to hugepages allocation.')
 
 
-def update_charm_status_for_upgrade():
-    ctx = get_context()
-    if config.get('maintenance') == 'issu':
-        ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
-        ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
-        ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
-        # orchestrator_info and auth_info can be taken from old relation
-
-    _update_charm_status(ctx)
-
-    if config.get('maintenance') == 'ziu':
-        config["upgraded"] = True
-        config.save()
-
-
-def _update_charm_status(ctx):
+def check_readyness(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
@@ -271,32 +272,34 @@ def _update_charm_status(ctx):
     if missing_relations:
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
-        return
+        return False
     if not ctx.get("analytics_servers"):
         status_set('blocked',
                    'Missing analytics_servers info in relation '
                    'with contrail-controller.')
-        return
+        return False
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kube_manager_token"):
         status_set('blocked',
                    'Kube manager token undefined.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kubernetes_api_server"):
         status_set('blocked',
                    'Kubernetes API unavailable')
-        return
+        return False
 
-    # TODO: what should happens if relation departed?
+    return True
 
+
+def render_configs(ctx):
     # local file for vif utility
     common_utils.render_and_log(
         "contrail-vrouter-agent.conf",
@@ -308,20 +311,16 @@ def _update_charm_status(ctx):
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml", VROUTER_COMPOSE_PATH, ctx)
     changed |= common_utils.render_and_log("vrouter-init.yaml", VROUTER_INIT_COMPOSE_PATH, ctx)
+    return changed
 
+
+def run_containers(ctx, changed):
     if is_vrouter_init_successfully_passed():
         docker_utils.compose_run(VROUTER_COMPOSE_PATH, changed)
     else:
         # let's down this compose. it will not fail but this will guarantee next run
         docker_utils.compose_down(VROUTER_INIT_COMPOSE_PATH)
         docker_utils.compose_run(VROUTER_INIT_COMPOSE_PATH, True)
-
-    if is_reboot_required():
-        status_set('blocked',
-                   'Reboot is required due to hugepages allocation.')
-        return
-
-    common_utils.update_services_status(MODULE, SERVICES)
 
 
 def is_vrouter_init_successfully_passed():
