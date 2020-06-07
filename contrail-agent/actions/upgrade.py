@@ -15,12 +15,32 @@ def _add_path(path):
 _add_path(_hooks)
 _add_path(_root)
 
+from charmhelpers.core.hookenv import (
+    action_fail,
+    config,
+)
+
 import contrail_agent_utils as utils
+import common_utils
+
+
+config = config()
 
 
 def upgrade():
+    ctx = utils.get_context()
+    if not utils.check_readyness(ctx):
+        action_fail("Unit is not ready for upgrade. Please wait for active state.")
+        return
+
     utils.stop_agent()
-    utils.update_charm_status_for_upgrade()
+    changed = utils.render_configs(ctx)
+    utils.run_containers(ctx, changed)
+    common_utils.update_services_status(utils.MODULE, utils.SERVICES)
+    if config.get('maintenance') == 'ziu':
+        config["upgraded"] = True
+        config.save()
+
     utils.update_ziu("upgrade")
 
 
