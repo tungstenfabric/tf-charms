@@ -112,9 +112,6 @@ def update_charm_status():
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
-    elif ctx.get("cloud_orchestrator") != "openstack":
-        status_set('blocked', 'Contrail command works with openstack only now')
-        return
 
     changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
 

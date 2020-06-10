@@ -40,12 +40,14 @@ def _decode_cert(key):
 
 
 def import_cluster():
+    ctx = utils.get_context()
     juju_params = {}
     juju_params["juju_controller"] = action_get("juju-controller")
     juju_params["juju_cacert_path"] = _decode_cert(action_get("juju-ca-cert"))
     juju_params["juju_model_id"] = action_get("juju-model-id")
     juju_params["juju_controller_password"] = action_get("juju-controller-password")
     juju_params["juju_controller_user"] = action_get("juju-controller-user")
+    juju_params["juju_cluster_type"] = ctx.get("cloud_orchestrator")
 
     res, message = utils.import_cluster(juju_params)
     if not res:

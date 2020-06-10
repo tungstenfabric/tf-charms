@@ -6,3 +6,4 @@ export juju_cacert_path={{ juju_cacert_path }}
 export juju_model_id={{ juju_model_id }}
 export juju_controller_password={{ juju_controller_password }}
 export juju_controller_user={{ juju_controller_user }}
+export juju_cluster_type={{ juju_cluster_type }}
