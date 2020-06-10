@@ -112,9 +112,6 @@ def update_charm_status():
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
-    elif ctx.get("cloud_orchestrator") != "openstack":
-        status_set('blocked', 'Contrail command works with openstack only now')
-        return
 
     changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
 
@@ -129,6 +126,9 @@ def update_charm_status():
 def import_cluster(juju_params):
     if not update_status():
         return False, 'Unit is not ready, try later'
+
+    ctx = get_context()
+    juju_params["juju_cluster_type"] = ctx.get("cloud_orchestrator")
 
     common_utils.render_and_log('juju_environment', '/tmp/juju_environment', juju_params)
     deployer_image = "contrail-command-deployer"
