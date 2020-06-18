@@ -221,12 +221,35 @@ def _update_charm_status(ctx, services_to_run=None):
 
 
 def _has_provisioning_finished():
+    result_config = _has_provisioning_finished_for_container("configapi_provisioner_1", CONFIG_API_CONFIGS_PATH)
+    log("Readyness of provisioner for configapi: {}".format(result_config))
+    # TODO: remove checking of contol for R2008 when provisioner will be ready
+    result_control = _has_provisioning_finished_for_container("control_provisioner_1", CONTROL_CONFIGS_PATH)
+    log("Readyness of provisioner for control: {}".format(result_control))
+
+    return result_config and result_control
+
+
+def _has_provisioning_finished_for_container(name, configs_path):
     try:
-        return docker_utils.execute(
-            "configapi_provisioner_1",
-            "configapi_provisioner_1 ps -a | grep -o -m 1 tail | wc -l", shell=True)
+        # check tail first. for R2008 and further this should work
+        data = docker_utils.execute(name, ['ps', '-ax'])
+        return '/usr/bin/tail' in data
     except Exception:
+        pass
+    try:
+        # for R2005 let's check exit status
+        state = docker_utils.get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
+        if not state:
+            return False
+        if state.get('Status').lower() == 'running':
+            return False
+        if state.get('ExitCode') != 0:
+            return False
         return True
+    except Exception:
+        pass
+    return False
 
 
 def _render_configs(ctx):
