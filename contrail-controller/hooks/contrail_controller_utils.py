@@ -234,7 +234,7 @@ def _has_provisioning_finished_for_container(name, configs_path):
     try:
         # check tail first. for R2008 and further this should work
         data = docker_utils.execute(name, ['ps', '-ax'])
-        return '/usr/bin/tail' in data
+        return '/provision.sh' not in data
     except Exception:
         pass
     try:
