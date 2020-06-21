@@ -234,21 +234,30 @@ def _has_provisioning_finished_for_container(name, configs_path):
     try:
         # check tail first. for R2008 and further this should work
         data = docker_utils.execute(name, ['ps', '-ax'])
+        log("{}: '/usr/bin/tail' in data = {}".format(name, '/usr/bin/tail' in data))
         return '/usr/bin/tail' in data
-    except Exception:
+    except Exception as e:
+        log("{}: exception in ps {}".format(name, e))
         pass
     try:
         # for R2005 let's check exit status
         state = docker_utils.get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
+        log("{}: state {}".format(name, state))
         if not state:
+            log("{}: not state".format(name))
             return False
         if state.get('Status').lower() == 'running':
+            log("{}: == running".format(name))
             return False
         if state.get('ExitCode') != 0:
+            log("{}: ExitCode != 0".format(name))
             return False
+        log("{}: True???".format(name))
         return True
-    except Exception:
+    except Exception as e:
+        log("{}: exception in state {}".format(name, e))
         pass
+    log("{}: False !!!".format(name))
     return False
 
 
