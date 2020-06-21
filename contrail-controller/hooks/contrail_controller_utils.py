@@ -1,6 +1,7 @@
 import os
 import tempfile
 import socket
+from subprocess import CalledProcessError, check_call, check_output
 
 from charmhelpers.core.hookenv import (
     config,
@@ -234,21 +235,37 @@ def _has_provisioning_finished_for_container(name, configs_path):
     try:
         # check tail first. for R2008 and further this should work
         data = docker_utils.execute(name, ['ps', '-ax'])
+        log("{}: data = {}".format(name, data))
+
+        try:
+            output = check_output("ps ax -H", shell=True).decode('UTF-8')
+            log("{}: output = {}".format(name, output))
+        except Exception as e:
+            log("{}: exception!!! {}".format(name, e))
+
         return '/usr/bin/tail' in data
-    except Exception:
+    except Exception as e:
+        log("{}: exception in ps {}".format(name, e))
         pass
     try:
         # for R2005 let's check exit status
         state = docker_utils.get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
+        log("{}: state {}".format(name, state))
         if not state:
+            log("{}: not state".format(name))
             return False
         if state.get('Status').lower() == 'running':
+            log("{}: == running".format(name))
             return False
         if state.get('ExitCode') != 0:
+            log("{}: ExitCode != 0".format(name))
             return False
+        log("{}: True???".format(name))
         return True
-    except Exception:
+    except Exception as e:
+        log("{}: exception in state {}".format(name, e))
         pass
+    log("{}: False !!!".format(name))
     return False
 
 
