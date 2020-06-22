@@ -39,9 +39,7 @@ import docker_utils
 MODULE = "agent"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
-VROUTER_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter/docker-compose.yaml"
-VROUTER_INIT_COMPOSE_PATH = BASE_CONFIGS_PATH + "/vrouter-init/docker-compose.yaml"
-
+CONFIGS_PATH = BASE_CONFIGS_PATH + "/vrouter"
 IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
@@ -213,6 +211,12 @@ def get_context():
         if my_ip in plugin_ips:
             ctx["plugin_settings"] = plugin_ips[my_ip]
 
+    if config.get('maintenance') == 'issu':
+        ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
+        ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
+        ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
+        # orchestrator_info and auth_info can be taken from old relation
+
     ctx["logging"] = docker_utils.render_logging()
     log("CTX: " + str(ctx))
 
@@ -220,7 +224,7 @@ def get_context():
     return ctx
 
 
-def update_charm_status():
+def _pull_images():
     tag = config.get('image-tag')
     for image in IMAGES + (IMAGES_DPDK if config["dpdk"] else IMAGES_KERNEL):
         try:
@@ -236,33 +240,35 @@ def update_charm_status():
         except Exception as e:
             log("Can't load optional image {}".format(e))
 
+
+def update_charm_status():
+    fix_dns_settings()
+    _pull_images()
+
     if config.get("maintenance"):
         log("Maintenance is in progress")
         common_utils.update_services_status(MODULE, SERVICES)
         return
 
-    fix_dns_settings()
-
     ctx = get_context()
-    _update_charm_status(ctx)
+    if not _check_readyness(ctx):
+        return
+    _run_services(ctx)
 
 
 def update_charm_status_for_upgrade():
     ctx = get_context()
-    if config.get('maintenance') == 'issu':
-        ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
-        ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
-        ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
-        # orchestrator_info and auth_info can be taken from old relation
-
-    _update_charm_status(ctx)
+    _run_services(ctx)
 
     if config.get('maintenance') == 'ziu':
+        # update_ziu("action-upgrade") raises exceptions from relation_set
+        # cause may not be ready. therefore save status and apply it
+        # either when network will be up or after reboot
         config["upgraded"] = True
         config.save()
 
 
-def _update_charm_status(ctx):
+def _check_readyness(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
@@ -271,32 +277,35 @@ def _update_charm_status(ctx):
     if missing_relations:
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
-        return
+        return False
     if not ctx.get("analytics_servers"):
         status_set('blocked',
                    'Missing analytics_servers info in relation '
                    'with contrail-controller.')
-        return
+        return False
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kube_manager_token"):
         status_set('blocked',
                    'Kube manager token undefined.')
-        return
+        return False
     if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kubernetes_api_server"):
         status_set('blocked',
                    'Kubernetes API unavailable')
-        return
+        return False
 
     # TODO: what should happens if relation departed?
+    return True
 
+
+def _run_services(ctx):
     # local file for vif utility
     common_utils.render_and_log(
         "contrail-vrouter-agent.conf",
@@ -306,46 +315,35 @@ def _update_charm_status(ctx):
     changed |= common_utils.render_and_log(
         "vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
-    changed |= common_utils.render_and_log("vrouter.yaml", VROUTER_COMPOSE_PATH, ctx)
-    changed |= common_utils.render_and_log("vrouter-init.yaml", VROUTER_INIT_COMPOSE_PATH, ctx)
-
-    if is_vrouter_init_successfully_passed():
-        docker_utils.compose_run(VROUTER_COMPOSE_PATH, changed)
-    else:
-        # let's down this compose. it will not fail but this will guarantee next run
-        docker_utils.compose_down(VROUTER_INIT_COMPOSE_PATH)
-        docker_utils.compose_run(VROUTER_INIT_COMPOSE_PATH, True)
+    changed |= common_utils.render_and_log("vrouter.yaml", CONFIGS_PATH + "/docker-compose.yaml", ctx)
+    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     if is_reboot_required():
         status_set('blocked',
                    'Reboot is required due to hugepages allocation.')
         return
-
     common_utils.update_services_status(MODULE, SERVICES)
 
 
-def is_vrouter_init_successfully_passed():
-    init_state = docker_utils.get_container_state(VROUTER_INIT_COMPOSE_PATH, "vrouter-kernel-init")
-    if not init_state:
-        return False
-    if init_state.get('Status').lower() == 'running':
-        return False
-    if init_state.get('ExitCode') != 0:
-        return False
-    return True
-
-
 def stop_agent():
-    docker_utils.compose_kill(VROUTER_COMPOSE_PATH, "SIGQUIT", "vrouter-agent")
+    path = CONFIGS_PATH + "/docker-compose.yaml"
+    docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
     # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
     for i in range(0, 12):
-        state = docker_utils.get_container_state(VROUTER_COMPOSE_PATH, "vrouter-agent")
+        state = docker_utils.get_container_state(path, "vrouter-agent")
         if not state or state.get('Status', '').lower() != 'running':
             break
     else:
-        raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and run update-status.")
-    docker_utils.compose_down(VROUTER_COMPOSE_PATH)
-    docker_utils.compose_down(VROUTER_INIT_COMPOSE_PATH)
+        raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and re-run operation.")
+    docker_utils.compose_down(path)
+    # remove all built vrouter.ko
+    modules = '/lib/modules'
+    for item in os.listdir(modules):
+        path = os.path.join(modules, item, 'updates/dkms/vrouter.ko')
+        try:
+            os.remove(path)
+        except Exception:
+            pass
 
 
 def fix_dns_settings():
