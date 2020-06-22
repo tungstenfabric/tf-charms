@@ -62,15 +62,20 @@ Wait for success about 5 minutes - please check output of action and juju status
 
 ### Reboot computes
 
-vRouter upgrade will require a reboot of the upgraded node in two cases: kernel version changed or not enough contiguous memory after reload of vrouter kmod available. Reboots & workload migrations are to be planned by the user and depends on the particular user environment and its requirements to workloads.
-In general the rule for reboot is :
-- new kernel 		=> reboot required
-- new kernel module 	=> reboot might be needed (lack of contiguous memory)
-- new dpdk pmd 	=> no reboot
+vRouter upgrade may require a reboot of the upgraded node in two cases: kernel version changed or not enough contiguous memory after reload of vrouter kmod available. Reboots & workload migrations are to be planned by the user and depends on the particular user environment and its requirements to workloads.
+In general the rule for reboot is:
+- new kernel => reboot required
+- new kernel module => reboot might be needed (lack of contiguous memory)
+- new dpdk pmd => no reboot
 
 Reboot the compute nodes manually.
 
 `sudo reboot`
+
+### Known issues
+
+- If upgrade action for compute is not completed after 5 minutes please check machine. For releases prior R2005
+  you may need to reboot the machine manually and re-run action again.
 
 ### The end
 

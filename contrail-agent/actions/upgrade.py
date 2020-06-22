@@ -19,9 +19,7 @@ import contrail_agent_utils as utils
 
 
 def upgrade():
-    utils.stop_agent()
-    utils.update_charm_status_for_upgrade()
-    utils.update_ziu("upgrade")
+    utils.action_upgrade()
 
 
 if __name__ == '__main__':
