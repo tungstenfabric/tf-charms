@@ -1,0 +1,308 @@
+machines:
+  # heat, kubernetes
+  "0":
+    series: "bionic"
+    constraints: mem=15G cores=2 root-disk=300G
+  # glance, nova-compute
+  "1":
+    series: "bionic"
+    constraints: mem=7G cores=4 root-disk=40G
+  # keystone
+  "2":
+    series: "bionic"
+    constraints: mem=7G cores=4 root-disk=40G
+  # nova-cloud-controller (nova-api)
+  "3":
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=40G
+  # Neutron, Contrail
+  "4":
+    series: "bionic"
+    constraints: mem=15G cores=2 root-disk=300G
+  # openstack-dashboard, mysql, rabbitmq
+  "5":
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=40G
+
+
+series: "bionic"
+services:
+
+#openstack
+  glance:
+    charm: "cs:bionic/glance"
+    num_units: 1
+    options:
+      debug: "true"
+      openstack-origin: "distro"
+    expose: true
+    to:
+      - "1"
+  keystone:
+    charm: "cs:bionic/keystone"
+    num_units: 1
+    options:
+      admin-password: "contrail123"
+      admin-role: "admin"
+      debug: "true"
+      openstack-origin: "distro"
+      preferred-api-version: "3"
+    expose: true
+    to:
+      - "2"
+  mysql:
+    charm: "cs:bionic/percona-cluster"
+    num_units: 1
+    options:
+      root-password: "password"
+      max-connections: 1500
+    to:
+      - "5"
+  rabbitmq-server:
+    charm: "cs:bionic/rabbitmq-server"
+    num_units: 1
+    to:
+      - "5"
+  neutron-api:
+    charm: "cs:bionic/neutron-api"
+    num_units: 1
+    options:
+      debug: "true"
+      openstack-origin: "distro"
+      manage-neutron-plugin-legacy-mode: false
+      neutron-security-groups: "true"
+    expose: true
+    to:
+      - "4"
+  heat:
+    charm: "cs:heat"
+    num_units: 1
+    options:
+      debug: "true"
+      openstack-origin: "distro"
+    expose: true
+    to:
+      - "0"
+  nova-cloud-controller:
+    charm: "cs:bionic/nova-cloud-controller"
+    num_units: 1
+    options:
+      network-manager: "Neutron"
+      console-access-protocol: "novnc"
+      debug: "true"
+      openstack-origin: "distro"
+    expose: true
+    to:
+      - "3"
+  nova-compute:
+    charm: "cs:bionic/nova-compute"
+    series: bionic
+    num_units: 1
+    options:
+      debug: "true"
+      openstack-origin: "distro"
+      virt-type: "qemu"
+      enable-resize: "true"
+      enable-live-migration: "true"
+      migration-auth-type: "ssh"
+    to:
+      - "1"
+  openstack-dashboard:
+    charm: "cs:bionic/openstack-dashboard"
+    num_units: 1
+    options:
+      debug: "true"
+      openstack-origin: "distro"
+    expose: true
+    to:
+      - "5"
+
+  # kubernetes
+
+  easyrsa:
+    series: "bionic"
+    charm: cs:~containers/easyrsa-303
+    num_units: 1
+    to:
+      - "0"
+
+  etcd:
+    series: "bionic"
+    charm: cs:~containers/etcd-501
+    num_units: 1
+    options:
+      channel: 3.2/stable
+    to:
+      - "0"
+
+  kubernetes-master:
+    series: "bionic"
+    charm: cs:~containers/kubernetes-master-827
+    num_units: 1
+    expose: true
+    options:
+      enable-metrics: false
+      enable-dashboard-addons: false
+      channel: '1.18/stable'
+      service-cidr: '10.96.0.0/12'
+    to:
+      - "0"
+
+  kubernetes-worker:
+    series: "bionic"
+    charm: cs:~containers/kubernetes-worker-665
+    num_units: 1
+    options:
+      ingress: false
+      channel: '1.18/stable'
+    to:
+      - "0"
+
+  docker:
+    series: "bionic"
+    charm: cs:~containers/docker-59
+    options:
+      docker_runtime: 'custom'
+      docker_runtime_repo: 'deb [arch={ARCH}] https://download.docker.com/linux/ubuntu {CODE} stable'
+      docker_runtime_key_url: 'https://download.docker.com/linux/ubuntu/gpg'
+      docker_runtime_package: 'docker-ce'
+
+  # contrail
+  contrail-controller:
+    charm: "./contrail-controller"
+    series: "bionic"
+    num_units: 1
+    options:
+      log-level: "SYS_DEBUG"
+      auth-mode: "rbac"
+      cassandra-minimum-diskgb: "4"
+      cassandra-jvm-extra-opts: "-Xms1g -Xmx2g"
+    expose: true
+    to:
+      - "4"
+  contrail-analyticsdb:
+    charm: "./contrail-analyticsdb"
+    series: "bionic"
+    num_units: 1
+    options:
+      log-level: "SYS_DEBUG"
+      cassandra-minimum-diskgb: "4"
+      cassandra-jvm-extra-opts: "-Xms1g -Xmx2g"
+    expose: true
+    to:
+      - "4"
+  contrail-analytics:
+    charm: "./contrail-analytics"
+    series: "bionic"
+    num_units: 1
+    options:
+      log-level: "SYS_DEBUG"
+    expose: true
+    to:
+      - "4"
+  contrail-agent:
+    charm: "./contrail-agent"
+    series: "bionic"
+    options:
+      log-level: "SYS_DEBUG"
+  contrail-keystone-auth:
+    charm: "./contrail-keystone-auth"
+    series: "bionic"
+    num_units: 1
+    to:
+      - "4"
+  contrail-openstack:
+    charm: "./contrail-openstack"
+    series: "bionic"
+  contrail-kubernetes-master:
+    series: "bionic"
+    charm: ./contrail-kubernetes-master
+    options:
+      log-level: 'SYS_DEBUG'
+      cluster_name: "k8s"
+      ip_fabric_forwarding: true
+      enable-metrics: false
+      enable-dashboard-addons: false
+      channel: '1.18/stable'
+      service-cidr: '10.96.0.0/12'
+      authorization-mode: "Node,RBAC"
+      enable-keystone-authorization: true
+  contrail-kubernetes-node:
+    series: "bionic"
+    charm: ./contrail-kubernetes-node
+    options:
+      log-level: 'SYS_DEBUG'
+
+  # misc
+  ubuntu:
+    charm: "cs:bionic/ubuntu"
+    num_units: 6
+    to:
+      - "0"
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+  ntp:
+    charm: "cs:bionic/ntp"
+
+
+relations:
+
+# openstack
+- [ nova-compute:amqp, rabbitmq-server:amqp ]
+- [ keystone:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:identity-service, keystone:identity-service ]
+- [ glance:identity-service, keystone:identity-service ]
+- [ neutron-api:identity-service, keystone:identity-service ]
+- [ neutron-api:shared-db, mysql:shared-db ]
+- [ neutron-api:amqp, rabbitmq-server:amqp ]
+- [ glance:shared-db, mysql:shared-db ]
+- [ glance:amqp, rabbitmq-server:amqp ]
+- [ nova-cloud-controller:image-service, glance:image-service ]
+- [ nova-compute:image-service, glance:image-service ]
+- [ nova-cloud-controller:cloud-compute, nova-compute:cloud-compute ]
+- [ nova-cloud-controller:amqp, rabbitmq-server:amqp ]
+- [ openstack-dashboard:identity-service, keystone:identity-service ]
+- [ nova-cloud-controller:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:neutron-api, neutron-api:neutron-api ]
+- [ heat:shared-db, mysql:shared-db ]
+- [ heat:amqp, rabbitmq-server:amqp ]
+- [ heat, keystone ]
+
+- [ ubuntu, ntp ]
+
+# kubernetes
+- [ kubernetes-master:kube-api-endpoint, kubernetes-worker:kube-api-endpoint ]
+- [ kubernetes-master:kube-control, kubernetes-worker:kube-control ]
+- [ kubernetes-master:certificates, easyrsa:client ]
+- [ kubernetes-master:etcd, etcd:db ]
+- [ kubernetes-worker:certificates,  easyrsa:client ]
+- [ etcd:certificates, easyrsa:client ]
+- [ kubernetes-master:container-runtime, docker:docker]
+- [ kubernetes-worker:container-runtime, docker:docker]
+
+# contrail
+- [ contrail-controller, contrail-analytics ]
+- [ contrail-controller, contrail-analyticsdb ]
+- [ contrail-analytics, contrail-analyticsdb ]
+- [ contrail-agent, contrail-controller ]
+
+- [ contrail-controller, contrail-keystone-auth ]
+- [ contrail-openstack, contrail-controller ]
+
+- [ contrail-kubernetes-master:contrail-controller, contrail-controller:contrail-controller ]
+- [ contrail-kubernetes-master:contrail-kubernetes-config, contrail-kubernetes-node:contrail-kubernetes-config ]
+
+- [ contrail-keystone-auth, keystone ]
+- [ contrail-openstack, neutron-api ]
+- [ contrail-openstack, heat ]
+- [ contrail-openstack, nova-compute ]
+- [ contrail-agent:juju-info, nova-compute:juju-info ]
+
+- [ contrail-kubernetes-node:cni, kubernetes-master:cni ]
+- [ contrail-kubernetes-node:cni, kubernetes-worker:cni ]
+- [ contrail-kubernetes-master:kube-api-endpoint, kubernetes-master:kube-api-endpoint ]
+- [ contrail-agent:juju-info, kubernetes-worker:juju-info ]
+- [ kubernetes-master, keystone ]

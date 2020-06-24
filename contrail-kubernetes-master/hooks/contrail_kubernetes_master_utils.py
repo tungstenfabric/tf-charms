@@ -136,6 +136,20 @@ def get_context():
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["logging"] = docker_utils.render_logging()
 
+    # get auth info
+    keystone_auth = False
+    for rid in relation_ids("contrail-controller"):
+        for unit in related_units(rid):
+            orchestrator_info = common_utils.json_loads(
+                relation_get("orchestrator-info", unit, rid), dict())
+            if orchestrator_info:
+                orchestrator = orchestrator_info.get("cloud_orchestrator")
+                if orchestrator == 'openstack':
+                    auth_info = relation_get("auth-info", unit, rid)
+                    keystone_auth = True
+                    ctx.update(common_utils.json_loads(auth_info, dict()))
+    ctx["keystone_auth"] = keystone_auth
+
     log("CTX: {}".format(ctx))
     return ctx
 
