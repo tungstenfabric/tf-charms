@@ -119,7 +119,12 @@ def get_context():
     ctx["host_network_service"] = config.get("host_network_service")
     ctx["public_fip_pool"] = config.get("public_fip_pool")
 
-    ctx["cloud_orchestrator"] = "kubernetes"
+    ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
+    if not ctx.get("cloud_orchestrators"):
+        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
+
+    # TODO: switch to use context for this
+
     ctx["kube_manager_token"] = leader_get("kube_manager_token")
     if config.get("kubernetes_api_hostname") and config.get("kubernetes_api_secure_port"):
         ctx["kubernetes_api_server"] = config.get("kubernetes_api_hostname")
@@ -137,6 +142,9 @@ def get_context():
     ctx["logging"] = docker_utils.render_logging()
 
     log("CTX: {}".format(ctx))
+
+    ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
+
     return ctx
 
 
@@ -164,10 +172,20 @@ def update_charm_status():
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
         return
+    if not ctx.get("cloud_orchestrator"):
+        status_set('blocked',
+                   'Missing cloud_orchestrator info in relation '
+                   'with contrail-controller.')
+        return
     if not ctx.get("kube_manager_token"):
         status_set('waiting',
                    'Kube manager token is absent. Wait for token from kubectl run.')
         return
+    if "openstack" in ctx.get("cloud_orchestrators") and not ctx.get("keystone_ip"):
+        status_set('blocked',
+                   'Missing auth info in relation with contrail-controller.')
+        return
+
     changed = common_utils.render_and_log(
         "kubemanager.env",
         BASE_CONFIGS_PATH + "/common_kubemanager.env", ctx)

@@ -122,6 +122,8 @@ def get_context():
     ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx["apply_defaults"] = config.get("apply-defaults")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
+    if not ctx.get("cloud_orchestrators"):
+        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
@@ -189,7 +191,7 @@ def _update_charm_status(ctx, services_to_run=None):
         status_set('blocked',
                    'Missing cloud orchestrator info in relations.')
         return
-    if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
+    if "openstack" in ctx.get("cloud_orchestrators") and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-auth.')
         return

@@ -74,11 +74,10 @@ def leader_settings_changed():
 def contrail_controller_joined(rel_id=None):
     settings = {
         'unit-type': 'openstack',
-        'use-internal-endpoints': config.get('use-internal-endpoints')}
+        'use-internal-endpoints': config.get('use-internal-endpoints'),
+    }
+    settings.update(_get_orchestrator_info())
     relation_set(relation_id=rel_id, relation_settings=settings)
-    if is_leader():
-        data = _get_orchestrator_info()
-        relation_set(relation_id=rel_id, **data)
 
 
 @hooks.hook("contrail-controller-relation-changed")
