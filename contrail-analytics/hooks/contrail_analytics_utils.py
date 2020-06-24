@@ -205,7 +205,7 @@ def _update_charm_status(ctx):
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
         return
-    if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
+    if "openstack" in ctx.get("cloud_orchestrator") and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
         return
