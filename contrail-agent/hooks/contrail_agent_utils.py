@@ -276,15 +276,15 @@ def _check_readyness(ctx):
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
         return False
-    if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
+    if "openstack" in ctx.get("cloud_orchestrator") and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
         return False
-    if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kube_manager_token"):
+    if "kubernetes" in ctx.get("cloud_orchestrator") and not ctx.get("kube_manager_token"):
         status_set('blocked',
                    'Kube manager token undefined.')
         return False
-    if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kubernetes_api_server"):
+    if "kubernetes" in ctx.get("cloud_orchestrator") and not ctx.get("kubernetes_api_server"):
         status_set('blocked',
                    'Kubernetes API unavailable')
         return False
