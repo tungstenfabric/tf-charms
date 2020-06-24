@@ -112,7 +112,7 @@ def update_charm_status():
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
-    elif ctx.get("cloud_orchestrator") != "openstack":
+    elif "openstack" not in ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Contrail command works with openstack only now')
         return
 
