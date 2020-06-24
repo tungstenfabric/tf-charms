@@ -108,6 +108,8 @@ def get_context():
     ctx["logging"] = docker_utils.render_logging()
     ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
+    if not ctx.get("cloud_orchestrators"):
+        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
 
     ctx.update(servers_ctx())
     ctx.update(analyticsdb_ctx())
@@ -169,7 +171,7 @@ def _update_charm_status(ctx):
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
         return
-    if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
+    if "openstack" in ctx.get("cloud_orchestrators") and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
         return
