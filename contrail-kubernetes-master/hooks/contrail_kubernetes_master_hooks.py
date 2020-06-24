@@ -81,6 +81,8 @@ def contrail_controller_changed():
     _update_config(data, "maintenance", "maintenance")
     _update_config(data, "controller_ips", "controller_ips")
     _update_config(data, "controller_data_ips", "controller_data_ips")
+    _update_config(data, "auth_info", "auth-info")
+    _update_config(data, "orchestrator_info", "orchestrator-info")
     config.save()
 
     utils.update_charm_status()

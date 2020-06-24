@@ -307,7 +307,18 @@ def contrail_controller_joined(rel_id=None):
 def contrail_controller_changed():
     data = relation_get()
     if "orchestrator-info" in data:
-        config["orchestrator_info"] = data["orchestrator-info"]
+        info = common_utils.json_loads(config.get("orchestrator_info"), dict())
+        if 'cloud_orchestrator' not in info:
+            info['cloud_orchestrator'] = list()
+        relation_info = common_utils.json_loads(data["orchestrator-info"])
+        relation_orchestrator = relation_info.pop("cloud_orchestrator", None)
+        if relation_orchestrator:
+            if type(relation_orchestrator) is str:
+                relation_orchestrator = [relation_orchestrator]
+            orchestrators = list(set(relation_orchestrator).union(set(info["cloud_orchestrator"])))
+            relation_info['cloud_orchestrator'] = orchestrators
+            info.update(relation_info)
+        config["orchestrator_info"] = json.dumps(info)
     if data.get("unit-type") == 'issu':
         config["maintenance"] = 'issu'
         config["issu_controller_ips"] = data.get("issu_controller_ips")
@@ -355,6 +366,15 @@ def contrail_controller_departed():
     if not agents_present and "orchestrator_info" in config:
         config.pop("orchestrator_info", None)
         changed = True
+    #TODO: what if there was both orchestrators and openstack was removed
+    elif agents_present:
+        for rid in relation_ids("contrail-controller"):
+            for unit in related_units(rid):
+                utype = relation_get('unit-type', unit, rid)
+                if (utype == "openstack" and not utype in config.get("cloud_orchestrator")):
+                    data = relation_get()
+                    config["orchestrator_info"] = data.get("orchestrator-info", dict())
+                    changed = True
     if not issu_present and config.get("maintenance") == 'issu':
         # TODO: finish ISSU process
         config.pop("maintenance", None)
