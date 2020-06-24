@@ -81,6 +81,13 @@ def contrail_controller_changed():
     _update_config(data, "maintenance", "maintenance")
     _update_config(data, "controller_ips", "controller_ips")
     _update_config(data, "controller_data_ips", "controller_data_ips")
+    _update_config(data, "auth_info", "auth-info")
+
+    if "orchestrator-info" in data:
+        orchestrator_info = common_utils.json_loads(data.get("orchestrator_info"), dict())
+        cloud_orchestrator = orchestrator_info.get("cloud_orchestrtor", 'kubernetes')
+        config["cloud_orchestrator"] = cloud_orchestrator
+
     config.save()
 
     utils.update_charm_status()

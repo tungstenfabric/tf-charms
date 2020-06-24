@@ -119,7 +119,7 @@ def get_context():
     ctx["host_network_service"] = config.get("host_network_service")
     ctx["public_fip_pool"] = config.get("public_fip_pool")
 
-    ctx["cloud_orchestrator"] = "kubernetes"
+    ctx["cloud_orchestrator"] = config.get("cloud_orchestrator", "kubernetes")
     ctx["kube_manager_token"] = leader_get("kube_manager_token")
     if config.get("kubernetes_api_hostname") and config.get("kubernetes_api_secure_port"):
         ctx["kubernetes_api_server"] = config.get("kubernetes_api_hostname")
@@ -135,6 +135,8 @@ def get_context():
 
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["logging"] = docker_utils.render_logging()
+
+    ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
 
     log("CTX: {}".format(ctx))
     return ctx
