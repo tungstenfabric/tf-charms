@@ -199,6 +199,8 @@ def get_context():
 
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
+    if not ctx.get("cloud_orchestrators"):
+        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
 
     ctx["controller_servers"] = common_utils.json_loads(config.get("controller_ips"), list())
     ctx["control_servers"] = common_utils.json_loads(config.get("controller_data_ips"), list())
@@ -276,15 +278,15 @@ def _check_readyness(ctx):
                    'Missing cloud_orchestrator info in relation '
                    'with contrail-controller.')
         return False
-    if ctx.get("cloud_orchestrator") == "openstack" and not ctx.get("keystone_ip"):
+    if "openstack" in ctx.get("cloud_orchestrators") and not ctx.get("keystone_ip"):
         status_set('blocked',
                    'Missing auth info in relation with contrail-controller.')
         return False
-    if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kube_manager_token"):
+    if "kubernetes" in ctx.get("cloud_orchestrators") and not ctx.get("kube_manager_token"):
         status_set('blocked',
                    'Kube manager token undefined.')
         return False
-    if ctx.get("cloud_orchestrator") == "kubernetes" and not ctx.get("kubernetes_api_server"):
+    if "kubernetes" in ctx.get("cloud_orchestrators") and not ctx.get("kubernetes_api_server"):
         status_set('blocked',
                    'Kubernetes API unavailable')
         return False

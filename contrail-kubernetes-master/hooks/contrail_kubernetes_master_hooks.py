@@ -66,10 +66,8 @@ def config_changed():
 @hooks.hook("contrail-controller-relation-joined")
 def contrail_controller_joined(rel_id=None):
     settings = {'unit-type': 'kubernetes'}
+    settings.update(_get_orchestrator_info())
     relation_set(relation_id=rel_id, relation_settings=settings)
-    if is_leader():
-        data = _get_orchestrator_info()
-        relation_set(relation_id=rel_id, **data)
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -81,6 +79,8 @@ def contrail_controller_changed():
     _update_config(data, "maintenance", "maintenance")
     _update_config(data, "controller_ips", "controller_ips")
     _update_config(data, "controller_data_ips", "controller_data_ips")
+    _update_config(data, "auth_info", "auth-info")
+    _update_config(data, "orchestrator_info", "orchestrator-info")
     config.save()
 
     utils.update_charm_status()

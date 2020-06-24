@@ -119,7 +119,13 @@ def get_context():
     ctx["host_network_service"] = config.get("host_network_service")
     ctx["public_fip_pool"] = config.get("public_fip_pool")
 
-    ctx["cloud_orchestrator"] = "kubernetes"
+    ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
+    if not ctx.get("cloud_orchestrators"):
+        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
+
+    # TODO: switch to use context for this
+    # TODO: add checks for orchestrator to calling function
+
     ctx["kube_manager_token"] = leader_get("kube_manager_token")
     if config.get("kubernetes_api_hostname") and config.get("kubernetes_api_secure_port"):
         ctx["kubernetes_api_server"] = config.get("kubernetes_api_hostname")
@@ -137,6 +143,9 @@ def get_context():
     ctx["logging"] = docker_utils.render_logging()
 
     log("CTX: {}".format(ctx))
+
+    ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
+
     return ctx
 
 
