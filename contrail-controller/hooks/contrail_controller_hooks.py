@@ -307,7 +307,20 @@ def contrail_controller_joined(rel_id=None):
 def contrail_controller_changed():
     data = relation_get()
     if "orchestrator-info" in data:
-        config["orchestrator_info"] = data["orchestrator-info"]
+        if "orchestrator_info" not in config:
+            config["orchestrator_info"] = data["orchestrator-info"]
+        else:
+            # update info with received info
+            relation_info = common_utils.json_loads(data["orchestrator-info"])
+            relation_orchestrator = relation_info.pop("cloud_orchestrator", None)
+            info = common_utils.json_loads(config.get("orchestrator-info"), dict())
+            info.update(relation_info)
+            info["all_orchestrators"] = list(
+                set([relation_orchestrator]).union(
+                    info.get("all_orchestrators", list()))
+            )
+            config["cloud_orchestrator"] = _choose_main_orchestrator(info["all_orchestrators"])
+            config["orchestrator_info"] = json.dumps(info)
     if data.get("unit-type") == 'issu':
         config["maintenance"] = 'issu'
         config["issu_controller_ips"] = data.get("issu_controller_ips")
@@ -341,20 +354,35 @@ def contrail_controller_changed():
 def contrail_controller_departed():
     # while we have at least one openstack/kubernetes unit on the remote end
     # then we can suggest that orchestrator is still defined
-    agents_present = False
+    openstack_present = False
+    kubernetes_present = False
     issu_present = False
     for rid in relation_ids("contrail-controller"):
         for unit in related_units(rid):
             utype = relation_get('unit-type', unit, rid)
-            if utype == "openstack" or utype == "kubernetes":
-                agents_present = True
+            if utype == "openstack":
+                openstack_present = True
+            if utype == "kubernetes":
+                kubernetes_present = True
             if utype == "issu":
                 issu_present = True
 
     changed = False
-    if not agents_present and "orchestrator_info" in config:
-        config.pop("orchestrator_info", None)
+    info = common_utils.json_loads(config.get("orchestrator-info"), dict())
+    all_orchestrators = info.get('all_orchestrators', list())
+    if not openstack_present and 'openstack' in all_orchestrators:
+        # remove 'openstack' from all_orchestrators
+        ...
         changed = True
+    if not kubernetes_present and 'kubernetes' in all_orchestrators:
+        # remove 'kubernetes' from all_orchestrators
+        ...
+        changed = True
+    if changed:
+        info["cloud_orchestrator"] = _choose_main_orchestrator(all_orchestrators)
+        info["all_orchestrators"] = all_orchestrators
+        config["orchestrator_info"] = json.dumps(info)
+
     if not issu_present and config.get("maintenance") == 'issu':
         # TODO: finish ISSU process
         config.pop("maintenance", None)
@@ -365,6 +393,14 @@ def contrail_controller_departed():
     if changed:
         update_northbound_relations()
         update_southbound_relations()
+
+
+def _choose_main_orchestrator(all_orchestrators):
+    if 'openstack' in all_orchestrators:
+        return 'openstack'
+    if 'kubernetes' in all_orchestrators:
+        return 'kubernetes'
+    return 'none'
 
 
 @hooks.hook("contrail-analytics-relation-joined")
