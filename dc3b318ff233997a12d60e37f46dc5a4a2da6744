@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e4674d3_e58eb9bb",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-25T09:06:05Z",
+      "side": 1,
+      "message": "who will pass kubernetes related params from master?",
+      "revId": "dc3b318ff233997a12d60e37f46dc5a4a2da6744",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4eccfa1e_894a72bb",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-25T09:06:05Z",
+      "side": 1,
+      "message": "what about this one?\nwhy it shouldn\u0027t be changed?",
+      "revId": "dc3b318ff233997a12d60e37f46dc5a4a2da6744",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c51ad84_3d51d07f",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-25T09:06:05Z",
+      "side": 1,
+      "message": "please do in a same way as in other charms",
+      "revId": "dc3b318ff233997a12d60e37f46dc5a4a2da6744",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57c5bb34_c0d5d34d",
+        "filename": "examples/contrail-bundle-k8s-opnestack.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-25T09:06:05Z",
+      "side": 1,
+      "message": "we have many machines. it\u0027s better to place worker to different machine than master",
+      "revId": "dc3b318ff233997a12d60e37f46dc5a4a2da6744",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
