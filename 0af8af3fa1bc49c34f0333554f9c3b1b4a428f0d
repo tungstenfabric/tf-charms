@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6be88da1_00efec9e",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-26T11:56:44Z",
+      "side": 1,
+      "message": "is really needed here? maybe move it to jinja file also?",
+      "revId": "0af8af3fa1bc49c34f0333554f9c3b1b4a428f0d",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
