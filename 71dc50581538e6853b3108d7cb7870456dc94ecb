@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc3912a7_f523d749",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-26T15:33:24Z",
+      "side": 1,
+      "message": "is it really required? other charms do not extract this and do not store",
+      "range": {
+        "startLine": 89,
+        "startChar": 8,
+        "endLine": 89,
+        "endChar": 36
+      },
+      "revId": "71dc50581538e6853b3108d7cb7870456dc94ecb",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56c31bbb_e349a49e",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-26T15:33:24Z",
+      "side": 1,
+      "message": "place this after log()",
+      "revId": "71dc50581538e6853b3108d7cb7870456dc94ecb",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47a76e0b_c0b1173b",
+        "filename": "contrail-kubernetes-master/templates/kubemanager.env",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-26T15:33:24Z",
+      "side": 1,
+      "message": "this check is not required I suppose.\nAUTH_MODE also is not required. containers will set it based on orchestrator",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 21
+      },
+      "revId": "71dc50581538e6853b3108d7cb7870456dc94ecb",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
