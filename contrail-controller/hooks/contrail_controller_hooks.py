@@ -443,11 +443,8 @@ def _http_services(vip):
             "balance source"]
     else:
         result[0]['service_options'] = [
-            "timeout client 86400000",
             "mode http",
             "balance source",
-            "timeout server 30000",
-            "timeout connect 4000",
             "hash-type consistent",
             "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
             "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
@@ -477,13 +474,10 @@ def _https_services_tcp(vip):
          "service_host": vip,
          "service_port": 8143,
          "service_options": [
-             "timeout client 86400000",
              "mode tcp",
              "option tcplog",
              "balance source",
              "cookie SERVERID insert indirect nocache",
-             "timeout server 30000",
-             "timeout connect 4000",
          ],
          "servers": [[
              name, addr, 8143,
@@ -500,11 +494,8 @@ def _https_services_http(vip):
          "service_port": 8143,
          "crts": ["DEFAULT"],
          "service_options": [
-             "timeout client 86400000",
              "mode http",
              "balance source",
-             "timeout server 30000",
-             "timeout connect 4000",
              "hash-type consistent",
              "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
              "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
