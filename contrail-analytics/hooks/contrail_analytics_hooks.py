@@ -205,9 +205,9 @@ def _http_services(vip):
             "balance source"]
     else:
         result[0]['service_options'] = [
-            "timeout client 86400000",
             "mode http",
             "balance source",
+            "timeout client 30000",
             "timeout server 30000",
             "timeout connect 4000",
             "hash-type consistent",

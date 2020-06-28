@@ -443,9 +443,9 @@ def _http_services(vip):
             "balance source"]
     else:
         result[0]['service_options'] = [
-            "timeout client 86400000",
             "mode http",
             "balance source",
+            "timeout client 30000",
             "timeout server 30000",
             "timeout connect 4000",
             "hash-type consistent",
@@ -477,11 +477,11 @@ def _https_services_tcp(vip):
          "service_host": vip,
          "service_port": 8143,
          "service_options": [
-             "timeout client 86400000",
              "mode tcp",
              "option tcplog",
              "balance source",
              "cookie SERVERID insert indirect nocache",
+             "timeout client 30000",
              "timeout server 30000",
              "timeout connect 4000",
          ],
@@ -500,9 +500,9 @@ def _https_services_http(vip):
          "service_port": 8143,
          "crts": ["DEFAULT"],
          "service_options": [
-             "timeout client 86400000",
              "mode http",
              "balance source",
+             "timeout client 30000",
              "timeout server 30000",
              "timeout connect 4000",
              "hash-type consistent",
