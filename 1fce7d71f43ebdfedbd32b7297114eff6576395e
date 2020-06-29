@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88217e8b_a364b35b",
+        "filename": "contrail-agent/templates/vrouter.env",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "i wrote \u0027none\u0027",
+      "range": {
+        "startLine": 8,
+        "startChar": 19,
+        "endLine": 8,
+        "endChar": 23
+      },
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1185b74_db57ef6e",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "how is it possible to have not string there?",
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d3c3334_b7ac7d78",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "if info[\"cloud_orchestrator\"] not in ...:\n    ... +\u003d info[\"cloud_orchestrator\"]",
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33418807_6fae1b6d",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "it\u0027s a bad idea to save it back",
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83123812_7d6e6d1e",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "incorrect default value",
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1db6460_70b41d2b",
+        "filename": "contrail-kubernetes-master/templates/kubemanager.env",
+        "patchSetId": 6
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-29T09:16:15Z",
+      "side": 1,
+      "message": "incorrect placement. this will override correct values for nested mode by empty values",
+      "revId": "1fce7d71f43ebdfedbd32b7297114eff6576395e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
