@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f63312a8_1c93e32a",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_utils.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-06-30T18:43:39Z",
+      "side": 1,
+      "message": "just return",
+      "range": {
+        "startLine": 187,
+        "startChar": 15,
+        "endLine": 187,
+        "endChar": 20
+      },
+      "revId": "c5755f3da1c5a68db53d5d7741554314ca712894",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
