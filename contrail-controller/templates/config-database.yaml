@@ -54,6 +54,8 @@ services:
 {% endif %}
   cassandra:
     image: "{{ container_registry }}/contrail-external-cassandra:{{ contrail_version_tag }}"
+    cap_add:
+      - SYS_NICE  # CAP_SYS_NICE
     env_file: /etc/contrail/common_config.env
     environment:
       - CASSANDRA_SEEDS={{ controller_servers|sort|join(',') }}
