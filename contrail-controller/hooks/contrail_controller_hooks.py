@@ -306,8 +306,6 @@ def contrail_controller_joined(rel_id=None):
 @hooks.hook("contrail-controller-relation-changed")
 def contrail_controller_changed():
     data = relation_get()
-    if "orchestrator-info" in data:
-        config["orchestrator_info"] = data["orchestrator-info"]
     if data.get("unit-type") == 'issu':
         config["maintenance"] = 'issu'
         config["issu_controller_ips"] = data.get("issu_controller_ips")
@@ -331,6 +329,8 @@ def contrail_controller_changed():
         config["agents-info"] = json.dumps(flags)
     config.save()
 
+    _rebuild_orchestrator_info()
+
     update_southbound_relations()
     update_northbound_relations()
     utils.update_ziu("controller-changed")
@@ -339,22 +339,15 @@ def contrail_controller_changed():
 
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_controller_departed():
-    # while we have at least one openstack/kubernetes unit on the remote end
-    # then we can suggest that orchestrator is still defined
-    agents_present = False
+    changed = _rebuild_orchestrator_info()
+
     issu_present = False
     for rid in relation_ids("contrail-controller"):
         for unit in related_units(rid):
             utype = relation_get('unit-type', unit, rid)
-            if utype == "openstack" or utype == "kubernetes":
-                agents_present = True
             if utype == "issu":
                 issu_present = True
 
-    changed = False
-    if not agents_present and "orchestrator_info" in config:
-        config.pop("orchestrator_info", None)
-        changed = True
     if not issu_present and config.get("maintenance") == 'issu':
         # TODO: finish ISSU process
         config.pop("maintenance", None)
@@ -365,6 +358,38 @@ def contrail_controller_departed():
     if changed:
         update_northbound_relations()
         update_southbound_relations()
+
+
+def _rebuild_orchestrator_info():
+    cloud_orchestrators = set()
+    info = dict()
+    for rid in relation_ids("contrail-controller"):
+        for unit in related_units(rid):
+            rel_info = relation_get('orchestrator-info', unit, rid)
+            if not rel_info:
+                continue
+            rel_info = common_utils.json_loads(rel_info)
+            rel_orchestrator = rel_info.pop("cloud_orchestrator", None)
+            if not rel_orchestrator:
+                continue
+            cloud_orchestrators.add(rel_orchestrator)
+            info.update(rel_info)
+    info['cloud_orchestrators'] = list(cloud_orchestrators)
+    info['cloud_orchestrator'] = _choose_main_orchestrator(cloud_orchestrators)
+
+    current_info = common_utils.json_loads(config.get("orchestrator-info"), dict())
+    config["orchestrator_info"] = json.dumps(info)
+    # returns 'changed' flag. this structure doesn't have nested dicts - will work.
+    return current_info != info
+
+
+def _choose_main_orchestrator(cloud_orchestrators):
+    if 'openstack' in cloud_orchestrators:
+        return 'openstack'
+    if 'kubernetes' in cloud_orchestrators:
+        return 'kubernetes'
+    # do not set anything - other case are not supported yet
+    return None
 
 
 @hooks.hook("contrail-analytics-relation-joined")
