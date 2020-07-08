@@ -1,5 +1,6 @@
 # ISSU procedure for Juju deployments with OpenStack
 
+
 ## Description
 
 This procedure assumes that you have working cluster with control plane, compute nodes and OpenStack controllers. With ISSU procedure you have to install new control plane of Contrail services and switch contrail-agents to this new control plane one by one. And at the end switch OpenStack plugins and then remove old control plane. Please note that only controller databases are migrated. Analytics database will not be migrated. Please do full backup before procedure.
