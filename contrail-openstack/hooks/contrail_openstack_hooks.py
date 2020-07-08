@@ -80,45 +80,64 @@ def contrail_controller_joined(rel_id=None):
     relation_set(relation_id=rel_id, relation_settings=settings)
 
 
-@hooks.hook("contrail-controller-relation-changed")
-def contrail_controller_changed():
-    data = relation_get()
+def _rebuild_config_from_controller_relation():
+    items = dict()
 
-    def _update_config(key, data_key):
-        if data_key in data:
-            val = data[data_key]
-            if val is not None:
-                config[key] = val
-            else:
-                config.pop(key, None)
+    def _update_item(data, key, data_key):
+        val = data.get(data_key)
+        if val is not None:
+            items[key] = val
+
+    ip = unit_private_ip()
+    units = [(rid, unit) for rid in relation_ids("contrail-controller")
+             for unit in related_units(rid)]
+    # add relation info as last item to override outdated data
+    units.append((None, None))
+    for rid, unit in units:
+        data = relation_get(attribute=None, unit=unit, rid=rid)
+        _update_item(data, "auth_info", "auth-info")
+        _update_item(data, "auth_mode", "auth-mode")
+        _update_item(data, "controller_ips", "controller_ips")
+
+        info = data.get("agents-info")
+        if not info:
+            items["dpdk"] = False
+        else:
+            value = json.loads(info).get(ip, False)
+            if not isinstance(value, bool):
+                value = yaml.load(value)
+            items["dpdk"] = value
+
+    if not items.get("dpdk"):
+        log("DPDK for current host is False. agents-info is not provided.")
+    else:
+        log("DPDK for host {ip} is {dpdk}".format(ip=ip, dpdk=value))
+
+    for key in ["auth_info", "auth_mode", "controller_ips", "dpdk"]:
+        if key in items:
+            config[key] = items[key]
         else:
             config.pop(key, None)
 
-    _update_config("auth_info", "auth-info")
-    _update_config("auth_mode", "auth-mode")
-    _update_config("controller_ips", "controller_ips")
 
-    info = data.get("agents-info")
-    if not info:
-        config["dpdk"] = False
-        log("DPDK for current host is False. agents-info is not provided.")
+def _update_status():
+    if "controller_ips" not in config:
+        status_set("blocked", "Missing relation to contrail-controller (controller_ips is empty or absent in relation)")
     else:
-        ip = unit_private_ip()
-        value = json.loads(info).get(ip, False)
-        if not isinstance(value, bool):
-            value = yaml.load(value)
-        config["dpdk"] = value
-        log("DPDK for host {ip} is {dpdk}".format(ip=ip, dpdk=value))
+        status_set("active", "Unit is ready")
 
+
+@hooks.hook("contrail-controller-relation-changed")
+def contrail_controller_changed():
+    _rebuild_config_from_controller_relation()
     config.save()
     utils.write_configs()
+    _update_status()
 
     # apply information to base charms
     _notify_nova()
     _notify_neutron()
     _notify_heat()
-
-    status_set("active", "Unit is ready")
 
     # auth_info can affect endpoints
     if is_leader() and utils.update_service_ips():
@@ -127,17 +146,10 @@ def contrail_controller_changed():
 
 @hooks.hook("contrail-controller-relation-departed")
 def contrail_cotroller_departed():
-    units = [unit for rid in relation_ids("contrail-controller")
-             for unit in related_units(rid)]
-    if units:
-        return
-
-    keys = ["auth_info", "auth_mode"]
-    for key in keys:
-        config.pop(key, None)
+    _rebuild_config_from_controller_relation()
     config.save()
     utils.write_configs()
-    status_set("blocked", "Missing relation to contrail-controller")
+    _update_status()
 
 
 def _configure_metadata_shared_secret():
@@ -332,6 +344,11 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    _rebuild_config_from_controller_relation()
+    config.save()
+    utils.write_configs()
+    _update_status()
+
     if is_leader():
         utils.update_service_ips()
     # apply information to base charms

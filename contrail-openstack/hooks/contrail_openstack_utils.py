@@ -344,7 +344,7 @@ def get_openstack_version_codename(dist):
         version = check_output(['./files/get_openstack_version_codename.sh',
                                 dist]).decode('UTF-8')
         if not version:
-            log("Version of {} couldn't be detected: {}".format(dist), level=WARNING)
+            log("Version of {} couldn't be detected.".format(dist), level=WARNING)
             return None
         return int(version.split('.')[0])
     except Exception as e:
