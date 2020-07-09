@@ -54,6 +54,8 @@ def config_changed():
     docker_utils.config_changed()
     utils.update_charm_status()
 
+    _notify_proxy_services()
+
     # leave it as latest - in case of exception in previous steps
     # config.changed doesn't work sometimes...
     if config.get("saved-image-tag") != config["image-tag"]:
@@ -153,6 +155,7 @@ def tls_certificates_relation_joined():
 @hooks.hook('tls-certificates-relation-changed')
 def tls_certificates_relation_changed():
     if common_utils.tls_changed(utils.MODULE, relation_get()):
+        _notify_proxy_services()
         utils.update_nrpe_config()
         utils.update_charm_status()
 
@@ -160,6 +163,7 @@ def tls_certificates_relation_changed():
 @hooks.hook('tls-certificates-relation-departed')
 def tls_certificates_relation_departed():
     if common_utils.tls_changed(utils.MODULE, None):
+        _notify_proxy_services()
         utils.update_nrpe_config()
         utils.update_charm_status()
 
@@ -176,6 +180,13 @@ def upgrade_charm():
 
 
 def _notify_proxy_services():
+    vip = config.get("vip")
+    func = close_port if vip else open_port
+    for port in ["8081"]:
+        try:
+            func(port, "TCP")
+        except Exception:
+            pass
     for rid in relation_ids("http-services"):
         if related_units(rid):
             http_services_joined(rid)
