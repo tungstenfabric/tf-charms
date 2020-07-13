@@ -37,7 +37,6 @@ services:
       - node-init
     restart: always
 {{ logging | indent(4,True) }}
-{% if contrail_version >= 2002 %}
   provisioner:
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
@@ -51,7 +50,6 @@ services:
       - node-init
     restart: on-failure
 {{ logging | indent(4,True) }}
-{% endif %}
   cassandra:
     image: "{{ container_registry }}/contrail-external-cassandra:{{ contrail_version_tag }}"
     cap_add:
@@ -69,9 +67,7 @@ services:
       - NODE_TYPE=config-database
     volumes:
       - config_cassandra:/var/lib/cassandra/data
-    {% if contrail_version >= 2008 %}
       - /var/log/contrail/config-database:/var/log/cassandra
-    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -90,9 +86,7 @@ services:
     volumes:
       - config_zookeeper:/data
       - config_zookeeper:/datalog
-    {% if contrail_version >= 2008 %}
       - /var/log/contrail/zookeeper:/var/log/zookeeper
-    {% endif %}
     volumes_from:
       - node-init
     depends_on:
@@ -109,10 +103,8 @@ services:
       - NODE_TYPE=config-database
       - RABBITMQ_LOGS=/var/log/rabbitmq/rabbitmq.log
       - RAMMITMQ_SASL_LOGS=/var/log/rabbitmq/rabbitmq_sasl.log
-    {% if contrail_version >= 2008 %}
     volumes:
       - /var/log/contrail/rabbitmq:/var/log/rabbitmq
-    {% endif %}
     volumes_from:
       - node-init
     depends_on:
