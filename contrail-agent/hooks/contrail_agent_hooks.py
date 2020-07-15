@@ -29,6 +29,8 @@ def install():
 
     # TODO: try to remove this call
     common_utils.fix_hostname()
+    utils.compile_kernel_modules()
+
 
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()
@@ -163,6 +165,7 @@ def vrouter_plugin_changed():
 @hooks.hook("update-status")
 def update_status():
     utils.update_ziu("update-status")
+    utils.compile_kernel_modules()
     utils.update_charm_status()
 
 
