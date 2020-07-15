@@ -163,6 +163,7 @@ def vrouter_plugin_changed():
 @hooks.hook("update-status")
 def update_status():
     utils.update_ziu("update-status")
+    utils.compile_kernel_modules()
     utils.update_charm_status()
 
 
