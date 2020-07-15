@@ -226,6 +226,23 @@ def get_context():
     return ctx
 
 
+def compile_kernel_modules():
+    modules = '/lib/modules'
+    need_to_compile = False
+    for item in os.listdir(modules):
+        # vrouter doesn't support kernels version 5, remove check after fix
+        if item.split('.')[0] != '5':
+            path = os.path.join(modules, item, 'updates/dkms/vrouter.ko')
+            if not os.path.exists(path):
+                need_to_compile = True
+                break
+    if need_to_compile:
+        path = CONFIGS_PATH + "/docker-compose.yaml"
+        state = docker_utils.get_container_state(path, "vrouter-kernel-init")
+        if state and state.get('Status', '').lower() == 'exited':
+            docker_utils.restart_container("contrail-vrouter-kernel-build-init")
+
+
 def _pull_images():
     tag = config.get('image-tag')
     for image in IMAGES + (IMAGES_DPDK if config["dpdk"] else IMAGES_KERNEL):
