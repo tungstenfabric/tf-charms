@@ -231,17 +231,20 @@ def compile_kernel_modules():
     need_to_compile = False
     for item in os.listdir(modules):
         # vrouter doesn't support kernels version 5, remove check after fix
-        if item.split('.')[0] != '5':
-            path = os.path.join(modules, item, 'updates/dkms/vrouter.ko')
-            if not os.path.exists(path):
-                need_to_compile = True
-                break
+        if item.split('.')[0] == '5':
+            continue
+        path = os.path.join(modules, item, 'updates/dkms/vrouter.ko')
+        if not os.path.exists(path):
+            need_to_compile = True
+            break
     contrail_version = common_utils.get_contrail_version()
-    if need_to_compile and contrail_version >= 2008:
-        path = CONFIGS_PATH + "/docker-compose.yaml"
-        state = docker_utils.get_container_state(path, "vrouter-kernel-init")
-        if state and state.get('Status', '').lower() == 'exited':
-            docker_utils.restart_container("contrail-vrouter-kernel-build-init")
+    if not need_to_compile or contrail_version < 2008:
+        return
+
+    path = CONFIGS_PATH + "/docker-compose.yaml"
+    state = docker_utils.get_container_state(path, "vrouter-kernel-init")
+    if state and state.get('Status', '').lower() != 'running':
+        docker_utils.restart_container(path, "vrouter-kernel-init")
 
 
 def _pull_images():
