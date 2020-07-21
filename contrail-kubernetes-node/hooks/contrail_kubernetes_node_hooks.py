@@ -43,6 +43,7 @@ def contrail_kubernetes_config_changed():
         if value:
             config[key] = value
 
+    _add_to_config("cluster_name")
     _add_to_config("pod_subnets")
     _add_to_config("nested_mode_config")
     nested_mode = relation_get("nested_mode")
@@ -60,7 +61,10 @@ def cni_joined(rel_id=None):
     cidr = config.get("pod_subnets")
     if not cidr:
         return
-    data = {"cidr": cidr, "cni-conf-file": "/etc/cni/net.d/10-contrail.conf" }
+    data = {
+        "cidr": cidr,
+        "cni-conf-file": "/etc/cni/net.d/10-contrail.conf"
+    }
     relation_set(relation_id=rel_id, relation_settings=data)
 
 
