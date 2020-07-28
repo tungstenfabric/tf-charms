@@ -176,6 +176,7 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    _notify_proxy_services()
     utils.update_charm_status()
 
 

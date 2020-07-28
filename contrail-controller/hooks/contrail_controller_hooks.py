@@ -643,6 +643,7 @@ def upgrade_charm():
     for rid in relation_ids("controller-cluster"):
         if related_units(rid):
             cluster_joined(rel_id=rid)
+    _notify_haproxy_services()
 
 
 def main():
