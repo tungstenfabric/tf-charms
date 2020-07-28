@@ -213,6 +213,9 @@ def get_context():
         if my_ip in plugin_ips:
             ctx["plugin_settings"] = plugin_ips[my_ip]
 
+    if "pod_subnets" in config:
+        ctx["pod_subnets"] = config["pod_subnets"]
+
     if config.get('maintenance') == 'issu':
         ctx["controller_servers"] = common_utils.json_loads(config.get("issu_controller_ips"), list())
         ctx["control_servers"] = common_utils.json_loads(config.get("issu_controller_data_ips"), list())
