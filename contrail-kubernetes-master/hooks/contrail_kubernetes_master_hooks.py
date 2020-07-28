@@ -14,6 +14,7 @@ from charmhelpers.core.hookenv import (
     relation_set,
     is_leader,
     leader_get,
+    leader_set,
 )
 
 import contrail_kubernetes_master_utils as utils
@@ -56,8 +57,11 @@ def config_changed():
                 relation_set(relation_id=rid, relation_settings=settings)
 
     _notify_contrail_kubernetes_node()
-    if config.changed("kubernetes_api_hostname") or config.changed("kubernetes_api_secure_port"):
-        _notify_controller()
+    if (config.changed("kubernetes_api_hostname") or
+        config.changed("kubernetes_api_secure_port") or
+        config_changed("cluster_name") or
+        config_changed("pod_subnets")):
+            _notify_controller()
 
     docker_utils.config_changed()
     utils.update_charm_status()
@@ -67,6 +71,7 @@ def config_changed():
 def contrail_controller_joined(rel_id=None):
     settings = {'unit-type': 'kubernetes'}
     settings.update(_get_orchestrator_info())
+    settings.update(_get_k8s_info())
     relation_set(relation_id=rel_id, relation_settings=settings)
 
 
@@ -119,12 +124,23 @@ def kube_api_endpoint_changed():
 
 @hooks.hook("contrail-kubernetes-config-relation-joined")
 def contrail_kubernetes_config_joined(rel_id=None):
+    if is_leader:
+        _set_workers_list()
+
     data = {}
     data["cluster_name"] = config.get("cluster_name")
     data["pod_subnets"] = config.get("pod_subnets")
     data["nested_mode"] = config.get("nested_mode")
     data["nested_mode_config"] = config.get("nested_mode_config")
     relation_set(relation_id=rel_id, relation_settings=data)
+
+
+@hooks.hook("contrail-kubernetes-config-relation-changed")
+@hooks.hook("contrail-kubernetes-config-relation-broken")
+@hooks.hook("contrail-kubernetes-config-relation-departed")
+def contrail_kubernetes_config_changed(rel_id=None):
+    if is_leader:
+        _set_workers_list()
 
 
 @hooks.hook("leader-settings-changed")
@@ -185,6 +201,31 @@ def _get_orchestrator_info():
     return {"orchestrator-info": json.dumps(info)}
 
 
+def _set_workers_list():
+    workers_list = []
+    for rid in relation_ids("contrail-kubernetes-config"):
+        for unit in related_units(rid):
+            ip = relation_get("private-address", unit, rid)
+            workers_list.append(ip)
+    settings = {"kubernetes_workers": json.dumps(workers_list)}
+    leader_set(settings=settings)
+    _notify_controller()
+
+
+def _get_k8s_info():
+    info = {}
+
+    def _add_to_info(key, value):
+        if value:
+            info[key] = value
+
+    _add_to_info("pod_subnets", config.get("pod_subnets"))
+    _add_to_info("kubernetes_workers", leader_get("kubernetes_workers"))
+    _add_to_info("cluster_name", config.get("cluster_name"))
+
+    return {"k8s_info": json.dumps(info)}
+
+
 @hooks.hook('tls-certificates-relation-joined')
 def tls_certificates_relation_joined():
     settings = common_utils.get_tls_settings(common_utils.get_ip())
@@ -206,6 +247,8 @@ def tls_certificates_relation_departed():
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
     _notify_contrail_kubernetes_node()
+    if is_leader:
+        _set_workers_list()
     utils.update_charm_status()
 
 
