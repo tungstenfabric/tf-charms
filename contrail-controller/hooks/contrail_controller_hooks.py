@@ -327,6 +327,26 @@ def contrail_controller_changed():
         flags = common_utils.json_loads(config.get("agents-info"), dict())
         flags[address] = data["dpdk"]
         config["agents-info"] = json.dumps(flags)
+    if "k8s_info" in data:
+        # remote unit is kubemaster
+        k8s_info = common_utils.json_loads(data.get("k8s_info"), dict())
+        if k8s_info:
+            cluster_name = k8s_info.get("cluster_name")
+            pod_subnets = k8s_info.get("pod_subnets")
+            kubernetes_workers= k8s_info.get("kubernetes_workers")
+
+            cluster_info = {
+                cluster_name: {
+                    "pod_subnets": pod_subnets,
+                    "kubernetes_workers": kubernetes_workers
+                }
+            }
+        agents_info = common_utils.json_loads(config.get("agents-info"), dict())
+        if agents_info.get("k8s_info"):
+            agents_info["k8s_info"].update(cluster_info)
+        else:
+            agents_info["k8s_info"] = cluster_info
+        config["agents-info"] = json.dumps(agents_info)
     config.save()
 
     _rebuild_orchestrator_info()

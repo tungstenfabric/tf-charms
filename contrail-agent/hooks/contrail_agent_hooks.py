@@ -13,6 +13,7 @@ from charmhelpers.core.hookenv import (
     relation_ids,
     related_units,
     status_set,
+    unit_private_ip,
 )
 
 import contrail_agent_utils as utils
@@ -102,7 +103,15 @@ def contrail_controller_changed():
     else:
         config.pop("maintenance", None)
 
-    config.save()
+    info = common_utils.json_loads(data.get("agents-info"), dict())
+    k8s_info = info.get("k8s_info")
+    if k8s_info:
+        ip = unit_private_ip()
+        for cluster in k8s_info:
+            kubernetes_workers = k8s_info[cluster].get("kubernetes_workers", [])
+            if ip in kubernetes_workers:
+                config["pod_subnets"] = k8s_info[cluster].get("pod_subnets")
+                break
 
     if "controller_data_ips" in data:
         settings = {"vhost-address": utils.get_vhost_ip()}
