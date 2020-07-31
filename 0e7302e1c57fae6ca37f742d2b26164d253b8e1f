@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ed3a621_3eea4626",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T19:29:57Z",
+      "side": 1,
+      "message": "is_leader() is always False here.\n\njust add a call to _notify_controller()",
+      "revId": "0e7302e1c57fae6ca37f742d2b26164d253b8e1f",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
