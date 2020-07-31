@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bc9bbe9_a4d24cac",
+        "filename": "contrail-agent/hooks/contrail_agent_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:27:28Z",
+      "side": 1,
+      "message": "lines 106-108 -\u003e\ncommon_utils.json_loads(data.get(\"agents-info\"), dict())",
+      "range": {
+        "startLine": 108,
+        "startChar": 19,
+        "endLine": 108,
+        "endChar": 29
+      },
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b3ccf26_44908943",
+        "filename": "contrail-agent/hooks/contrail_agent_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:27:28Z",
+      "side": 1,
+      "message": "do not save config",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f4ea8c6_a21d35c5",
+        "filename": "contrail-agent/hooks/contrail_agent_utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:27:28Z",
+      "side": 1,
+      "message": "do not check here",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80386930_f5372174",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:27:28Z",
+      "side": 1,
+      "message": "what if several k8s clusters there?",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
