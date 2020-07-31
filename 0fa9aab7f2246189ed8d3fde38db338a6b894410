@@ -73,6 +73,166 @@
       "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbe9deed_87c5b517",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "please use appropriate name always",
+      "range": {
+        "startLine": 333,
+        "startChar": 8,
+        "endLine": 333,
+        "endChar": 13
+      },
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c69f0b1_9b90f25f",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "in joined hook you can\u0027t do relation.get\nplease remove added code from this hook",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8eae1d7_9446056f",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "if not is_leader():\n    return\n\n...",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0f4ae16_b37db27a",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "leader_set(\"kubernetes_workers\": json.dumps(_collect_worker_ips()))\n_notify_controller()",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 149,
+        "endChar": 0
+      },
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f0f0bfd_598005b3",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "add _notify_controller here as well. all relations must have new info",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a47ac1d8_d12daa08",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "why \u0027set\u0027? it\u0027s \u0027get\u0027 or \u0027collect\u0027",
+      "range": {
+        "startLine": 210,
+        "startChar": 4,
+        "endLine": 210,
+        "endChar": 21
+      },
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49a0d145_2e036834",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "mmm, I told that this internal function is not required...",
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91814c53_8e820323",
+        "filename": "contrail-kubernetes-master/hooks/contrail_kubernetes_master_hooks.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-07-31T10:54:35Z",
+      "side": 1,
+      "message": "leader_set(\"kubernetes_workers\": json.dumps(_collect_worker_ips()))\n_notify_controller()",
+      "range": {
+        "startLine": 255,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 0
+      },
+      "revId": "0fa9aab7f2246189ed8d3fde38db338a6b894410",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
