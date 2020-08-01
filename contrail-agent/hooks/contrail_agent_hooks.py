@@ -109,7 +109,7 @@ def contrail_controller_changed():
         ip = unit_private_ip()
         for cluster in k8s_info:
             kubernetes_workers = k8s_info[cluster].get("kubernetes_workers", [])
-            if ip in kubernetes_workers:
+            if kubernetes_workers and ip in kubernetes_workers:
                 config["pod_subnets"] = k8s_info[cluster].get("pod_subnets")
                 break
 
