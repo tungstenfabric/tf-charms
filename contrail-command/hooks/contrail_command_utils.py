@@ -5,6 +5,7 @@ from distutils.dir_util import copy_tree
 import shutil
 
 from charmhelpers.core.hookenv import (
+    application_version_set,
     config,
     log,
     status_set
@@ -127,6 +128,9 @@ def update_charm_status():
         config["command_deployed"] = True
 
     update_status()
+
+    version = docker_utils.get_contrail_version("contrail-command", tag)
+    application_version_set(version)
 
 
 def import_cluster(juju_params):
