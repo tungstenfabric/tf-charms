@@ -338,16 +338,17 @@ def _run_services(ctx):
     common_utils.update_services_status(MODULE, SERVICES)
 
 
-def stop_agent():
+def stop_agent(stop_agent_par):
     path = CONFIGS_PATH + "/docker-compose.yaml"
-    docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
-    # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
-    for i in range(0, 12):
-        state = docker_utils.get_container_state(path, "vrouter-agent")
-        if not state or state.get('Status', '').lower() != 'running':
-            break
-    else:
-        raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and re-run operation.")
+    if stop_agent_par:
+        docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
+        # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
+        for i in range(0, 12):
+            state = docker_utils.get_container_state(path, "vrouter-agent")
+            if not state or state.get('Status', '').lower() != 'running':
+                break
+        else:
+            raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and re-run operation.")
     docker_utils.compose_down(path)
     # remove all built vrouter.ko
     modules = '/lib/modules'
@@ -359,12 +360,12 @@ def stop_agent():
             pass
 
 
-def action_upgrade():
+def action_upgrade(params):
     mode = config.get("maintenance")
     if not mode:
         return
-
-    stop_agent()
+    log("Upgrade action params: {}".format(params))
+    stop_agent(params["stop_agent"])
     if mode == 'issu':
         _run_services(get_context())
     elif mode == 'ziu':
