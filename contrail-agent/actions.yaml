@@ -1,2 +1,10 @@
 upgrade:
     description: Do unit upgrade in case of maintenace mode (ISSU or ZIU). New image-tag should be set before.
+    params:
+        stop-agent:
+            type: boolean
+            description: |
+                Do call sig quit for agent container or not. for versions 2003 and before this container has a bug - 
+                if this signal will be sent then node can loose connectivity or hang.
+            default: True
+
