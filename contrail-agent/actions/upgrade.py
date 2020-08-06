@@ -19,7 +19,9 @@ import contrail_agent_utils as utils
 
 
 def upgrade():
-    utils.action_upgrade()
+    juju_params = {}
+    juju_params["stop_agent"] = action_get("stop-agent")
+    utils.action_upgrade(juju_params)
 
 
 if __name__ == '__main__':
