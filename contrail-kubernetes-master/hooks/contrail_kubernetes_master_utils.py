@@ -106,7 +106,7 @@ def get_context():
     ips = common_utils.json_loads(config.get("analytics_servers"), list())
     ctx["analytics_servers"] = ips
 
-    # TODO: add ssl
+    ctx["ssl_enabled"] = config.get("ssl_enabled", False)
 
     ctx["cluster_name"] = config.get("cluster_name")
     ctx["cluster_project"] = config.get("cluster_project")
