@@ -24,6 +24,8 @@ UBUNTU_RELEASES = (
     'bionic',
     'cosmic',
     'disco',
+    'eoan',
+    'focal'
 )
 
 
