@@ -105,11 +105,11 @@ def _get_default_gateway_iface():
 
 def _get_iface_gateway_ip(iface):
     ifaces = [iface, "vhost0"]
-    for line in check_output(["route", "-n"]).decode('UTF-8').splitlines()[2:]:
-        items = line.split()
-        if "G" in items[3] and items[7] in ifaces:
-            log("Found gateway {} for interface {}".format(items[1], iface))
-            return items[1]
+    gateways = netifaces.gateways()[netifaces.AF_INET]
+    for gw in gateways:
+        if gw[1] in ifaces:
+            log("Found gateway {} for interface {}".format(gw[0], iface))
+            return gw[0]
     log("vrouter-gateway set to 'auto' but gateway could not be determined "
         "from routing table for interface {}".format(iface), level=WARNING)
     return None
