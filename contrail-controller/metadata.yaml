@@ -6,6 +6,7 @@ description: |
 series:
   - xenial
   - bionic
+  - focal
 peers:
   controller-cluster:
     interface: contrail-controller-cluster
