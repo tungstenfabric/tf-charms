@@ -6,6 +6,7 @@ description: |
 series:
   - xenial
   - bionic
+  - focal
 peers:
   analytics-cluster:
     interface: contrail-analytics-cluster
