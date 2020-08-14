@@ -17,4 +17,7 @@ for dep in ${DEPS[@]}; do
     check_and_install ${PYTHON} ${dep}
 done
 
+# in Ubuntu 20.04 net-tools can be not installed
+apt-get -y install net-tools
+
 exec ./hooks/install.real
