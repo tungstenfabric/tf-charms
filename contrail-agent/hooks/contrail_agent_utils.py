@@ -1,5 +1,6 @@
 import os
 import socket
+import struct
 import yaml
 from subprocess import (
     check_call,
@@ -105,11 +106,14 @@ def _get_default_gateway_iface():
 
 def _get_iface_gateway_ip(iface):
     ifaces = [iface, "vhost0"]
-    for line in check_output(["route", "-n"]).decode('UTF-8').splitlines()[2:]:
-        items = line.split()
-        if "G" in items[3] and items[7] in ifaces:
-            log("Found gateway {} for interface {}".format(items[1], iface))
-            return items[1]
+    with open("/proc/net/route") as fh:
+        for line in fh:
+            fields = line.strip().split()
+            if fields[0] not in ifaces or not int(fields[3], 16) & 2:
+                continue
+            gateway = socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+            log("Found gateway {} for interface {}".format(gateway, iface))
+            return gateway
     log("vrouter-gateway set to 'auto' but gateway could not be determined "
         "from routing table for interface {}".format(iface), level=WARNING)
     return None
