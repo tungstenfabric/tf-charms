@@ -58,10 +58,10 @@ def config_changed():
 
     _notify_contrail_kubernetes_node()
     if (config.changed("kubernetes_api_hostname") or
-        config.changed("kubernetes_api_secure_port") or
-        config.changed("cluster_name") or
-        config.changed("pod_subnets")):
-            _notify_controller()
+            config.changed("kubernetes_api_secure_port") or
+            config.changed("cluster_name") or
+            config.changed("pod_subnets")):
+        _notify_controller()
 
     docker_utils.config_changed()
     utils.update_charm_status()
