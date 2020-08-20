@@ -76,6 +76,7 @@ services:
       - node-init
     depends_on:
       - node-init
+    restart: on-failure
 {{ logging | indent(4,True) }}
 {%- if agent_mode == 'dpdk' %}
   vrouter-agent-dpdk:

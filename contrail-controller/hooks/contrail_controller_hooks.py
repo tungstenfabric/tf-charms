@@ -333,7 +333,7 @@ def contrail_controller_changed():
         if k8s_info:
             cluster_name = k8s_info.get("cluster_name")
             pod_subnets = k8s_info.get("pod_subnets")
-            kubernetes_workers= k8s_info.get("kubernetes_workers")
+            kubernetes_workers = k8s_info.get("kubernetes_workers")
 
             cluster_info = {
                 cluster_name: {
