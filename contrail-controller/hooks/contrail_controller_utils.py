@@ -3,6 +3,7 @@ import tempfile
 import socket
 
 from charmhelpers.core.hookenv import (
+    action_fail,
     config,
     is_leader,
     in_relation_hook,
@@ -515,11 +516,7 @@ def signal_ziu(key, value):
     config_set(key, value)
 
 
-def check_ziu_stage_done(stage):
-    log("ZIU: check stage({}) is done".format(stage))
-    if int(config.get("ziu_done", -1)) != stage:
-        log("ZIU: stage is not ready on local unit")
-        return False
+def check_ziu_stage_done_ziu_relations(stage):
     for rname in ziu_relations:
         for rid in relation_ids(rname):
             for unit in related_units(rid):
@@ -527,7 +524,10 @@ def check_ziu_stage_done(stage):
                 if value is None or int(value) != stage:
                     log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
                     return False
-    # special case for contrail-agents
+    return True
+
+
+def check_ziu_stage_done_contrail_agents(stage):
     for rid in relation_ids("contrail-controller"):
         for unit in related_units(rid):
             unit_type = relation_get("unit-type", unit, rid)
@@ -537,6 +537,22 @@ def check_ziu_stage_done(stage):
             if value is None or int(value) != stage:
                 log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
                 return False
+    return True
+
+
+def check_ziu_stage_done(stage, contrail_agent=True):
+    log("ZIU: check stage({}) is done".format(stage))
+    if int(config.get("ziu_done", -1)) != stage:
+        log("ZIU: stage is not ready on local unit")
+        return False
+
+    if not check_ziu_stage_done_ziu_relations(stage):
+        return False
+
+    if contrail_agent:
+        if not check_ziu_stage_done_contrail_agents(stage):
+            return False
+
     log("ZIU: stage done")
     return True
 
@@ -657,6 +673,18 @@ def ziu_restart_db(stage):
     if result:
         signal_ziu("ziu_done", stage)
 
+
+def ziu_finish(trigger):
+    ziu_stage = 5
+    if not check_ziu_stage_done_ziu_relations(ziu_stage):
+        action_fail("ziu stage 5 is not completed\ncannot finish manualy")
+        return
+
+    log("ZIU: forcing stage 6")
+    ziu_stage = ziu_stage + 1
+    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+    stages[ziu_stage](ziu_stage, trigger)
+    signal_ziu("ziu", ziu_stage)
 
 stages = {
     0: ziu_stage_0,

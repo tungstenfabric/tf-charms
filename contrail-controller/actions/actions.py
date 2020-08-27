@@ -38,10 +38,14 @@ def apply_defaults(args):
     utils.update_charm_status()
 
 
+def finish_ziu(args):
+    utils.ziu_finish("finish-ziu")
+
 ACTIONS = {
     "upgrade-ziu": upgrade_ziu,
     "cancel-ziu": cancel_ziu,
-    "apply-defaults": apply_defaults
+    "apply-defaults": apply_defaults,
+    "finish-ziu": finish_ziu
 }
 
 
