@@ -658,6 +658,19 @@ def ziu_restart_db(stage):
         signal_ziu("ziu_done", stage)
 
 
+def ziu_finnish(trigger): 
+    ziu_stage = 5
+    if not check_ziu_stage_done(ziu_stage):
+        print("ziu stage 5 is not completed\ncannot finnish manualy")
+        return False
+
+    print("forcing stage 6")
+    ziu_stage = ziu_stage + 1
+    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+    stages[ziu_stage](ziu_stage, trigger)
+    return True
+
+
 stages = {
     0: ziu_stage_0,
     1: ziu_stage_1,
