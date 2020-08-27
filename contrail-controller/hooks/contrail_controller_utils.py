@@ -515,7 +515,7 @@ def signal_ziu(key, value):
     config_set(key, value)
 
 
-def check_ziu_stage_done(stage):
+def check_ziu_stage_done_ziu_relations(stage):
     log("ZIU: check stage({}) is done".format(stage))
     if int(config.get("ziu_done", -1)) != stage:
         log("ZIU: stage is not ready on local unit")
@@ -527,7 +527,15 @@ def check_ziu_stage_done(stage):
                 if value is None or int(value) != stage:
                     log("ZIU: stage is not ready: rel={} unit={} value={}".format(rid, unit, value))
                     return False
-    # special case for contrail-agents
+    log("ZIU: stage done")
+    return True
+
+
+def check_ziu_stage_done_contrail_agents(stage):
+    log("ZIU: check stage({}) is done".format(stage))
+    if int(config.get("ziu_done", -1)) != stage:
+        log("ZIU: stage is not ready on local unit")
+        return False
     for rid in relation_ids("contrail-controller"):
         for unit in related_units(rid):
             unit_type = relation_get("unit-type", unit, rid)
@@ -539,6 +547,12 @@ def check_ziu_stage_done(stage):
                 return False
     log("ZIU: stage done")
     return True
+
+
+def check_ziu_stage_done(stage):
+    if not check_ziu_stage_done_ziu_relations(stage):
+        return False
+    return check_ziu_stage_done_contrail_agents(stage)
 
 
 def sequential_ziu_stage(stage, action):
@@ -656,6 +670,19 @@ def ziu_restart_db(stage):
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:
         signal_ziu("ziu_done", stage)
+
+
+def ziu_finish(trigger):
+    ziu_stage = 5
+    if not check_ziu_stage_done_ziu_relations(ziu_stage):
+        print("ziu stage 5 is not completed\ncannot finish manualy")
+        return False
+
+    print("forcing stage 6")
+    ziu_stage = ziu_stage + 1
+    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+    stages[ziu_stage](ziu_stage, trigger)
+    return True
 
 
 stages = {
