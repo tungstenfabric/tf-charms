@@ -7,3 +7,7 @@ apply-defaults:
       Action which applies configuration parameters marked as [default] in their description.
       It has sense only for release 2002 and further.
       Release 1912 and before may apply default parameters each restart.
+finish-ziu:
+    description: |
+      When user finishes with upgrading all computes and if he has some unresponsive computes -
+      then he may call finish-upgrade for ZIU finish
