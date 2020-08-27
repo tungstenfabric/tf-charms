@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b094fa33_c251f120",
+        "filename": "contrail-agent/hooks/install",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-27T14:21:17Z",
+      "side": 1,
+      "message": "let\u0027s replace call to \u0027route\u0027 with \u0027ip\u0027",
+      "revId": "1499303c09ad8f0170f9cd0d67ee297d5c916956",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
