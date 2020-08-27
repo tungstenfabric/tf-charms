@@ -37,11 +37,15 @@ def apply_defaults(args):
     config['apply-defaults'] = True
     utils.update_charm_status()
 
+def finnish_ziu(args):
+    utils.ziu_finnish()
+    utils.update_charm_status("finnish ziu")
 
 ACTIONS = {
     "upgrade-ziu": upgrade_ziu,
     "cancel-ziu": cancel_ziu,
     "apply-defaults": apply_defaults
+    "finnish-ziu": finnish_ziu
 }
 
 
