@@ -2,6 +2,8 @@
 import os
 import sys
 
+from charmhelpers.core.hookenv import action_get
+
 _path = os.path.dirname(os.path.realpath(__file__))
 _hooks = os.path.abspath(os.path.join(_path, '../hooks'))
 _root = os.path.abspath(os.path.join(_path, '..'))
