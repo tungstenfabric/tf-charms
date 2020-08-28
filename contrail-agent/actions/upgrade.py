@@ -2,8 +2,6 @@
 import os
 import sys
 
-from charmhelpers.core.hookenv import action_get
-
 _path = os.path.dirname(os.path.realpath(__file__))
 _hooks = os.path.abspath(os.path.join(_path, '../hooks'))
 _root = os.path.abspath(os.path.join(_path, '..'))
@@ -17,6 +15,7 @@ def _add_path(path):
 _add_path(_hooks)
 _add_path(_root)
 
+from charmhelpers.core.hookenv import action_get
 import contrail_agent_utils as utils
 
 
