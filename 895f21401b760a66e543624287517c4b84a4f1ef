@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68d7d381_6af0a0cb",
+        "filename": "contrail-controller/actions/actions.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "please keep 2 empty lines between global functions",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d982d29_8ec77edd",
+        "filename": "contrail-controller/actions/actions.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "let\u0027s move second call into first one",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7444d9c4_bfa4d69b",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "let\u0027s move this check into check_ziu_stage_done which can be treated as \"busness logic\" and current function as helper",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46ce5bf4_645aed0c",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "this is inconsistent message - for the call from check_ziu_stage_done it can be wrong",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24368565_89adb847",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "let\u0027s do all logging here",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e565c56c_c7bdc993",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "I would suggest to use action_fail method",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e9a74ad_38816739",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-31T18:49:40Z",
+      "side": 1,
+      "message": "caller doesn\u0027t need return value from this function",
+      "revId": "895f21401b760a66e543624287517c4b84a4f1ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
