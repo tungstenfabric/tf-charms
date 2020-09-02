@@ -28,11 +28,11 @@ DOCKER_COMPOSE_CLI = "docker-compose"
 def _format_curl_proxy_opt():
     proxy_settings = env_proxy_settings(['http', 'https', 'no_proxy'])
     result = ""
-    if 'https' in proxy_settings:
-        result += ' --proxy {}'.format(proxy_settings['https'])
-    if 'http' in proxy_settings:
-        result += ' --proxy {}'.format(proxy_settings['http'])
-    if 'noproxy' in proxy_settings:
+    if 'https_proxy' in proxy_settings:
+        result += ' --proxy {}'.format(proxy_settings['https_proxy'])
+    if 'http_proxy' in proxy_settings:
+        result += ' --proxy {}'.format(proxy_settings['http_proxy'])
+    if 'no_proxy' in proxy_settings:
         result += ' --noproxy {}'.format(proxy_settings['no_proxy'])
     return result
 
