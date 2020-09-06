@@ -543,7 +543,7 @@ def check_ziu_stage_done_from_agents(stage):
 def check_ziu_stage_done(stage):
     log("ZIU: check stage({}) is done".format(stage))
     if int(config.get("ziu_done", -1)) != stage:
-        log("ZIU: stage is not ready on local unit")
+        log("ZIU: stage is not ready on local unit ziu_done={}".format(int(config.get("ziu_done", -1))))
         return False
 
     if not check_ziu_stage_done_from_relations(stage):
@@ -675,15 +675,14 @@ def ziu_restart_db(stage):
 
 def finish_ziu():
     ziu_stage = 5
-    if not check_ziu_stage_done_ziu_relations(ziu_stage):
+    if not check_ziu_stage_done_from_relations(ziu_stage):
         action_fail("ZIU: stage 5 is not completed for controllers. Process couldn't be finished manually.")
         return
 
     log("ZIU: forcing stage 6 - skip broken agents if they are present.")
     ziu_stage = 6
-    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
     signal_ziu("finish-ziu", ziu_stage)
-    stages[ziu_stage](ziu_stage, trigger)
+    stages[ziu_stage](ziu_stage, "finish-ziu")
 
 
 stages = {
