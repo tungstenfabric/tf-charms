@@ -376,6 +376,16 @@ def action_upgrade(params):
         update_ziu("upgrade")
 
 
+def ensure_python():
+    # HACK for vrouter-port-control on Ubuntu 20.04
+    # /usr/bin/python is not there and can't be installed
+    # only /usr/bin/python3 is there
+    # let's create symlink while shebang of vrouter-port-control is not fixed
+    if os.path.exists('/usr/bin/python'):
+        return
+    os.symlink('/usr/bin/python3', '/usr/bin/python')
+
+
 def fix_dns_settings():
     # in some bionic installations DNS is proxied by local instance
     # of systed-resolved service. this services applies DNS settings

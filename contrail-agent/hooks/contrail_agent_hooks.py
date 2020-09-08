@@ -36,6 +36,8 @@ def install():
         if utils.is_reboot_required():
             utils.reboot()
 
+    utils.ensure_python()
+
     docker_utils.install()
     if config["dpdk"]:
         utils.fix_libvirt()
