@@ -25,6 +25,7 @@ config = config()
 MODULE = "kubernetes-master"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME = "contrailkubernetesmaster"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/contrail-kubernetes-master"
 IMAGES = [
     "contrail-kubernetes-kube-manager",
@@ -192,7 +193,7 @@ def update_charm_status():
     changed |= common_utils.render_and_log(
         "/contrail-kubemanager.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    docker_utils.compose_run(PROJECT_NAME, CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
 

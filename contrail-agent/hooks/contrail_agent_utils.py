@@ -40,6 +40,7 @@ import docker_utils
 MODULE = "agent"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME = "vrouter"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/vrouter"
 IMAGES = [
     "contrail-node-init",
@@ -248,9 +249,9 @@ def compile_kernel_modules():
         return
 
     path = CONFIGS_PATH + "/docker-compose.yaml"
-    state = docker_utils.get_container_state(path, "vrouter-kernel-init")
+    state = docker_utils.get_container_state(PROJECT_NAME, path, "vrouter-kernel-init")
     if state and state.get('Status', '').lower() != 'running':
-        docker_utils.restart_container(path, "vrouter-kernel-init")
+        docker_utils.restart_container(PROJECT_NAME, path, "vrouter-kernel-init")
 
 
 def _pull_images():
@@ -333,7 +334,7 @@ def _run_services(ctx):
         "vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml", CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    docker_utils.compose_run(PROJECT_NAME, CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     if is_reboot_required():
         status_set('blocked',
@@ -345,10 +346,10 @@ def _run_services(ctx):
 def stop_agent(stop_agent):
     path = CONFIGS_PATH + "/docker-compose.yaml"
     if stop_agent:
-        docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
+        docker_utils.compose_kill(PROJECT_NAME, path, "SIGQUIT", "vrouter-agent")
         # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
         for i in range(0, 12):
-            state = docker_utils.get_container_state(path, "vrouter-agent")
+            state = docker_utils.get_container_state(PROJECT_NAME, path, "vrouter-agent")
             if not state or state.get('Status', '').lower() != 'running':
                 break
         else:

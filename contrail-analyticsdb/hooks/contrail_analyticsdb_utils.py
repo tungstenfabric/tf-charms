@@ -22,6 +22,7 @@ config = config()
 MODULE = "analyticsdb"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME = "analyticsdatabase"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/analytics_database"
 IMAGES = {
     500: [
@@ -179,7 +180,7 @@ def _update_charm_status(ctx):
 
     changed_dict = _render_configs(ctx)
     changed = changed_dict["common"] or changed_dict["analytics-database"]
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    docker_utils.compose_run(PROJECT_NAME, CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
 
@@ -299,7 +300,7 @@ def ziu_stage_6(ziu_stage, trigger):
 def ziu_restart_db(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME, CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
     if result:
