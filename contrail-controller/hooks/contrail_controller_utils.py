@@ -27,6 +27,11 @@ MODULE = "controller"
 
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME_CONFIG_API = "configapi"
+PROJECT_NAME_CONFIG_DATABASE = "configdatabase"
+PROJECT_NAME_CONTROL = "control"
+PROJECT_NAME_WEBUI = "webui"
+PROJECT_NAME_REDIS = "redis"
 CONFIG_API_CONFIGS_PATH = BASE_CONFIGS_PATH + "/config_api"
 CONFIG_DATABASE_CONFIGS_PATH = BASE_CONFIGS_PATH + "/config_database"
 CONTROL_CONFIGS_PATH = BASE_CONFIGS_PATH + "/control"
@@ -201,20 +206,20 @@ def _update_charm_status(ctx, services_to_run=None):
     changed = changed_dict["common"]
 
     service_changed = changed_dict["config-api"]
-    docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_CONFIG_API, CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["config-database"]
-    docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_CONFIG_DATABASE, CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["control"]
-    docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_CONTROL, CONTROL_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["webui"]
-    docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_WEBUI, WEBUI_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     # redis is a common service that needs own synchronized env
     service_changed = changed_dict["redis"]
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
 
@@ -223,16 +228,16 @@ def _update_charm_status(ctx, services_to_run=None):
 
 
 def _has_provisioning_finished():
-    result_config = _has_provisioning_finished_for_container("configapi_provisioner_1", CONFIG_API_CONFIGS_PATH)
+    result_config = _has_provisioning_finished_for_container("configapi_provisioner_1", PROJECT_NAME_CONFIG_API, CONFIG_API_CONFIGS_PATH)
     log("Readyness of provisioner for configapi: {}".format(result_config))
     # TODO: remove checking of contol for R2008 when provisioner will be ready
-    result_control = _has_provisioning_finished_for_container("control_provisioner_1", CONTROL_CONFIGS_PATH)
+    result_control = _has_provisioning_finished_for_container("control_provisioner_1", PROJECT_NAME_CONTROL, CONTROL_CONFIGS_PATH)
     log("Readyness of provisioner for control: {}".format(result_control))
 
     return result_config and result_control
 
 
-def _has_provisioning_finished_for_container(name, configs_path):
+def _has_provisioning_finished_for_container(name, project_name, configs_path):
     try:
         # check tail first. for R2008 and further this should work
         data = docker_utils.execute(name, ['ps', '-ax'])
@@ -241,7 +246,7 @@ def _has_provisioning_finished_for_container(name, configs_path):
         pass
     try:
         # for R2005 let's check exit status
-        state = docker_utils.get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
+        state = docker_utils.get_container_state(project_name, configs_path + "/docker-compose.yaml", "provisioner")
         if not state:
             return False
         if state.get('Status').lower() == 'running':
@@ -603,9 +608,9 @@ def ziu_stage_0(ziu_stage, trigger):
 
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
-    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(PROJECT_NAME_CONFIG_API, CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(PROJECT_NAME_WEBUI, WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     signal_ziu("ziu_done", ziu_stage)
 
 
@@ -613,9 +618,9 @@ def ziu_stage_2(ziu_stage, trigger):
     # start API services
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_CONFIG_API, CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_WEBUI, WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:
@@ -641,7 +646,7 @@ def ziu_stage_6(ziu_stage, trigger):
 def ziu_restart_control(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_CONTROL, CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:
@@ -651,7 +656,7 @@ def ziu_restart_control(stage):
 def ziu_restart_db(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_CONFIG_DATABASE, CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:

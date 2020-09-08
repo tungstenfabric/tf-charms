@@ -12,6 +12,7 @@ config = config()
 MODULE = "kubernetes-node"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME = "contrailkubernetesnode"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/contrail-kubernetes-node"
 IMAGES = [
     "contrail-kubernetes-cni-init",
@@ -54,6 +55,6 @@ def update_charm_status():
     changed |= common_utils.render_and_log(
         "/contrail-cni.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    docker_utils.compose_run(PROJECT_NAME, CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     status_set("active", "Unit is ready")

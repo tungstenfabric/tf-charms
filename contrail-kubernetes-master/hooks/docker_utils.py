@@ -202,7 +202,7 @@ def pull(image, tag):
     check_call([DOCKER_CLI, "pull", get_image_id(image, tag)])
 
 
-def compose_run(path, config_changed=True):
+def compose_run(project_name, path, config_changed=True):
     do_update = config_changed
     if not do_update:
         # check count of services
@@ -211,29 +211,29 @@ def compose_run(path, config_changed=True):
             data = yaml.load(fh)
             count = len(data['services'])
         # check is it run or not
-        actual_count = len(check_output([DOCKER_COMPOSE_CLI, "-f", path, "ps", "-q"]).decode("UTF-8").splitlines())
+        actual_count = len(check_output([DOCKER_COMPOSE_CLI, "-p", project_name, "-f", path, "ps", "-q"]).decode("UTF-8").splitlines())
         log("Services actual count: {}, required count: {}".format(actual_count, count), level=DEBUG)
         do_update = actual_count != count
     if do_update:
-        check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"])
+        check_call([DOCKER_COMPOSE_CLI, "-p", project_name, "-f", path, "up", "-d"])
 
 
-def compose_down(path):
+def compose_down(project_name, path):
     try:
-        check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+        check_call([DOCKER_COMPOSE_CLI, "-p", project_name, "-f", path, "down"])
     except Exception as e:
         log("Error during compose down: {}".format(e))
 
 
-def compose_kill(path, signal, service=None):
-    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "kill", "-s", signal]
+def compose_kill(project_name, path, signal, service=None):
+    cmd = [DOCKER_COMPOSE_CLI, "-p", project_name, "-f", path, "kill", "-s", signal]
     if service:
         cmd.append(service)
     check_call(cmd)
 
 
-def _get_container_id(path, service):
-    cmd = [DOCKER_COMPOSE_CLI, "-f", path, "ps", "-q", service]
+def _get_container_id(project_name, path, service):
+    cmd = [DOCKER_COMPOSE_CLI, "-p", project_name, "-f", path, "ps", "-q", service]
     try:
         cnt_id = check_output(cmd).decode('UTF-8').rstrip().strip("'")
         if len(cnt_id) < 2:
@@ -245,10 +245,10 @@ def _get_container_id(path, service):
     return cnt_id
 
 
-def get_container_state(path, service):
+def get_container_state(project_name, path, service):
     # returns None or State dict from docker
     # status must be None when compose returns error or empty ID for service
-    cnt_id = _get_container_id(path, service)
+    cnt_id = _get_container_id(project_name, path, service)
     if not cnt_id:
         return None
     try:
@@ -317,8 +317,8 @@ def create(image, tag):
     return name
 
 
-def restart_container(path, service):
-    cnt_id = _get_container_id(path, service)
+def restart_container(project_name, path, service):
+    cnt_id = _get_container_id(project_name, path, service)
     if not cnt_id:
         return None
     cmd = [DOCKER_CLI, "restart", cnt_id]

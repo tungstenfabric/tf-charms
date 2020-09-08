@@ -21,6 +21,10 @@ config = config()
 MODULE = "analytics"
 BASE_CONFIGS_PATH = "/etc/contrail"
 
+PROJECT_NAME_ANALYTICS = "analytics"
+PROJECT_NAME_ANALYTICS_ALARM = "/analyticsalarm"
+PROJECT_NAME_ANALYTICS_SNMP = "analyticssnmp"
+PROJECT_NAME_REDIS = "redis"
 ANALYTICS_CONFIGS_PATH = BASE_CONFIGS_PATH + "/analytics"
 ANALYTICS_ALARM_CONFIGS_PATH = BASE_CONFIGS_PATH + "/analytics_alarm"
 ANALYTICS_SNMP_CONFIGS_PATH = BASE_CONFIGS_PATH + "/analytics_snmp"
@@ -218,18 +222,18 @@ def _update_charm_status(ctx):
     changed = changed_dict["common"]
 
     service_changed = changed_dict["analytics"]
-    docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_ANALYTICS, ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     if ctx["contrail_version"] >= 510:
         service_changed = changed_dict["analytics-alarm"]
-        docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+        docker_utils.compose_run(PROJECT_NAME_ANALYTICS_ALARM, ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
         service_changed = changed_dict["analytics-snmp"]
-        docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+        docker_utils.compose_run(PROJECT_NAME_ANALYTICS_SNMP, ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     # redis is a common service that needs own synchronized env
     service_changed = changed_dict["redis"]
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    docker_utils.compose_run(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
 
@@ -349,11 +353,11 @@ def ziu_stage_0(ziu_stage, trigger):
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
     cver = common_utils.get_contrail_version()
-    docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(PROJECT_NAME_ANALYTICS, ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     if cver >= 510:
-        docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
-        docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_down(PROJECT_NAME_ANALYTICS_ALARM, ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_down(PROJECT_NAME_ANALYTICS_SNMP, ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
     signal_ziu("ziu_done", ziu_stage)
 
@@ -362,11 +366,11 @@ def ziu_stage_2(ziu_stage, trigger):
     # start API services
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_ANALYTICS, ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_run(PROJECT_NAME_REDIS, REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     if ctx["contrail_version"] >= 510:
-        docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
-        docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_run(PROJECT_NAME_ANALYTICS_ALARM, ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_run(PROJECT_NAME_ANALYTICS_SNMP, ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
     if result:
