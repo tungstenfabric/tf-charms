@@ -1,6 +1,7 @@
 version: '2'
 services:
   node-init:
+    container_name: "vrouter_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_vrouter.env
     environment:
@@ -19,6 +20,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   nodemgr:
+    container_name: "vrouter_nodemgr_1"
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_vrouter.env
     environment:
@@ -38,6 +40,7 @@ services:
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
   provisioner:
+    container_name: "vrouter_provisioner_1"
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_vrouter.env
@@ -52,6 +55,7 @@ services:
 {{ logging | indent(4,True) }}
 {% endif %}
   vrouter-kernel-init:
+    container_name: "vrouter_vrouter-kernel-init_1"
 {%- if agent_mode == 'dpdk' %}
     image: "{{ container_registry }}/contrail-vrouter-kernel-init-dpdk:{{ contrail_version_tag }}"
 {%- else %}
@@ -79,6 +83,7 @@ services:
 {{ logging | indent(4,True) }}
 {%- if agent_mode == 'dpdk' %}
   vrouter-agent-dpdk:
+    container_name: "vrouter_vrouter-agent-dpdk_1"
     image: "{{ container_registry }}/contrail-vrouter-agent-dpdk:{{ contrail_version_tag }}"
     network_mode: host
     privileged: true
@@ -100,6 +105,7 @@ services:
 {{ logging | indent(4,True) }}
 {%- endif %}
   vrouter-agent:
+    container_name: "vrouter_vrouter-agent_1"
     image: "{{ container_registry }}/contrail-vrouter-agent:{{ contrail_version_tag }}"
     network_mode: host
     privileged: true

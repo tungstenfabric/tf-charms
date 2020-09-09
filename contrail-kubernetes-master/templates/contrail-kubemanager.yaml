@@ -1,6 +1,7 @@
 version: '2'
 services:
   node-init:
+    container_name: "contrailkubernetesmaster_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_kubemanager.env
     environment:
@@ -19,6 +20,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   kubemanager:
+    container_name: "contrailkubernetesmaster_kubemanager_1"
     image: "{{ container_registry }}/contrail-kubernetes-kube-manager:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_kubemanager.env
     network_mode: host

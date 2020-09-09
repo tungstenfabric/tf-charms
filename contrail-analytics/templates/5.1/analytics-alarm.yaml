@@ -1,6 +1,7 @@
 version: '2'
 services:
   node-init:
+    container_name: "analytics_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_analytics.env
     environment:
@@ -19,6 +20,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   nodemgr:
+    container_name: "analytics_nodemgr_1"
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_analytics.env
     environment:
@@ -34,6 +36,7 @@ services:
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
   provisioner:
+    container_name: "analytics_provisioner_1"
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_analytics.env
@@ -48,6 +51,7 @@ services:
 {{ logging | indent(4,True) }}
 {% endif %}
   kafka:
+    container_name: "analytics_kafka_1"
     image: "{{ container_registry }}/contrail-external-kafka:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_analytics.env
@@ -67,6 +71,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   alarm-gen:
+    container_name: "analytics_alarm-gen_1"
     image: "{{ container_registry }}/contrail-analytics-alarm-gen:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_analytics.env

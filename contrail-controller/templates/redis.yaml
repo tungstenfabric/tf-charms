@@ -1,6 +1,7 @@
 version: '2'
 services:
   redis:
+    container_name: "redis_redis_1"
     image: "{{ container_registry }}/contrail-external-redis:{{ contrail_version_tag }}"
     env_file: /etc/contrail/redis.env
     network_mode: "host"
@@ -8,6 +9,7 @@ services:
 {{ logging | indent(4,True) }}
 {%- if ssl_enabled and config_analytics_ssl_available %}
   stunnel:
+    container_name: "redis_stunnel_1"
     image: "{{ container_registry }}/contrail-external-stunnel:{{ contrail_version_tag }}"
     env_file: /etc/contrail/redis.env
     network_mode: "host"

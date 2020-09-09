@@ -1,6 +1,7 @@
 version: '2'
 services:
   node-init:
+    container_name: "analyticssnmp_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_analytics.env
     environment:
@@ -19,6 +20,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   nodemgr:
+    container_name: "analyticssnmp_nodemgr_1"
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_analytics.env
     environment:
@@ -34,6 +36,7 @@ services:
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
   provisioner:
+    container_name: "analyticssnmp_provisioner_1"
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_analytics.env
@@ -48,6 +51,7 @@ services:
 {{ logging | indent(4,True) }}
 {% endif %}
   api:
+    container_name: "analyticssnmp_api_1"
     image: "{{ container_registry }}/contrail-analytics-api:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_analytics.env
@@ -58,6 +62,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   collector:
+    container_name: "analyticssnmp_collector_1"
     image: "{{ container_registry }}/contrail-analytics-collector:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_analytics.env

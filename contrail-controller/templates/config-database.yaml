@@ -4,6 +4,7 @@ volumes:
  config_zookeeper:
 services:
   node-init:
+    container_name: "configdatabase_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_config.env
     environment:
@@ -22,6 +23,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   nodemgr:
+    container_name: "configdatabase_nodemgr_1"
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_config.env
     environment:
@@ -39,6 +41,7 @@ services:
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
   provisioner:
+    container_name: "configdatabase_provisioner_1"
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_config.env
@@ -53,6 +56,7 @@ services:
 {{ logging | indent(4,True) }}
 {% endif %}
   cassandra:
+    container_name: "configdatabase_cassandra_1"
     image: "{{ container_registry }}/contrail-external-cassandra:{{ contrail_version_tag }}"
     cap_add:
       - SYS_NICE  # CAP_SYS_NICE
@@ -80,6 +84,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   zookeeper:
+    container_name: "configdatabase_zookeeper_1"
     image: "{{ container_registry }}/contrail-external-zookeeper:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_config.env
     environment:
@@ -101,6 +106,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   rabbitmq:
+    container_name: "configdatabase_rabbitmq_1"
     image: "{{ container_registry }}/contrail-external-rabbitmq:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_config.env
     environment:

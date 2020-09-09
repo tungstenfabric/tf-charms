@@ -3,6 +3,7 @@ volumes:
   contrail_control_dns:
 services:
   node-init:
+    container_name: "control_node-init_1"
     image: "{{ container_registry }}/contrail-node-init:{{ contrail_version_tag }}"
     env_file: /etc/contrail/common_config.env
     environment:
@@ -21,6 +22,7 @@ services:
       - /var/crashes:/var/crashes
 {{ logging | indent(4,True) }}
   nodemgr:
+    container_name: "control_nodemgr_1"
     image: "{{ container_registry }}/contrail-nodemgr:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_config.env
@@ -40,6 +42,7 @@ services:
 {{ logging | indent(4,True) }}
 {% if contrail_version >= 2002 %}
   provisioner:
+    container_name: "control_provisioner_1"
     image: "{{ container_registry }}/contrail-provisioner:{{ contrail_version_tag }}"
     env_file:
       - /etc/contrail/common_config.env
@@ -55,6 +58,7 @@ services:
 {{ logging | indent(4,True) }}
 {% endif %}
   control:
+    container_name: "control_control_1"
     image: "{{ container_registry }}/contrail-controller-control-control:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_config.env
@@ -65,6 +69,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   named:
+    container_name: "control_named_1"
     image: "{{ container_registry }}/contrail-controller-control-named:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_config.env
@@ -79,6 +84,7 @@ services:
     restart: always
 {{ logging | indent(4,True) }}
   dns:
+    container_name: "control_dns_1"
     image: "{{ container_registry }}/contrail-controller-control-dns:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_config.env
