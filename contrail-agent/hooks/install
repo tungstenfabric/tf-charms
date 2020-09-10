@@ -17,4 +17,7 @@ for dep in ${DEPS[@]}; do
     check_and_install ${PYTHON} ${dep}
 done
 
+# special case for vrouter-port-control wich still have /usr/bin/python in shebang
+apt-get -y install python-is-python3
+
 exec ./hooks/install.real
