@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01274a75_46657533",
+        "filename": "examples/contrail-hybrid-k8s-openstack/bundle.yaml",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-09-18T10:19:22Z",
+      "side": 1,
+      "message": "32",
+      "range": {
+        "startLine": 8,
+        "startChar": 21,
+        "endLine": 8,
+        "endChar": 24
+      },
+      "revId": "32bd71cda3879cce1f4ecca8f39ba2eea68f2cd4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
