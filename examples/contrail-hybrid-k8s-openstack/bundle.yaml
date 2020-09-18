@@ -1,0 +1,421 @@
+series: bionic
+
+machines:
+
+  # contrail componenets, openstack components
+  0:
+    series: "bionic"
+    constraints: mem=32G cores=4 root-disk=150G
+
+  # kubernetes master
+  1:
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=60G
+
+  # kubernetes worker
+  2:
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=60G
+
+  # nova compute
+  3:
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=60G
+
+applications:
+  # contrail
+  contrail-agent:
+    charm: local:bionic/contrail-agent-0
+    options:
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "357"
+      gui-y: "-77.5254037844386"
+  contrail-analytics:
+    charm: local:bionic/contrail-analytics-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "629"
+      gui-y: "-495.884757729337"
+  contrail-analyticsdb:
+    charm: local:bionic/contrail-analyticsdb-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      cassandra-jvm-extra-opts: -Xms1g -Xmx2g
+      cassandra-minimum-diskgb: "4"
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "17"
+      gui-y: "-501.4745351804054"
+  contrail-controller:
+    charm: local:bionic/contrail-controller-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      auth-mode: rbac
+      cassandra-jvm-extra-opts: -Xms1g -Xmx2g
+      cassandra-minimum-diskgb: "4"
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "325"
+      gui-y: "-342.2949192431124"
+  contrail-keystone-auth:
+    charm: local:bionic/contrail-keystone-auth-0
+    num_units: 1
+    to:
+    - "0"
+    annotations:
+      gui-x: "553"
+      gui-y: "-222.29491924311242"
+  contrail-kubernetes-master:
+    charm: local:bionic/contrail-kubernetes-master-2
+    options:
+      cluster_name: k8s
+      ip_fabric_forwarding: true
+      log-level: SYS_DEBUG
+      service_subnets: 10.96.0.0/12
+    annotations:
+      gui-x: "-179"
+      gui-y: "-285.47453518040516"
+  contrail-kubernetes-node:
+    charm: local:bionic/contrail-kubernetes-node-0
+    options:
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "-583"
+      gui-y: "-274.29485820795605"
+  contrail-openstack:
+    charm: local:bionic/contrail-openstack-0
+    annotations:
+      gui-x: "813"
+      gui-y: "-319.1152422706632"
+
+  # kubernetes
+  kubernetes-master:
+    charm: cs:~containers/kubernetes-master-827
+    num_units: 1
+    to:
+    - "1"
+    expose: true
+    options:
+      authorization-mode: Node,RBAC
+      channel: 1.18/stable
+      enable-dashboard-addons: false
+      enable-keystone-authorization: true
+      enable-metrics: false
+      keystone-policy: |
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: k8s-auth-policy
+          namespace: kube-system
+          labels:
+            k8s-app: k8s-keystone-auth
+        data:
+          policies: |
+            [
+              {
+              "resource": {
+                  "verbs": ["get", "list", "watch"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "*"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["k8s"]
+                  }
+                ]
+              },
+              {
+              "resource": {
+                  "verbs": ["*"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "myproject"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["k8s-myproject"]
+                  }
+                ]
+              },
+              {
+              "resource": {
+                  "verbs": ["*"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "*"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["admin"]
+                  }
+                ]
+              }
+            ]
+      service-cidr: 10.96.0.0/12
+    annotations:
+      gui-x: "-191"
+      gui-y: "37.70508075688758"
+  kubernetes-worker:
+    charm: cs:~containers/kubernetes-worker-665
+    num_units: 1
+    to:
+    - "2"
+    options:
+      channel: 1.18/stable
+      ingress: false
+    annotations:
+      gui-x: "-595"
+      gui-y: "40.11524227066309"
+  easyrsa:
+    charm: cs:~containers/easyrsa-303
+    num_units: 1
+    to:
+    - "1"
+    annotations:
+      gui-x: "-591"
+      gui-y: "421.7050807568876"
+  etcd:
+    charm: cs:~containers/etcd-501
+    num_units: 1
+    to:
+    - "1"
+    options:
+      channel: 3.2/stable
+    annotations:
+      gui-x: "-171"
+      gui-y: "423.29485820795594"
+
+  # openstack
+  glance:
+    charm: cs:glance-299
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1824.9998779296875"
+      gui-y: "399.2949192431122"
+  heat:
+    charm: cs:heat-277
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1820.9998779296875"
+      gui-y: "66.52546481959484"
+  keystone:
+    charm: cs:keystone-317
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      admin-password: contrail123
+      admin-role: admin
+      debug: true
+      openstack-origin: distro
+      preferred-api-version: 3
+    annotations:
+      gui-x: "177"
+      gui-y: "196.8847577293368"
+  mysql:
+    charm: cs:percona-cluster-291
+    num_units: 1
+    to:
+    - lxd:0
+    options:
+      max-connections: 1500
+      root-password: password
+    annotations:
+      gui-x: "1085"
+      gui-y: "44.8847577293368"
+  neutron-api:
+    charm: cs:neutron-api-288
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      manage-neutron-plugin-legacy-mode: false
+      neutron-security-groups: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1528.9998779296875"
+      gui-y: "411.2949192431122"
+  nova-cloud-controller:
+    charm: cs:nova-cloud-controller-346
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      console-access-protocol: novnc
+      debug: true
+      network-manager: Neutron
+      openstack-origin: distro
+    annotations:
+      gui-x: "1516.9998779296875"
+      gui-y: "77.70508075688758"
+  nova-compute:
+    charm: cs:nova-compute-320
+    num_units: 1
+    to:
+    - "3"
+    options:
+      debug: true
+      enable-live-migration: true
+      enable-resize: true
+      migration-auth-type: ssh
+      openstack-origin: distro
+      virt-type: qemu
+    annotations:
+      gui-x: "709"
+      gui-y: "48.1152422706632"
+  openstack-dashboard:
+    charm: cs:openstack-dashboard-305
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: "true"
+      openstack-origin: distro
+    annotations:
+      gui-x: "721"
+      gui-y: "390.52546481959484"
+  rabbitmq-server:
+    charm: cs:rabbitmq-server-104
+    num_units: 1
+    to:
+    - lxd:0
+    annotations:
+      gui-x: "1109"
+      gui-y: "428.8847577293368"
+
+  # misc
+  ubuntu:
+    charm: cs:ubuntu-15
+    num_units: 4
+    to:
+    - "0"
+    - "1"
+    - "2"
+    - "3"
+    annotations:
+      gui-x: "185"
+      gui-y: "568.1153033058195"
+  ntp:
+    charm: cs:ntp-41
+    annotations:
+      gui-x: "473"
+      gui-y: "615.2949192431122"
+  docker:
+    charm: cs:~containers/docker-59
+    options:
+      docker_runtime: custom
+      docker_runtime_key_url: https://download.docker.com/linux/ubuntu/gpg
+      docker_runtime_package: docker-ce
+      docker_runtime_repo: deb [arch={ARCH}] https://download.docker.com/linux/ubuntu
+        {CODE} stable
+    annotations:
+      gui-x: "-395"
+      gui-y: "171.2949192431122"
+
+relations:
+# contrail
+- [ contrail-controller:contrail-analytics, contrail-analytics:contrail-analytics ]
+- [ contrail-controller:contrail-analyticsdb, contrail-analyticsdb:contrail-analyticsdb ]
+- [ contrail-analytics:contrail-analyticsdb, contrail-analyticsdb:contrail-analyticsdb ]
+- [ contrail-agent:contrail-controller, contrail-controller:contrail-controller ]
+- [ contrail-controller:contrail-auth, contrail-keystone-auth:contrail-auth ]
+- [ contrail-openstack:contrail-controller, contrail-controller:contrail-controller ]
+- [ contrail-kubernetes-master:contrail-controller, contrail-controller:contrail-controller ]
+- [ contrail-kubernetes-master:contrail-kubernetes-config, contrail-kubernetes-node:contrail-kubernetes-config ]
+
+# kubernetes
+- [ kubernetes-master:kube-api-endpoint, kubernetes-worker:kube-api-endpoint ]
+- [ kubernetes-master:kube-control, kubernetes-worker:kube-control ]
+- [ kubernetes-master:certificates, easyrsa:client ]
+- [ kubernetes-master:etcd, etcd:db ]
+- [ kubernetes-worker:certificates, easyrsa:client ]
+- [ etcd:certificates, easyrsa:client ]
+- [ kubernetes-master:container-runtime, docker:docker ]
+- [ kubernetes-worker:container-runtime, docker:docker ]
+
+# openstack
+- [ nova-compute:amqp, rabbitmq-server:amqp ]
+- [ keystone:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:identity-service, keystone:identity-service ]
+- [ glance:identity-service, keystone:identity-service ]
+- [ neutron-api:identity-service, keystone:identity-service ]
+- [ neutron-api:shared-db, mysql:shared-db ]
+- [ neutron-api:amqp, rabbitmq-server:amqp ]
+- [ glance:shared-db, mysql:shared-db ]
+- [ glance:amqp, rabbitmq-server:amqp ]
+- [ nova-cloud-controller:image-service, glance:image-service ]
+- [ nova-compute:image-service, glance:image-service ]
+- [ nova-cloud-controller:cloud-compute, nova-compute:cloud-compute ]
+- [ nova-cloud-controller:amqp, rabbitmq-server:amqp ]
+- [ openstack-dashboard:identity-service, keystone:identity-service ]
+- [ openstack-dashboard:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:neutron-api, neutron-api:neutron-api ]
+- [ heat:shared-db, mysql:shared-db ]
+- [ heat:amqp, rabbitmq-server:amqp ]
+- [ heat:identity-service, keystone:identity-service ]
+
+# cross
+# contrail - openstack
+- [ contrail-keystone-auth:identity-admin, keystone:identity-admin ]
+- [ contrail-openstack:neutron-api, neutron-api:neutron-plugin-api-subordinate ]
+- [ contrail-openstack:heat-plugin, heat:heat-plugin-subordinate ]
+- [ contrail-openstack:nova-compute, nova-compute:neutron-plugin ]
+- [ contrail-agent:juju-info, nova-compute:juju-info ]
+
+# contrail - k8s
+- [ contrail-kubernetes-node:cni, kubernetes-master:cni ]
+- [ contrail-kubernetes-node:cni, kubernetes-worker:cni ]
+- [ contrail-kubernetes-master:kube-api-endpoint, kubernetes-master:kube-api-endpoint ]
+- [ contrail-agent:juju-info, kubernetes-worker:juju-info ]
+- [ contrail-agent:juju-info, kubernetes-master:juju-info ]
+
+# openstack - k8s
+- [ kubernetes-master:keystone-credentials, keystone:identity-credentials ]
+
+- [ ubuntu:juju-info, ntp:juju-info ]
