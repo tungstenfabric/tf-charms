@@ -6,6 +6,7 @@ description: |
 series:
   - xenial
   - bionic
+  - focal
 subordinate: true
 peers:
   kubernetes-master-cluster:

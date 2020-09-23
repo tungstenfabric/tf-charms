@@ -66,7 +66,26 @@ def install():
         ]
         check_output(cmd)
     arch = "amd64"
-    dist = platform.linux_distribution()[2].strip()
+
+    # linux_distribution is deprecated and will be removed in Python 3.7
+    def _get_codename_from_fs():
+        """Get Codename from /etc/os-release."""
+        with open(os.path.join(os.sep, 'etc', 'os-release')) as fin:
+            content = dict(
+                line.split('=', 1)
+                for line in fin.read().splitlines()
+                if '=' in line
+            )
+        for k, v in content.items():
+            content[k] = v.strip('"')
+        return content["UBUNTU_CODENAME"]
+
+    if hasattr(platform, 'linux_distribution'):
+        tuple_platform = platform.linux_distribution()
+        dist = tuple_platform[2].strip()
+    else:
+        dist = _get_codename_from_fs()
+
     if docker_repo:
         exc = None
         for i in range(5):
