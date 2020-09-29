@@ -1,0 +1,273 @@
+series: focal
+
+machines:
+  "0":
+    constraints: mem=32G cores=4 root-disk=200G
+    series: focal
+
+applications:
+  # contrail
+  contrail-agent:
+    charm: cs:~juniper-os-software/contrail-agent-0
+    options:
+      docker-registry: tungstenfabric
+      docker-registry-insecure: true
+      image-tag: latest
+      log-level: SYS_DEBUG
+    annotations:
+      gui-x: "136"
+      gui-y: "857.3203230275508"
+  contrail-analytics:
+    charm: cs:~juniper-os-software/contrail-analytics-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      docker-registry: tungstenfabric
+      docker-registry-insecure: true
+      image-tag: latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 1
+    annotations:
+      gui-x: "-132"
+      gui-y: "0.49999999999994316"
+  contrail-analyticsdb:
+    charm: cs:~juniper-os-software/contrail-analyticsdb-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      cassandra-jvm-extra-opts: -Xms1g -Xmx2g
+      cassandra-minimum-diskgb: "4"
+      docker-registry: tungstenfabric
+      docker-registry-insecure: true
+      image-tag: latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 1
+    annotations:
+      gui-x: "-140"
+      gui-y: "430.9101615137754"
+  contrail-controller:
+    charm: cs:~juniper-os-software/contrail-controller-0
+    num_units: 1
+    to:
+    - "0"
+    expose: true
+    options:
+      auth-mode: rbac
+      cassandra-jvm-extra-opts: -Xms1g -Xmx2g
+      cassandra-minimum-diskgb: "4"
+      docker-registry: tungstenfabric
+      docker-registry-insecure: true
+      image-tag: latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 1
+    annotations:
+      gui-x: "120"
+      gui-y: "226.0898384862245"
+  contrail-keystone-auth:
+    charm: cs:~juniper-os-software/contrail-keystone-auth-0
+    num_units: 1
+    to:
+    - "0"
+    annotations:
+      gui-x: "316"
+      gui-y: "-65.91016151377545"
+  contrail-openstack:
+    charm: cs:~juniper-os-software/contrail-openstack-0
+    options:
+      docker-registry: tungstenfabric
+      docker-registry-insecure: true
+      image-tag: latest
+    annotations:
+      gui-x: "529.3486328125"
+      gui-y: "255.08790115255078"
+
+  # openstack
+  glance:
+    charm: cs:glance-299
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1643.1162109375"
+      gui-y: "249.93451454111914"
+  heat:
+    charm: cs:heat-277
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1624"
+      gui-y: "-39.5"
+  keystone:
+    charm: cs:keystone-317
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      admin-password: password
+      admin-role: admin
+      debug: true
+      openstack-origin: distro
+      preferred-api-version: 3
+    annotations:
+      gui-x: "814.9066467285156"
+      gui-y: "391.4401063547733"
+  mysql:
+    charm: cs:percona-cluster-291
+    series: bionic
+    num_units: 1
+    to:
+    - lxd:0
+    options:
+      innodb-buffer-pool-size: 256M
+      max-connections: 1500
+      performance-schema: true
+      root-password: password
+    annotations:
+      gui-x: "1250.90673828125"
+      gui-y: "816.1127877049746"
+  neutron-api:
+    charm: cs:neutron-api-288
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: true
+      manage-neutron-plugin-legacy-mode: false
+      neutron-security-groups: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1255.0703125"
+      gui-y: "-57.44269035390039"
+  nova-cloud-controller:
+    charm: cs:nova-cloud-controller-346
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      console-access-protocol: novnc
+      debug: true
+      network-manager: Neutron
+      openstack-origin: distro
+    annotations:
+      gui-x: "827.1162719726562"
+      gui-y: "-41.373280562340824"
+  nova-compute:
+    charm: cs:nova-compute-320
+    num_units: 1
+    to:
+    - "0"
+    options:
+      debug: true
+      enable-live-migration: true
+      enable-resize: true
+      migration-auth-type: ssh
+      openstack-origin: distro
+      virt-type: qemu
+    annotations:
+      gui-x: "516"
+      gui-y: "816.5"
+  openstack-dashboard:
+    charm: cs:openstack-dashboard-306
+    num_units: 1
+    to:
+    - lxd:0
+    expose: true
+    options:
+      debug: "true"
+      openstack-origin: distro
+    annotations:
+      gui-x: "1656"
+      gui-y: "543.6796769724491"
+  placement:
+    charm: cs:placement-13
+    num_units: 1
+    to:
+    - lxd:0
+    options:
+      debug: true
+      openstack-origin: distro
+    annotations:
+      gui-x: "1669.7777709960938"
+      gui-y: "801.5768790430723"
+  rabbitmq-server:
+    charm: cs:rabbitmq-server-104
+    num_units: 1
+    to:
+    - lxd:0
+    annotations:
+      gui-x: "946.0230712890625"
+      gui-y: "824.2905883789062"
+
+  # misc
+  ubuntu:
+    charm: cs:ubuntu-15
+    num_units: 1
+    to:
+    - "0"
+    annotations:
+      gui-x: "1995.5556640625"
+      gui-y: "457.388916015625"
+  ntp:
+    charm: cs:ntp-41
+    annotations:
+      gui-x: "2031.1110229492188"
+      gui-y: "824.3120674901309"
+
+relations:
+# contrail
+- [ contrail-controller:contrail-analytics, contrail-analytics:contrail-analytics ]
+- [ contrail-controller:contrail-analyticsdb, contrail-analyticsdb:contrail-analyticsdb ]
+- [ contrail-analytics:contrail-analyticsdb, contrail-analyticsdb:contrail-analyticsdb ]
+- [ contrail-agent:contrail-controller, contrail-controller:contrail-controller ]
+- [ contrail-controller:contrail-auth, contrail-keystone-auth:contrail-auth ]
+- [ contrail-openstack:contrail-controller, contrail-controller:contrail-controller ]
+
+# openstack
+- [ nova-compute:amqp, rabbitmq-server:amqp ]
+- [ nova-cloud-controller:identity-service, keystone:identity-service ]
+- [ glance:identity-service, keystone:identity-service ]
+- [ neutron-api:identity-service, keystone:identity-service ]
+- [ neutron-api:amqp, rabbitmq-server:amqp ]
+- [ glance:amqp, rabbitmq-server:amqp ]
+- [ nova-cloud-controller:image-service, glance:image-service ]
+- [ nova-compute:image-service, glance:image-service ]
+- [ nova-cloud-controller:cloud-compute, nova-compute:cloud-compute ]
+- [ nova-cloud-controller:amqp, rabbitmq-server:amqp ]
+- [ openstack-dashboard:identity-service, keystone:identity-service ]
+- [ nova-cloud-controller:neutron-api, neutron-api:neutron-api ]
+- [ heat:amqp, rabbitmq-server:amqp ]
+- [ heat:identity-service, keystone:identity-service ]
+- [ placement:identity-service, keystone:identity-service ]
+- [ placement:placement, nova-cloud-controller:placement ]
+- [ keystone:shared-db, mysql:shared-db ]
+- [ glance:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:shared-db, mysql:shared-db ]
+- [ neutron-api:shared-db, mysql:shared-db ]
+- [ openstack-dashboard:shared-db, mysql:shared-db ]
+- [ heat:shared-db, mysql:shared-db ]
+- [ placement:shared-db, mysql:shared-db ]
+
+# contrail-openstack
+- [ contrail-keystone-auth:identity-admin, keystone:identity-admin ]
+- [ contrail-openstack:neutron-api, neutron-api:neutron-plugin-api-subordinate ]
+- [ contrail-openstack:heat-plugin, heat:heat-plugin-subordinate ]
+- [ contrail-openstack:nova-compute, nova-compute:neutron-plugin ]
+- [ contrail-agent:juju-info, nova-compute:juju-info ]
+
+- [ ubuntu:juju-info, ntp:juju-info ]
