@@ -158,6 +158,18 @@ def get_context():
 def update_charm_status():
     ctx = get_context()
     tag = config.get('image-tag')
+    
+    if not ctx.get("analyticsdb_servers"):
+        for key in IMAGES:
+            key_list = IMAGES.get(key)
+            key_list.remove("contrail-analytics-topology")
+            key_list.remove("contrail-analytics-alarm-gen")
+            IMAGES.update({key: key_list)
+        for key in SERVICES:
+            key_list = SERVICES.get(key)
+            key_list.remove("topology")
+            key_list.remove("alarm-gen")
+            SERVICES.update({key: key_list)
 
     images = IMAGES.get(ctx["contrail_version"], IMAGES.get(9999))
     for image in images:
@@ -191,8 +203,9 @@ def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
-    if not ctx.get("analyticsdb_servers"):
-        missing_relations.append("contrail-analyticsdb")
+    ###EDIT###
+    #if not ctx.get("analyticsdb_servers"):
+    #    missing_relations.append("contrail-analyticsdb")
     if missing_relations:
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
@@ -220,7 +233,8 @@ def _update_charm_status(ctx):
     service_changed = changed_dict["analytics"]
     docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    if ctx["contrail_version"] >= 510:
+    ###EDIT###
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_servers"):
         service_changed = changed_dict["analytics-alarm"]
         docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
@@ -247,7 +261,8 @@ def _render_configs(ctx):
         tfolder + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    if ctx["contrail_version"] >= 510:
+    ###EDIT###
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_servers"):
         result["analytics-alarm"] = common_utils.render_and_log(
             tfolder + "/analytics-alarm.yaml",
             ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
@@ -255,7 +270,7 @@ def _render_configs(ctx):
         result["analytics-snmp"] = common_utils.render_and_log(
             tfolder + "/analytics-snmp.yaml",
             ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-
+    # TODO:  think about removing analytics-alarm.yaml and analytics-snmp.yaml
     # redis is a common service that needs own synchronized env
     result["redis"] = common_utils.render_and_log(
         "redis.env",
@@ -351,7 +366,8 @@ def ziu_stage_1(ziu_stage, trigger):
     cver = common_utils.get_contrail_version()
     docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
-    if cver >= 510:
+    ###EDIT###
+    if cver >= 510 and ctx.get("analyticsdb_servers"):
         docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
         docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
@@ -364,7 +380,8 @@ def ziu_stage_2(ziu_stage, trigger):
     _render_configs(ctx)
     docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
-    if ctx["contrail_version"] >= 510:
+    ###EDIT###
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_servers"):
         docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
         docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
