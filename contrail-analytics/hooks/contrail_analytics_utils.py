@@ -191,8 +191,9 @@ def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
-    if not ctx.get("analyticsdb_servers"):
-        missing_relations.append("contrail-analyticsdb")
+    ###EDIT###
+    #if not ctx.get("analyticsdb_servers"):
+    #    missing_relations.append("contrail-analyticsdb")
     if missing_relations:
         status_set('blocked',
                    'Missing relations: ' + ', '.join(missing_relations))
@@ -247,7 +248,8 @@ def _render_configs(ctx):
         tfolder + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    if ctx["contrail_version"] >= 510:
+    ###EDIT###
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_servers"):
         result["analytics-alarm"] = common_utils.render_and_log(
             tfolder + "/analytics-alarm.yaml",
             ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
@@ -255,7 +257,7 @@ def _render_configs(ctx):
         result["analytics-snmp"] = common_utils.render_and_log(
             tfolder + "/analytics-snmp.yaml",
             ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-
+    # TODO:  think about removing analytics-alarm.yaml and analytics-snmp.yaml
     # redis is a common service that needs own synchronized env
     result["redis"] = common_utils.render_and_log(
         "redis.env",
