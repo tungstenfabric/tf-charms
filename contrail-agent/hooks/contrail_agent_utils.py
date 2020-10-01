@@ -162,6 +162,15 @@ def _convert2cpuset(cpuset):
             cpuset += "{}".format(start)
     return cpuset
 
+def analyticsdb_ctx():
+    """Get the ipaddress of all contrail analyticsdb nodes"""
+    analyticsdb_ip_list = []
+    for rid in relation_ids("contrail-analyticsdb"):
+        for unit in related_units(rid):
+            ip = relation_get("private-address", unit, rid)
+            if ip:
+                analyticsdb_ip_list.append(ip)
+    return {"analyticsdb_servers": analyticsdb_ip_list}
 
 def get_context():
     ctx = {}
@@ -200,6 +209,7 @@ def get_context():
         ctx["hugepages_2m"] = config.get("kernel-hugepages-2m")
 
     ctx.update(tsn_ctx())
+    ctx.update(analyticsdb_ctx())
 
     info = common_utils.json_loads(config.get("orchestrator_info"), dict())
     ctx.update(info)
