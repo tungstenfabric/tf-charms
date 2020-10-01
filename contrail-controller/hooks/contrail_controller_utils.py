@@ -104,6 +104,15 @@ def get_analytics_list():
                 analytics_ip_list.append(ip)
     return analytics_ip_list
 
+def analyticsdb_ctx():
+    """Get the ipaddress of all contrail analyticsdb nodes"""
+    analyticsdb_ip_list = []
+    for rid in relation_ids("contrail-analyticsdb"):
+        for unit in related_units(rid):
+            ip = relation_get("private-address", unit, rid)
+            if ip:
+                analyticsdb_ip_list.append(ip)
+    return {"analyticsdb_servers": analyticsdb_ip_list}
 
 def get_context():
     ctx = {}
@@ -136,6 +145,7 @@ def get_context():
     ctx["controller_servers"] = ips
     ctx["control_servers"] = data_ips
     ctx["analytics_servers"] = get_analytics_list()
+    ctx.update(analyticsdb_ctx())
     log("CTX: " + str(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
     return ctx
