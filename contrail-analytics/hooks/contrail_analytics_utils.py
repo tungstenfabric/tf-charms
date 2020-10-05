@@ -47,6 +47,7 @@ IMAGES = {
         "contrail-analytics-snmp-collector",
         "contrail-analytics-snmp-topology",
         "contrail-external-redis",
+        "contrail-external-kafka",
     ],
 }
 # images for new versions that can be absent in previous releases
@@ -118,12 +119,14 @@ def analytics_ctx():
 def analyticsdb_ctx():
     """Get the ipaddress of all contrail analyticsdb nodes"""
     analyticsdb_ip_list = []
+    analyticsdb_enabled = False
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
+            analyticsdb_enabled = True
             ip = relation_get("private-address", unit, rid)
             if ip:
                 analyticsdb_ip_list.append(ip)
-    return {"analyticsdb_servers": analyticsdb_ip_list}
+    return {"analyticsdb_servers": analyticsdb_ip_list}, {"analyticsdb_enbled": analyticsdb_enabled}
 
 
 def get_context():
@@ -158,16 +161,19 @@ def get_context():
 def update_charm_status():
     ctx = get_context()
     tag = config.get('image-tag')
-
     images = IMAGES.get(ctx["contrail_version"], IMAGES.get(9999))
+    excluded_images = ["contrail-external-kafka", "contrail-analytics-snmp-collector",
+                        "contrail-analytics-alarm-gen", "contrail-analytics-snmp-topology"]
+
     for image in images:
-        try:
-            docker_utils.pull(image, tag)
-        except Exception as e:
-            log("Can't load image {}".format(e))
-            status_set('blocked',
-                       'Image could not be pulled: {}:{}'.format(image, tag))
-            return
+        if ctx.get("analyticsdb_enabled") or image not in excluded_images:
+            try:
+                docker_utils.pull(image, tag)
+            except Exception as e:
+                log("Can't load image {}".format(e))
+                status_set('blocked',
+                        'Image could not be pulled: {}:{}'.format(image, tag))
+                return
     for image in IMAGES_OPTIONAL:
         try:
             docker_utils.pull(image, tag)
@@ -191,7 +197,7 @@ def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
-    if not ctx.get("analyticsdb_servers"):
+    if ctx.get("analyticsdb_enabled") and not ctx.get("analyticsdb_servers"):
         missing_relations.append("contrail-analyticsdb")
     if missing_relations:
         status_set('blocked',
@@ -220,7 +226,7 @@ def _update_charm_status(ctx):
     service_changed = changed_dict["analytics"]
     docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    if ctx["contrail_version"] >= 510:
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_enabled"):
         service_changed = changed_dict["analytics-alarm"]
         docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
@@ -231,7 +237,12 @@ def _update_charm_status(ctx):
     service_changed = changed_dict["redis"]
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
+    services = SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)).copy()
+    if ctx["contrail_version"] >= 510 and not ctx.get("analyticsdb_enabled"):
+        services.pop("analytics-alarm")
+        services.pop("analytics-snmp")
+
+    common_utils.update_services_status(MODULE, services)
 
 
 def _render_configs(ctx):
@@ -247,7 +258,7 @@ def _render_configs(ctx):
         tfolder + "/analytics.yaml",
         ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml", ctx)
 
-    if ctx["contrail_version"] >= 510:
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_enabled"):
         result["analytics-alarm"] = common_utils.render_and_log(
             tfolder + "/analytics-alarm.yaml",
             ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml", ctx)
@@ -255,7 +266,7 @@ def _render_configs(ctx):
         result["analytics-snmp"] = common_utils.render_and_log(
             tfolder + "/analytics-snmp.yaml",
             ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml", ctx)
-
+    # TODO:  think about removing analytics-alarm.yaml and analytics-snmp.yaml
     # redis is a common service that needs own synchronized env
     result["redis"] = common_utils.render_and_log(
         "redis.env",
@@ -351,7 +362,8 @@ def ziu_stage_1(ziu_stage, trigger):
     cver = common_utils.get_contrail_version()
     docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
-    if cver >= 510:
+    # can i get_context() here and pass it to ziu_stage_2 ???
+    if cver >= 510 and analyticsdb_ctx()[1].get("analyticsdb_enabled", False):
         docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
         docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
@@ -364,11 +376,17 @@ def ziu_stage_2(ziu_stage, trigger):
     _render_configs(ctx)
     docker_utils.compose_run(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
     docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
-    if ctx["contrail_version"] >= 510:
+
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_enabled"):
         docker_utils.compose_run(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
         docker_utils.compose_run(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
 
-    result = common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
+    services = SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)).copy()
+    if ctx["contrail_version"] >= 510 and not ctx.get("analyticsdb_enabled"):
+        services.pop("analytics-alarm")
+        services.pop("analytics-snmp")
+
+    result = common_utils.update_services_status(MODULE, services)
     if result:
         signal_ziu("ziu_done", ziu_stage)
 

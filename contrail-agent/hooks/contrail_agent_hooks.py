@@ -85,6 +85,8 @@ def contrail_controller_changed():
             config.pop(key, None)
 
     _update_config("analytics_servers", "analytics-server")
+    if "analyticsdb_enabled" in data:
+        _update_config("analyticsdb_enabled", "analyticsdb_enabled")
     _update_config("auth_info", "auth-info")
     _update_config("orchestrator_info", "orchestrator-info")
     _update_config("controller_ips", "controller_ips")
