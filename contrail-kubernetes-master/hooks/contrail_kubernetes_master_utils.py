@@ -105,7 +105,7 @@ def get_context():
     ctx["control_servers"] = data_ips
     ips = common_utils.json_loads(config.get("analytics_servers"), list())
     ctx["analytics_servers"] = ips
-
+    ctx["analyticsdb_enabled"] = config.get("analyticsdb_enabled")
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
 
     ctx["cluster_name"] = config.get("cluster_name")
