@@ -81,6 +81,7 @@ def contrail_controller_changed():
     log("RelData: " + str(data))
 
     _update_config(data, "analytics_servers", "analytics-server")
+    _update_config(data. "analyticsdb_enabled", "analyticsdb_enabled")
     _update_config(data, "maintenance", "maintenance")
     _update_config(data, "controller_ips", "controller_ips")
     _update_config(data, "controller_data_ips", "controller_data_ips")
