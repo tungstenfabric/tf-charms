@@ -105,6 +105,13 @@ def get_analytics_list():
     return analytics_ip_list
 
 
+def analyticsdb_enabled():
+    for rid in relation_ids("contrail-analyticsdb"):
+        for unit in related_units(rid):
+            return True
+    return False
+
+
 def get_context():
     ctx = {}
     ctx["module"] = MODULE
@@ -136,6 +143,7 @@ def get_context():
     ctx["controller_servers"] = ips
     ctx["control_servers"] = data_ips
     ctx["analytics_servers"] = get_analytics_list()
+    ctx["analyticsdb_enabled"] = analyticsdb_enabled()
     log("CTX: " + str(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
     return ctx
