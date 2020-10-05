@@ -27,6 +27,7 @@ requires:
     interface: contrail-analytics
   contrail-analyticsdb:
     interface: contrail-analyticsdb
+    optional: true
   tls-certificates:
     interface: tls-certificates
     optional: true
