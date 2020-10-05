@@ -209,8 +209,9 @@ def get_context():
     ctx["controller_servers"] = common_utils.json_loads(config.get("controller_ips"), list())
     ctx["control_servers"] = common_utils.json_loads(config.get("controller_data_ips"), list())
     ctx["analytics_servers"] = common_utils.json_loads(config.get("analytics_servers"), list())
+    ctx["analyticsdb_enabled"] = config.get("analyticsdb_enabled")
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-
+    ctx["analyticsdb_enabled"] = config.get("analyticsdb_enabled")
     if "plugin-ips" in config:
         plugin_ips = common_utils.json_loads(config["plugin-ips"], dict())
         my_ip = unit_get("private-address")
