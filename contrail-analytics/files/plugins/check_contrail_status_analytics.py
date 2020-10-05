@@ -38,7 +38,17 @@ WARNING = 1
 CRITICAL = 2
 
 
+def analyticsdb_enabled():
+    for rid in relation_ids("contrail-analyticsdb"):
+        for unit in related_units(rid):
+            return True
+    return False
+
+
 def check_contrail_status(services):
+    if not analyticsdb_enabled():
+        services.pop("analytics-alarm")
+        services.pop("analytics-snmp")
 
     try:
         output = subprocess.check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-analytics-nrpe ; sudo -E contrail-status", shell=True).decode('UTF-8')
@@ -88,4 +98,4 @@ def check_contrail_status(services):
 
 if __name__ == '__main__':
     cver = sys.argv[1]
-    check_contrail_status(SERVICES[cver])
+    check_contrail_status(SERVICES[cver].copy())
