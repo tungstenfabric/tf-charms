@@ -2,6 +2,8 @@
 
 import subprocess
 import sys
+import yaml
+import os.path
 
 SERVICES = {
     '5.0': {
@@ -38,7 +40,22 @@ WARNING = 1
 CRITICAL = 2
 
 
+def analyticsdb_enabled():
+    if not os.path.isfile("/etc/contrail/analytics.env"):
+        return True
+
+    with open("/etc/contrail/analytics.env") as f:
+        for line in f:
+            name, value = line.split("=")
+            if name == "ANALYTICSDB_ENABLE":
+                return yaml.load(value)
+    return True
+
+
 def check_contrail_status(services):
+    if not analyticsdb_enabled():
+        services.pop("analytics-alarm")
+        services.pop("analytics-snmp")
 
     try:
         output = subprocess.check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-analytics-nrpe ; sudo -E contrail-status", shell=True).decode('UTF-8')
@@ -88,4 +105,4 @@ def check_contrail_status(services):
 
 if __name__ == '__main__':
     cver = sys.argv[1]
-    check_contrail_status(SERVICES[cver])
+    check_contrail_status(SERVICES[cver].copy())

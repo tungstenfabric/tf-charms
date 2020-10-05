@@ -263,6 +263,7 @@ def update_southbound_relations(rid=None):
     settings = {
         "maintenance": config.get("maintenance"),
         "analytics-server": json.dumps(utils.get_analytics_list()),
+        "analyticsdb_enabled": utils.analyticsdb_enabled(),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
         "orchestrator-info": config.get("orchestrator_info"),
