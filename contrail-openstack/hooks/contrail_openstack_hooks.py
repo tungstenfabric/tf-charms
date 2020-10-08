@@ -95,6 +95,11 @@ def _rebuild_config_from_controller_relation():
     units.append((None, None))
     for rid, unit in units:
         data = relation_get(attribute=None, unit=unit, rid=rid)
+        if data is None:
+            if "dpdk" not in items:
+                items["dpdk"] = False
+            continue
+
         _update_item(data, "auth_info", "auth-info")
         _update_item(data, "auth_mode", "auth-mode")
         _update_item(data, "controller_ips", "controller_ips")
