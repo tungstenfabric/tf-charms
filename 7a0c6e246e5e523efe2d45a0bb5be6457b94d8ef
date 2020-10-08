@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dae83ede_b472f12d",
+        "filename": "contrail-openstack/hooks/contrail_openstack_hooks.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-08T13:46:52Z",
+      "side": 1,
+      "message": "let\u0027s don\u0027t check this",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 37
+      },
+      "revId": "7a0c6e246e5e523efe2d45a0bb5be6457b94d8ef",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
