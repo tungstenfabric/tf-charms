@@ -213,3 +213,8 @@ options:
     description: |
       [default parameter, use action apply-defaults to change for release 2002 and further]
       Virtual Network id type to be used
+  config-api-worker-count:
+    default: "1"
+    type: string
+    description: |
+      Here I'll add the description
