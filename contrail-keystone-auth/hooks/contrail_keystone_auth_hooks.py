@@ -111,7 +111,7 @@ def identity_admin_departed():
 def update_status():
     auth_info = config.get("auth_info")
     if not auth_info:
-        status_set('blocked', 'Missing relations: identity')
+        status_set('blocked', 'Missing or incomplete relations: identity')
     else:
         status_set("active", "Unit is ready")
 

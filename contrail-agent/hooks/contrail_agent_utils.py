@@ -293,7 +293,7 @@ def _check_readyness(ctx):
         missing_relations.append("vrouter-plugin")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return False
     if not ctx.get("analytics_servers"):
         status_set('blocked',
