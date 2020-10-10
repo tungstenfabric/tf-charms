@@ -1,0 +1,169 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc8de1c2_5920f94f",
+        "filename": "contrail-agent/hooks/contrail_agent_hooks.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "what happens in upgrade charm?\npreviously controller didn\u0027t send this flag and if this will be raised beforecontroller send new data - then this charm will disable analyticsdb",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea193d39_e3e150f8",
+        "filename": "contrail-analytics/files/plugins/check_contrail_status_analytics.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "this will corrupt SERVICES object",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5461cb47_499c5899",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "please remove this method and define analyticsdb_enabled in analyticsdb_ctx\n\nalso you can define \u0027enable\u0027 as existed units or contrail_version\u003d\u003d500",
+      "range": {
+        "startLine": 130,
+        "startChar": 4,
+        "endLine": 130,
+        "endChar": 23
+      },
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f192847e_34de98b5",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "if we have such units then we can return True. it doesn\u0027t matter what we have in relation",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40165cb6_fd2eff22",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "let\u0027s move this into analyticsdb_ctx\nanalyticsdb_ctx can define both variables.",
+      "range": {
+        "startLine": 155,
+        "startChar": 4,
+        "endLine": 155,
+        "endChar": 54
+      },
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28ac71cc_cc132eb2",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "please remove unrelated comments",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aab7841b_e0a67ed7",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "it\u0027s better to replicate SERVICES structure with dividing images to groups. define such number constants in code reduces maintaainability and readability\nand do next \u0027for\u0027 by groups first with condition like\nif analyticsdb_enabled or group not in [...]:",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65b37be5_95aa2466",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "if analyticsdb_enabled:",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23f37473_6536b0bd",
+        "filename": "contrail-analytics/hooks/contrail_analytics_utils.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-10T14:14:56Z",
+      "side": 1,
+      "message": "this will corrupt SERVICES constant",
+      "revId": "2ed3fb1249d3e134b12514ca07685920f33eeeb4",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
