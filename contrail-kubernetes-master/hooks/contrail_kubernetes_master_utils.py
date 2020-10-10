@@ -170,7 +170,7 @@ def update_charm_status():
         missing_relations.append("kube-api-endpoint")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',

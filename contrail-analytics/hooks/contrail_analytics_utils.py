@@ -215,7 +215,7 @@ def _update_charm_status(ctx):
         missing_relations.append("contrail-analyticsdb")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return
     if len(ctx.get("analytics_servers")) < config.get("min-cluster-size"):
         status_set('blocked',
