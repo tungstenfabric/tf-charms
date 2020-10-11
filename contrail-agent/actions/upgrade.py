@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import os
 import sys
+from charmhelpers.core.hookenv import action_get
+import contrail_agent_utils as utils
+
 
 _path = os.path.dirname(os.path.realpath(__file__))
 _hooks = os.path.abspath(os.path.join(_path, '../hooks'))
@@ -14,9 +17,6 @@ def _add_path(path):
 
 _add_path(_hooks)
 _add_path(_root)
-
-from charmhelpers.core.hookenv import action_get
-import contrail_agent_utils as utils
 
 
 def upgrade():
