@@ -323,7 +323,7 @@ def get_contrail_version():
     """
     Function returns contrail version from image-tag in comparable format.
     Returned value is integer looks like 500 (for 5.0 version) or 2002 for 2002 version
-    If container tag is 'latest' or if the version cannot be evaluated then 
+    If container tag is 'latest' or if the version cannot be evaluated then
     version will be set to 9999
     If someone changes the naming conventions, he must make changes in this function to support these new conventions.
     """
