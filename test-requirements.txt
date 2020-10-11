@@ -1,0 +1,9 @@
+greenlet
+gevent==1.4.0
+eventlet
+testtools
+bottle
+mock
+junitxml
+python-subunit
+testrepository
