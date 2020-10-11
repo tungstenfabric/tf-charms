@@ -23,6 +23,7 @@ GITHUB_URL = "https://api.github.com/search/commits?q=repo:tungstenfabric/tf-cha
 # curl -H "Accept: application/vnd.github.cloak-preview" \
 # https://api.github.com/search/commits?q=repo:tungstenfabric/tf-charms+cc1474f70b5bbfb6abeab009b4acab704f525bf2
 
+
 def cli_grab():
     """take stuff from cli, output it in a dict"""
     parser = argparse.ArgumentParser(description='compare charm commit hashes. '
