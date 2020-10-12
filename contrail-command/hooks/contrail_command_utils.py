@@ -114,11 +114,6 @@ def update_charm_status():
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
-    elif ("openstack" in ctx.get("cloud_orchestrators") and
-          "kubernetes" in ctx.get("cloud_orchestrators")):
-        status_set('blocked',
-                   "Contrail command charm doesn't supports two orchestrators simultaneously now")
-        return
 
     changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
 
