@@ -215,6 +215,16 @@ def update_nrpe_config():
     nrpe_compat.write()
 
 
+def stop_analyticsdb():
+    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    # Removes all config files, environment files, etc.
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_analyticsdb.env")
+    common_utils.remove_file_safe(CONFIGS_PATH + "/docker-compose.yaml")
+
+
 # ZUI code block
 
 ziu_relations = [

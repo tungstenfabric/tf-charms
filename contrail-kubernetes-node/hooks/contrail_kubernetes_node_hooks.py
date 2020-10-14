@@ -78,6 +78,12 @@ def upgrade_charm():
     utils.update_charm_status()
 
 
+@hooks.hook("stop")
+def stop():
+    utils.stop_kubernetes_node()
+    utils.remove_created_files()
+
+
 def main():
     try:
         hooks.execute(sys.argv)
