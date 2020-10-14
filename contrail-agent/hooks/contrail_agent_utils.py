@@ -342,7 +342,7 @@ def _run_services(ctx):
     common_utils.update_services_status(MODULE, SERVICES)
 
 
-def stop_agent(stop_agent):
+def stop_agent(stop_agent=True):
     path = CONFIGS_PATH + "/docker-compose.yaml"
     if stop_agent:
         docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
