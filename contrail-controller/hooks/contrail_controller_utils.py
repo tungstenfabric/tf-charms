@@ -702,3 +702,30 @@ stages = {
     5: ziu_stage_noop,
     6: ziu_stage_6,
 }
+
+
+def stop_controller():
+    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+
+    # TODO: Redis is common service. We can't stop it here.
+    if os.path.exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml"):
+        docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/common_config.env")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/defaults_controller.env")
+    common_utils.remove_file_if_exists(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/common_web.env")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/contrail-issu.conf")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/ssl/{}/keystone-ca-cert.pem".format(MODULE))
+
+    # TODO: Redis is common service. We can't delete its files here.
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/redis.env")
+    common_utils.remove_file_if_exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
