@@ -420,3 +420,27 @@ stages = {
     5: ziu_stage_noop,
     6: ziu_stage_6,
 }
+
+def stop_analytics():
+    ctx = get_context()
+    docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_enabled"):
+        docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+        docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+
+    # TODO: Redis is a common service. We can't stop it here
+    if os.path.exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml"):
+        docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    # Removes all config files, environment files, etc.
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/common_analytics.env")
+    common_utils.remove_file_if_exists(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/ssl/{}/keystone-ca-cert.pem".format(MODULE))
+
+    # TODO: Redis is a common service. We can't delete its files here.
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/redis.env")
+    common_utils.remove_file_if_exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
