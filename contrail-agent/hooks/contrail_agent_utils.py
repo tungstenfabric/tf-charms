@@ -326,7 +326,7 @@ def _run_services(ctx):
     # local file for vif utility
     common_utils.render_and_log(
         "contrail-vrouter-agent.conf",
-        "/etc/contrail/contrail-vrouter-agent.conf", ctx, perms=0o440)
+        BASE_CONFIGS_PATH + "/contrail-vrouter-agent.conf", ctx, perms=0o440)
 
     changed = common_utils.apply_keystone_ca(MODULE, ctx)
     changed |= common_utils.render_and_log(
@@ -342,7 +342,7 @@ def _run_services(ctx):
     common_utils.update_services_status(MODULE, SERVICES)
 
 
-def stop_agent(stop_agent):
+def stop_agent(stop_agent=True):
     path = CONFIGS_PATH + "/docker-compose.yaml"
     if stop_agent:
         docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
@@ -362,6 +362,14 @@ def stop_agent(stop_agent):
             os.remove(path)
         except Exception:
             pass
+
+
+def remove_created_files():
+    # Removes all config files, environment files, etc.
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/contrail-vrouter-agent.conf")
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_vrouter.env")
+    common_utils.remove_file_safe(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_safe("/etc/apparmor.d/libvirt/TEMPLATE.qemu")
 
 
 def action_upgrade(params):
