@@ -59,6 +59,9 @@ def contrail_controller_changed():
 
     utils.update_charm_status()
 
+@hooks.hook("stop")
+def stop():
+    utils.remove_created_files()
 
 def main():
     try:
