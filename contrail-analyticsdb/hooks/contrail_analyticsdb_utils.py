@@ -315,3 +315,13 @@ stages = {
     5: ziu_stage_noop,
     6: ziu_stage_6,
 }
+
+def stop_analyticsdb():
+    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    # Removes all config files, environment files, etc.
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/common_analyticsdb.env")
+    common_utils.remove_file_if_exists(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/ssl/{}/keystone-ca-cert.pem".format(MODULE))
