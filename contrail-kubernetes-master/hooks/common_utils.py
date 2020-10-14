@@ -240,33 +240,28 @@ def _try_os(func, *args, **kwargs):
 
 def update_certificates(module, cert, key, ca):
     certs_path = "/etc/contrail/ssl/{}".format(module)
-    files = {"/certs/server.pem": (cert, 0o644),
-             "/private/server-privkey.pem": (key, 0o640),
-             "/certs/ca-cert.pem": (ca, 0o644)}
+    # order is important: containers wait for key file as signal to start
+    files = [
+        ("/certs/ca-cert.pem", ca, 0o644),
+        ("/certs/server.pem", cert, 0o644),
+        ("/private/server-privkey.pem", key, 0o640),
+    ]
     # create common directories to create symlink
     # this is needed for contrail-status
     _try_os(os.makedirs, "/etc/contrail/ssl/certs")
     _try_os(os.makedirs, "/etc/contrail/ssl/private")
+    # create before files appear to set correct permisions
+    _try_os(os.makedirs, certs_path + "/certs", mode=0o755)
+    _try_os(os.makedirs, certs_path + "/private", mode=0o750)
     changed = False
-    for fkey in files:
-        cfile = certs_path + fkey
-        data = files[fkey][0]
+    for fname, data, perms in files:
+        cfile = certs_path + fname
         old_hash = file_hash(cfile)
-        save_file(cfile, data, perms=files[fkey][1])
+        save_file(cfile, data, perms=perms)
         changed |= (old_hash != file_hash(cfile))
-        # create symlink to common place
-        _try_os(os.remove, "/etc/contrail/ssl" + fkey)
-        _try_os(os.symlink, cfile, "/etc/contrail/ssl" + fkey)
-    # apply strange permissions to certs to allow containers to read them
-    # group 1011 is a hardcoded group id for internal contrail purposes
-    if os.path.exists(certs_path + "/certs"):
-        os.chmod(certs_path + "/certs", 0o755)
-    if os.path.exists(certs_path + "/private"):
-        os.chmod(certs_path + "/private", 0o750)
-        os.chown(certs_path + "/private", 0, 1011)
-    if key:
-        os.chown(certs_path + "/private/server-privkey.pem", 0, 1011)
-
+        # re-create symlink to common place for contrail-status
+        _try_os(os.remove, "/etc/contrail/ssl" + fname)
+        _try_os(os.symlink, cfile, "/etc/contrail/ssl" + fname)
     return changed
 
 
