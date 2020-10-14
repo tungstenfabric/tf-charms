@@ -99,6 +99,8 @@ def save_file(path, data, perms=0o400):
     elif os.path.exists(path):
         os.remove(path)
 
+def remove_file_safe(path):
+    _try_os(os.remove, path);
 
 def update_services_status(module, services):
     try:

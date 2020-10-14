@@ -253,6 +253,12 @@ def nrpe_external_master_relation_changed():
     utils.update_nrpe_config()
 
 
+@hooks.hook("stop")
+def stop():
+    utils.stop_kubernetes_master()
+    utils.remove_created_files()
+
+
 def main():
     try:
         hooks.execute(sys.argv)
