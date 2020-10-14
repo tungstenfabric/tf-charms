@@ -211,3 +211,10 @@ def update_nrpe_config():
     )
 
     nrpe_compat.write()
+
+def stop_kubernetes_master():
+    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+
+def remove_created_files():
+    common_utils.remove_file_if_exists(BASE_CONFIGS_PATH + "/common_kubemanager.env")
+    common_utils.remove_file_if_exists(CONFIGS_PATH + "/docker-compose.yaml")

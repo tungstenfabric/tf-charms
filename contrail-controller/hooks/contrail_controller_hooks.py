@@ -666,6 +666,10 @@ def upgrade_charm():
             cluster_joined(rel_id=rid)
     _notify_haproxy_services()
 
+@hooks.hook("stop")
+def stop():
+    utils.stop_controller()
+    utils.remove_created_files()
 
 def main():
     try:

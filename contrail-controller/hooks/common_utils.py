@@ -99,6 +99,9 @@ def save_file(path, data, perms=0o400):
     elif os.path.exists(path):
         os.remove(path)
 
+def remove_file_if_exists(path):
+    if os.path.exists(path):
+        os.remove(path)
 
 def update_services_status(module, services):
     try:
