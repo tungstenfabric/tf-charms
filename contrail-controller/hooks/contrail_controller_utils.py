@@ -492,6 +492,34 @@ def update_nrpe_config():
     nrpe_compat.write()
 
 
+def stop_controller():
+    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+
+    # TODO: Redis is common service. We can't stop it here.
+    if os.path.exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml"):
+        docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    # Removes all config files, env files, etc.
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_config.env")
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/defaults_controller.env")
+    common_utils.remove_file_safe(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_safe(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_safe(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_safe(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_web.env")
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/contrail-issu.conf")
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/ssl/{}/keystone-ca-cert.pem".format(MODULE))
+
+    # TODO: Redis is common service. We can't delete its files here.
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/redis.env")
+    common_utils.remove_file_safe(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+
+
 # ZUI code block
 
 ziu_relations = [
