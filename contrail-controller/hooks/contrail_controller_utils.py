@@ -88,26 +88,29 @@ def get_controller_ips(address_type, own_ip):
     controller_ips = dict()
     for rid in relation_ids("controller-cluster"):
         for unit in related_units(rid):
-            ip = relation_get(address_type, unit, rid)
-            controller_ips[unit] = ip
-    # add it's own ip address
+            controller_ips[unit] = relation_get(address_type, unit, rid)
     controller_ips[local_unit()] = own_ip
     return controller_ips
 
 
 def get_analytics_list():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analytics"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is not None:
+        analytics_ip_list = common_utils.json_loads(analytics_ip_list, list())
+    else:
+        analytics_ip_list = []
+        for rid in relation_ids("contrail-analytics"):
+            for unit in related_units(rid):
+                ip = relation_get("private-address", unit, rid)
+                if ip:
+                    analytics_ip_list.append(ip)
     return analytics_ip_list
 
 
 def analyticsdb_enabled():
     for rid in relation_ids("contrail-analyticsdb"):
-        return True if related_units(rid) else False
+        if related_units(rid):
+            return True
     return False
 
 
@@ -138,8 +141,8 @@ def get_context():
     ctx["use_internal_endpoints"] = config.get("use_internal_endpoints", False)
     ctx["logging"] = docker_utils.render_logging()
 
-    ips = common_utils.json_loads(leader_get("controller_ip_list"), list())
-    data_ips = common_utils.json_loads(leader_get("controller_data_ip_list"), list())
+    ips = common_utils.json_loads(leader_get("cluster_ip_list"), list())
+    data_ips = common_utils.json_loads(leader_get("cluster_data_ip_list"), list())
     ctx["controller_servers"] = ips
     ctx["control_servers"] = data_ips
     ctx["analytics_servers"] = get_analytics_list()
@@ -428,13 +431,13 @@ def update_rabbitmq_cluster_hostnames():
 
 def get_cassandra_connection_details():
     return {
-        "cassandra_address_list": common_utils.json_loads(leader_get("controller_ip_list"), list()),
+        "cassandra_address_list": common_utils.json_loads(leader_get("cluster_ip_list"), list()),
     }
 
 
 def get_zookeeper_connection_details():
     return {
-        "zookeeper_address_list": common_utils.json_loads(leader_get("controller_ip_list"), list()),
+        "zookeeper_address_list": common_utils.json_loads(leader_get("cluster_ip_list"), list()),
     }
 
 
@@ -443,7 +446,7 @@ def get_rabbitmq_connection_details():
         "rabbit_q_name": "vnc-config.issu-queue",
         "rabbit_vhost": "/",
         "rabbit_port": "5673",
-        "rabbit_address_list": common_utils.json_loads(leader_get("controller_ip_list"), list()),
+        "rabbit_address_list": common_utils.json_loads(leader_get("cluster_ip_list"), list()),
     }
 
 
