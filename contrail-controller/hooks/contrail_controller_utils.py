@@ -84,30 +84,44 @@ SERVICES = {
 }
 
 
-def get_controller_ips(address_type, own_ip):
-    controller_ips = dict()
-    for rid in relation_ids("controller-cluster"):
+###
+def create_ip_list(rel, data_type, address_type):
+    if data_type != [] and data_type != {}:
+        return None
+    ip_list = data_type.copy()
+
+    for rid in relation_ids(rel):
         for unit in related_units(rid):
             ip = relation_get(address_type, unit, rid)
-            controller_ips[unit] = ip
-    # add it's own ip address
+            if data_type == {}:
+                ip_list[unit] = ip
+            elif ip:
+                ip_list.append(ip)
+            else:
+                return None
+
+    return ip_list
+
+
+def get_controller_ips(address_type, own_ip):
+    controller_ips = create_ip_list("controller_cluster", dict(), address_type)
     controller_ips[local_unit()] = own_ip
     return controller_ips
 
 
 def get_analytics_list():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analytics"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is None:
+        analytics_ip_list = create_ip_list("contrail_analytics", list(), "private-address")
+    else:
+        analytics_ip_list = common_utils.json_loads(analytics_ip_list, list())
     return analytics_ip_list
 
 
 def analyticsdb_enabled():
     for rid in relation_ids("contrail-analyticsdb"):
-        return True if related_units(rid) else False
+        if related_units(rid):
+            return True
     return False
 
 
