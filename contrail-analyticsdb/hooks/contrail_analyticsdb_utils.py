@@ -61,14 +61,39 @@ SERVICES = {
 }
 
 
-def servers_ctx():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analyticsdb"):
+def get_analyticsdb_ips(address_type, own_ip):
+    analyticsdb_ips = dict()
+    for rid in relation_ids("analyticsdb-cluster"):
         for unit in related_units(rid):
-            utype = relation_get("unit-type", unit, rid)
-            ip = relation_get("private-address", unit, rid)
-            if ip and utype == "analytics":
-                analytics_ip_list.append(ip)
+            ip = relation_get(address_type, unit, rid)
+            analyticsdb_ips[unit] = ip
+    # add it's own ip address
+    analyticsdb_ips[local_unit()] = own_ip
+    return analyticsdb_ips
+
+
+ def create_ip_list(rel):
+     ip_list = []
+         for rid in relation_ids(rel):
+             for unit in related_units(rid):
+                 ip = relation_get("private-address", unit, rid)
+                 if ip:
+                     ip_list.append(ip)
+     return ip_list
+
+
+def servers_ctx():
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is None:
+        analytics_ip_list = []
+        for rid in relation_ids("contrail-analyticsdb"):
+            for unit in related_units(rid):
+                utype = relation_get("unit-type", unit, rid)
+                ip = relation_get("private-address", unit, rid)
+                if ip and utype == "analytics":
+                    analytics_ip_list.append(ip)
+    else:
+        analytics_ip_list = common_utils.json_loads(analytics_ip_list, list())
 
     return {
         "controller_servers": common_utils.json_loads(config.get("controller_ips"), list()),
@@ -78,14 +103,14 @@ def servers_ctx():
 
 def analyticsdb_ctx():
     """Get the ipaddres of all analyticsdb nodes"""
-    analyticsdb_ip_list = list()
-    for rid in relation_ids("analyticsdb-cluster"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analyticsdb_ip_list.append(ip)
-    # add it's own ip address
-    analyticsdb_ip_list.append(common_utils.get_ip())
+    analyticsdb_ip_list = config.get("analyticsdb_ips")
+    if analyticsdb_ip_list is None:
+        analyticsdb_ip_list = create_ip_list("analyticsdb-cluster")
+        # add it's own ip address
+        analyticsdb_ip_list.append(common_utils.get_ip())
+    else:
+        analyticsdb_ip_list = common_utils.json_loads(analyticsdb_ip_list, list())
+
     return {"analyticsdb_servers": analyticsdb_ip_list}
 
 

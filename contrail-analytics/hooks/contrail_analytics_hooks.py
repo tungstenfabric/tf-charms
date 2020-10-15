@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import sys
 import yaml
 
@@ -7,14 +8,19 @@ from charmhelpers.core.hookenv import (
     UnregisteredHookError,
     config,
     log,
+    is_leader,
+    leader_get,
+    leader_set,
     relation_get,
     relation_ids,
     related_units,
     status_set,
     relation_set,
     local_unit,
+    remote_unit,
     open_port,
     close_port,
+    ERROR,
 )
 
 import contrail_analytics_utils as utils
@@ -81,7 +87,11 @@ def _value_changed(rel_data, rel_key, cfg_key):
 
 @hooks.hook("contrail-analytics-relation-joined")
 def contrail_analytics_joined():
-    settings = {"private-address": common_utils.get_ip()}
+    ip_list = leader_get("analytics_ip_list")
+    if len(common_utils.json_loads(leader_get("analytics_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+    settings = {"private-address": common_utils.get_ip(),
+                "analytics_ips": ip_list}
     relation_set(relation_settings=settings)
 
 
@@ -95,6 +105,7 @@ def contrail_analytics_changed():
     _value_changed(data, "maintenance", "maintenance")
     _value_changed(data, "controller_ips", "controller_ips")
     _value_changed(data, "controller_data_ips", "controller_data_ips")
+    _value_changed(data, "analyticsdb_ips", "analyticsdb_ips")
     config.save()
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
@@ -117,8 +128,13 @@ def contrail_analytics_departed():
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def contrail_analyticsdb_joined():
+    ip_list = leader_get("analytics_ip_list")
+    if len(common_utils.json_loads(leader_get("analytics_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+
     settings = {"private-address": common_utils.get_ip(),
-                'unit-type': 'analytics'}
+                'unit-type': 'analytics',
+                "analytics_ips": ip_list}
     relation_set(relation_settings=settings)
 
 
@@ -135,15 +151,31 @@ def contrail_analyticsdb_departed():
 
 @hooks.hook("analytics-cluster-relation-joined")
 def analytics_cluster_joined():
-    settings = {"private-address": common_utils.get_ip()}
+    ip = common_utils.get_ip()
+    settings = {"private-address": ip,
+                "unit-address": ip}
     relation_set(relation_settings=settings)
-
     utils.update_charm_status()
 
 
 @hooks.hook("analytics-cluster-relation-changed")
 def analytics_cluster_changed():
+    data = relation_get()
+    log("Peer relation changed with {}: {}".format(
+        remote_unit(), data))
+
+    ip = data.get("unit-address")
+    if not ip:
+        log("There is no unit-address or data-address in the relation")
+        return
+
+    if is_leader():
+        unit = remote_unit()
+        _address_changed(unit, ip, 'ip')
+
+    update_relations()
     utils.update_ziu("cluster-changed")
+    utils.update_charm_status()
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -166,6 +198,28 @@ def tls_certificates_relation_departed():
         _notify_proxy_services()
         utils.update_nrpe_config()
         utils.update_charm_status()
+
+
+def _address_changed(unit, ip, var_name):
+    ip_list = common_utils.json_loads(leader_get("analytics_{}_list".format(var_name)), list())
+    ips = common_utils.json_loads(leader_get("analytics_{}s".format(var_name)), dict())
+    if ip in ip_list:
+        return
+    old_ip = ips.get(unit)
+    if old_ip:
+        index = ip_list.index(old_ip)
+        ip_list[index] = ip
+        ips[unit] = ip
+    else:
+        ip_list.append(ip)
+        ips[unit] = ip
+
+    log("{}_LIST: {}    {}S: {}".format(var_name.upper(), str(ip_list), var_name.upper(), str(ips)))
+    settings = {
+        "analytics_{}_list".format(var_name): json.dumps(ip_list),
+        "analytics_{}s".format(var_name): json.dumps(ips)
+    }
+    leader_set(settings=settings)
 
 
 @hooks.hook("update-status")
@@ -247,6 +301,40 @@ def nrpe_external_master_relation_changed():
 def stop():
     utils.stop_analytics()
     utils.remove_created_files()
+
+
+def update_relations(rid=None):
+    for rid in relation_ids("contrail-analytics"):
+        contrail_analytics_joined()
+    for rid in relation_ids("contrail-analyticsdb"):
+        contrail_analyticsdb_joined()
+
+
+@hooks.hook("leader-elected")
+def leader_elected():
+    ip = common_utils.get_ip()
+    var_name = ["ip", "unit-address", ip]
+    ip_list = common_utils.json_loads(leader_get("analytics_{}_list".format(var_name[0])), list())
+    ips = utils.get_analytics_ips(var_name[1], var_name[2])
+    if not ip_list:
+        ip_list = ips.values()
+        log("{}_LIST: {}    {}S: {}".format(var_name[0].upper(), str(ip_list), var_name[0].upper(), str(ips)))
+        settings = {
+            "analytics_{}_list".format(var_name[0]): json.dumps(list(ip_list)),
+            "analytics_{}s".format(var_name[0]): json.dumps(ips)
+        }
+        leader_set(settings=settings)
+    else:
+        current_ip_list = ips.values()
+        dead_ips = set(ip_list).difference(current_ip_list)
+        new_ips = set(current_ip_list).difference(ip_list)
+        if new_ips:
+            log("There are a new analytics' that are not in the list: " + str(new_ips), level=ERROR)
+        if dead_ips:
+            log("There are a dead analytics' that are in the list: " + str(dead_ips), level=ERROR)
+
+    update_relations()
+    utils.update_charm_status()
 
 
 def main():

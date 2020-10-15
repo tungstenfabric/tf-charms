@@ -83,6 +83,16 @@ SERVICES = {
     ],
 }
 
+###
+def create_ip_list(rel):
+    ip_list = []
+        for rid in relation_ids(rel):
+            for unit in related_units(rid):
+                ip = relation_get("private-address", unit, rid)
+                if ip:
+                    ip_list.append(ip)
+    return ip_list
+
 
 def get_controller_ips(address_type, own_ip):
     controller_ips = dict()
@@ -96,18 +106,18 @@ def get_controller_ips(address_type, own_ip):
 
 
 def get_analytics_list():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analytics"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is None:
+        analytics_ip_list = create_ip_list("contrail_analytics")
+    else:
+        analytics_ip_list = common_utils.json_loads(analytics_ip_list, list())
     return analytics_ip_list
 
 
 def analyticsdb_enabled():
     for rid in relation_ids("contrail-analyticsdb"):
-        return True if related_units(rid) else False
+        if related_units(rid):
+            return True
     return False
 
 
