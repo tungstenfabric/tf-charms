@@ -4,6 +4,7 @@ import yaml
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
+    local_unit,
     related_units,
     relation_get,
     relation_set,
@@ -100,6 +101,31 @@ SERVICES = {
 }
 
 
+def create_ip_list(rel, data_type, address_type):
+    if data_type != [] and data_type != {}:
+        return None
+    ip_list = data_type.copy()
+
+    for rid in relation_ids(rel):
+        for unit in related_units(rid):
+            ip = relation_get(address_type, unit, rid)
+            if data_type == {}:
+                ip_list[unit] = ip
+            elif ip:
+                ip_list.append(ip)
+            else:
+                return None
+
+    return ip_list
+
+
+def get_analytics_ips(address_type, own_ip):
+    analytics_ips = create_ip_list("analytics-cluster", dict(), address_type)
+    # add it's own ip address
+    analytics_ips[local_unit()] = own_ip
+    return analytics_ips
+
+
 def controller_ctx():
     """Get the ipaddress of all contrail control nodes"""
     auth_mode = config.get("auth_mode")
@@ -118,28 +144,35 @@ def controller_ctx():
 
 def analytics_ctx():
     """Get the ipaddress of all analytics control nodes"""
-    analytics_ip_list = []
-    for rid in relation_ids("analytics-cluster"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
-    # add it's own ip address
-    analytics_ip_list.append(common_utils.get_ip())
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is None:
+        analytics_ip_list = create_ip_list("analytics-cluster", list(), "private-address")
+    else:
+        analytics_ip_list = common_utils.json_loads(analytics_ip_list, list())
+
     return {"analytics_servers": analytics_ip_list}
 
 
 def analyticsdb_ctx():
     """Get the ipaddress of all contrail analyticsdb nodes"""
-    analyticsdb_ip_list = []
-    analyticsdb_enabled = True if common_utils.get_contrail_version() == 500 else False
-    for rid in relation_ids("contrail-analyticsdb"):
-        for unit in related_units(rid):
-            analyticsdb_enabled = True
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analyticsdb_ip_list.append(ip)
-    return {"analyticsdb_servers": analyticsdb_ip_list, "analyticsdb_enabled": analyticsdb_enabled}
+    analyticsdb_ip_list = config.get("analyticsdb_ips")
+
+    if analyticsdb_ip_list is None:
+        analyticsdb_ip_list = create_ip_list("contrail-analyticsdb", list(), "private-address")
+    else:
+        analyticsdb_ip_list = common_utils.json_loads(analyticsdb_ip_list, list())
+
+    if common_utils.get_contrail_version() == 500:
+        analyticsdb_enabled = True
+    else:
+        analyticsdb_enabled = False
+        for rid in relation_ids("contrail-analyticsdb"):
+            if related_units(rid):
+                analyticsdb_enabled = True
+                break
+
+    return {"analyticsdb_servers": analyticsdb_ip_list,
+            "analyticsdb_enabled": analyticsdb_enabled}
 
 
 def get_context():
