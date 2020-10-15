@@ -61,19 +61,30 @@ SERVICES = {
 }
 
 
-def servers_ctx():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analyticsdb"):
+def get_analyticsdb_ips(address_type, own_ip):
+    analyticsdb_ips = dict()
+    for rid in relation_ids("analyticsdb-cluster"):
         for unit in related_units(rid):
-            utype = relation_get("unit-type", unit, rid)
-            ip = relation_get("private-address", unit, rid)
-            if ip and utype == "analytics":
-                analytics_ip_list.append(ip)
+            ip = relation_get(address_type, unit, rid)
+            analyticsdb_ips[unit] = ip
+    # add it's own ip address
+    analyticsdb_ips[local_unit()] = own_ip
+    return analyticsdb_ips
+
+
+def servers_ctx():
+    #analytics_ip_list = []
+    #for rid in relation_ids("contrail-analyticsdb"):
+    #    for unit in related_units(rid):
+    #        utype = relation_get("unit-type", unit, rid)
+    #        ip = relation_get("private-address", unit, rid)
+    #        if ip and utype == "analytics":
+    #            analytics_ip_list.append(ip)
 
     return {
         "controller_servers": common_utils.json_loads(config.get("controller_ips"), list()),
         "control_servers": common_utils.json_loads(config.get("controller_data_ips"), list()),
-        "analytics_servers": analytics_ip_list}
+        "analytics_servers": common_utils.json_loads(config.get("analytics_ips"), list())}
 
 
 def analyticsdb_ctx():
