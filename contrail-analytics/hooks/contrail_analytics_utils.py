@@ -3,6 +3,7 @@ import yaml
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
+    local_unit,
     related_units,
     relation_get,
     relation_set,
@@ -97,6 +98,17 @@ SERVICES = {
         ],
     },
 }
+
+
+def get_analytics_ips(address_type, own_ip):
+    analytics_ips = dict()
+    for rid in relation_ids("analytics-cluster"):
+        for unit in related_units(rid):
+            ip = relation_get(address_type, unit, rid)
+            analytics_ips[unit] = ip
+    # add it's own ip address
+    analytics_ips[local_unit()] = own_ip
+    return analytics_ips
 
 
 def controller_ctx():
