@@ -88,14 +88,16 @@ def get_controller_ips(address_type, own_ip):
     controller_ips = dict()
     for rid in relation_ids("controller-cluster"):
         for unit in related_units(rid):
-            ip = relation_get(address_type, unit, rid)
-            controller_ips[unit] = ip
-    # add it's own ip address
+            controller_ips[unit] = relation_get(address_type, unit, rid)
     controller_ips[local_unit()] = own_ip
     return controller_ips
 
 
 def get_analytics_list():
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is not None:
+        return common_utils.json_loads(analytics_ip_list, list())
+
     analytics_ip_list = []
     for rid in relation_ids("contrail-analytics"):
         for unit in related_units(rid):
@@ -105,6 +107,16 @@ def get_analytics_list():
     return analytics_ip_list
 
 
+<<<<<<< HEAD   (d70b5a Merge "do not set AUTH_MODE=keystone for agent if openstack )
+=======
+def analyticsdb_enabled():
+    for rid in relation_ids("contrail-analyticsdb"):
+        if related_units(rid):
+            return True
+    return False
+
+
+>>>>>>> CHANGE (06b71e Use min-cluster-size for publishing correct data in relation)
 def get_context():
     ctx = {}
     ctx["module"] = MODULE
