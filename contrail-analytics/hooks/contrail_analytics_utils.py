@@ -3,6 +3,7 @@ import yaml
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
+    local_unit,
     related_units,
     relation_get,
     relation_set,
@@ -99,6 +100,17 @@ SERVICES = {
 }
 
 
+def get_analytics_ips(address_type, own_ip):
+    analytics_ips = dict()
+    for rid in relation_ids("analytics-cluster"):
+        for unit in related_units(rid):
+            ip = relation_get(address_type, unit, rid)
+            analytics_ips[unit] = ip
+    # add it's own ip address
+    analytics_ips[local_unit()] = own_ip
+    return analytics_ips
+
+
 def controller_ctx():
     """Get the ipaddress of all contrail control nodes"""
     auth_mode = config.get("auth_mode")
@@ -130,15 +142,18 @@ def analytics_ctx():
 
 def analyticsdb_ctx():
     """Get the ipaddress of all contrail analyticsdb nodes"""
-    analyticsdb_ip_list = []
+    analyticsdb_ip_list = common_utils.json_loads(config.get("analyticsdb_ips"), list())
+
     analyticsdb_enabled = True if common_utils.get_contrail_version() == 500 else False
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             analyticsdb_enabled = True
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analyticsdb_ip_list.append(ip)
-    return {"analyticsdb_servers": analyticsdb_ip_list, "analyticsdb_enabled": analyticsdb_enabled}
+            break
+            #ip = relation_get("private-address", unit, rid)
+            #if ip:
+                #analyticsdb_ip_list.append(ip)
+    return {"analyticsdb_servers": analyticsdb_ip_list,
+            "analyticsdb_enabled": analyticsdb_enabled}
 
 
 def get_context():

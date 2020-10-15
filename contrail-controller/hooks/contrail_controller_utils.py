@@ -96,13 +96,15 @@ def get_controller_ips(address_type, own_ip):
 
 
 def get_analytics_list():
-    analytics_ip_list = []
-    for rid in relation_ids("contrail-analytics"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
-    return analytics_ip_list
+    ###EDIT###
+    # should return analytics_ips
+    #analytics_ip_list = []
+    #for rid in relation_ids("contrail-analytics"):
+    #    for unit in related_units(rid):
+    #        ip = relation_get("private-address", unit, rid)
+    #        if ip:
+    #            analytics_ip_list.append(ip)
+    return common_utils.json_loads(config.get("analytics_ips"), list())
 
 
 def analyticsdb_enabled():
