@@ -116,14 +116,14 @@ def leader_elected():
     data_ip = common_utils.get_ip(config_param="data-network", fallback=ip)
     for var_name in [("ip", "unit-address", ip),
                      ("data_ip", "data-address", data_ip)]:
-        ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name[0])), list())
+        ip_list = common_utils.json_loads(leader_get("cluster_{}_list".format(var_name[0])), list())
         ips = utils.get_controller_ips(var_name[1], var_name[2])
         if not ip_list:
             ip_list = ips.values()
             log("{}_LIST: {}    {}S: {}".format(var_name[0].upper(), str(ip_list), var_name[0].upper(), str(ips)))
             settings = {
-                "controller_{}_list".format(var_name[0]): json.dumps(list(ip_list)),
-                "controller_{}s".format(var_name[0]): json.dumps(ips)
+                "cluster_{}_list".format(var_name[0]): json.dumps(list(ip_list)),
+                "cluster_{}s".format(var_name[0]): json.dumps(ips)
             }
             leader_set(settings=settings)
         else:
@@ -190,8 +190,8 @@ def cluster_changed():
 
 
 def _address_changed(unit, ip, var_name):
-    ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name)), list())
-    ips = common_utils.json_loads(leader_get("controller_{}s".format(var_name)), dict())
+    ip_list = common_utils.json_loads(leader_get("cluster_{}_list".format(var_name)), list())
+    ips = common_utils.json_loads(leader_get("cluster_{}s".format(var_name)), dict())
     if ip in ip_list:
         return
     old_ip = ips.get(unit)
@@ -205,8 +205,8 @@ def _address_changed(unit, ip, var_name):
 
     log("{}_LIST: {}    {}S: {}".format(var_name.upper(), str(ip_list), var_name.upper(), str(ips)))
     settings = {
-        "controller_{}_list".format(var_name): json.dumps(ip_list),
-        "controller_{}s".format(var_name): json.dumps(ips)
+        "cluster_{}_list".format(var_name): json.dumps(ip_list),
+        "cluster_{}s".format(var_name): json.dumps(ips)
     }
     leader_set(settings=settings)
 
@@ -216,17 +216,17 @@ def cluster_departed():
     if is_leader():
         unit = remote_unit()
         for var_name in ["ip", "data_ip"]:
-            ips = common_utils.json_loads(leader_get("controller_{}s".format(var_name)), dict())
+            ips = common_utils.json_loads(leader_get("cluster_{}s".format(var_name)), dict())
             if unit not in ips:
                 return
             old_ip = ips.pop(unit)
-            ip_list = common_utils.json_loads(leader_get("controller_{}_list".format(var_name)), list())
+            ip_list = common_utils.json_loads(leader_get("cluster_{}_list".format(var_name)), list())
             ip_list.remove(old_ip)
             log("{}_LIST: {}    {}S: {}".format(var_name.upper(), str(ip_list), var_name.upper(), str(ips)))
 
             settings = {
-                "controller_{}_list".format(var_name): json.dumps(ip_list),
-                "controller_{}s".format(var_name): json.dumps(ips)
+                "cluster_{}_list".format(var_name): json.dumps(ip_list),
+                "cluster_{}s".format(var_name): json.dumps(ips)
             }
             leader_set(settings=settings)
 
@@ -238,14 +238,19 @@ def cluster_departed():
 
 def update_northbound_relations(rid=None):
     # controller_ips/data_ips are already dumped json
+    ip_list = leader_get("cluster_ip_list")
+    data_ip_list = leader_get("cluster_data_ip_list")
+    if len(common_utils.json_loads(leader_get("cluster_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+        data_ip_list = '[]'
     settings = {
         "unit-type": "controller",
         "maintenance": config.get("maintenance"),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
         "orchestrator-info": config.get("orchestrator_info"),
-        "controller_ips": leader_get("controller_ip_list"),
-        "controller_data_ips": leader_get("controller_data_ip_list"),
+        "controller_ips": ip_list,
+        "controller_data_ips": data_ip_list,
     }
 
     if rid:
@@ -260,6 +265,11 @@ def update_northbound_relations(rid=None):
 
 def update_southbound_relations(rid=None):
     # controller_ips/data_ips are already dumped json
+    ip_list = leader_get("cluster_ip_list")
+    data_ip_list = leader_get("cluster_data_ip_list")
+    if len(common_utils.json_loads(leader_get("cluster_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+        data_ip_list = '[]'
     settings = {
         "maintenance": config.get("maintenance"),
         "analytics-server": json.dumps(utils.get_analytics_list()),
@@ -271,8 +281,8 @@ def update_southbound_relations(rid=None):
         "ssl-enabled": config.get("ssl_enabled") and common_utils.is_config_analytics_ssl_available(),
         # base64 encoded ca-cert
         "ca-cert": config.get("ca_cert"),
-        "controller_ips": leader_get("controller_ip_list"),
-        "controller_data_ips": leader_get("controller_data_ip_list"),
+        "controller_ips": ip_list,
+        "controller_data_ips": data_ip_list,
         "issu_controller_ips": config.get("issu_controller_ips"),
         "issu_controller_data_ips": config.get("issu_controller_data_ips"),
         "issu_analytics_ips": config.get("issu_analytics_ips"),
@@ -290,8 +300,8 @@ def update_issu_relations(rid=None):
     settings = {
         "unit-type": "issu",
         "maintenance": config.get("maintenance"),
-        "issu_controller_ips": leader_get("controller_ip_list"),
-        "issu_controller_data_ips": leader_get("controller_data_ip_list"),
+        "issu_controller_ips": leader_get("cluster_ip_list"),
+        "issu_controller_data_ips": leader_get("cluster_data_ip_list"),
         "issu_analytics_ips": json.dumps(utils.get_analytics_list()),
     }
 
@@ -419,9 +429,24 @@ def analytics_joined(rel_id=None):
     update_southbound_relations()
 
 
+def _value_changed(rel_data, rel_key, cfg_key):
+    if rel_key not in rel_data:
+        # data is absent in relation. it means that remote charm doesn't
+        # send it due to lack of information
+        return
+    value = rel_data[rel_key]
+    if value is not None:
+        config[cfg_key] = value
+    elif value is None and config.get(cfg_key) is not None:
+        config.pop(cfg_key, None)
+    return
+
+
 @hooks.hook("contrail-analytics-relation-changed")
 @hooks.hook("contrail-analytics-relation-departed")
 def analytics_changed_departed():
+    data = relation_get()
+    _value_changed(data, "analytics_ips", "analytics_ips")
     update_southbound_relations()
     utils.update_ziu("analytics-changed")
     utils.update_charm_status()
