@@ -101,7 +101,7 @@ def save_file(path, data, perms=0o400):
 
 
 def remove_file_safe(path):
-    _try_os(os.remove, path);
+    _try_os(os.remove, path)
 
 
 def update_services_status(module, services):
