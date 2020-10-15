@@ -1,9 +1,10 @@
 import os
 import yaml
-
 from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
+    local_unit,
+    leader_get,
     related_units,
     relation_get,
     relation_set,
@@ -87,6 +88,16 @@ SERVICES = {
 }
 
 
+def get_cluster_info(address_type, own_ip):
+    info = dict()
+    for rid in relation_ids("analytics-cluster"):
+        for unit in related_units(rid):
+            info[unit] = relation_get(address_type, unit, rid)
+    # add it's own ip address
+    info[local_unit()] = own_ip
+    return info
+
+
 def controller_ctx():
     """Get the ipaddress of all contrail control nodes"""
     auth_mode = config.get("auth_mode")
@@ -103,28 +114,39 @@ def controller_ctx():
     }
 
 
-def analytics_ctx():
-    """Get the ipaddress of all analytics control nodes"""
-    analytics_ip_list = []
-    for rid in relation_ids("analytics-cluster"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analytics_ip_list.append(ip)
-    # add it's own ip address
-    analytics_ip_list.append(common_utils.get_ip())
-    return {"analytics_servers": analytics_ip_list}
-
-
 def analyticsdb_ctx():
     """Get the ipaddress of all contrail analyticsdb nodes"""
+<<<<<<< HEAD   (d70b5a Merge "do not set AUTH_MODE=keystone for agent if openstack )
     analyticsdb_ip_list = []
+=======
+
+    data = {"analyticsdb_enabled": True}
+    if common_utils.get_contrail_version() > 500:
+        data["analyticsdb_enabled"] = False
+        for rid in relation_ids("contrail-analyticsdb"):
+            if related_units(rid):
+                data["analyticsdb_enabled"] = True
+                break
+
+    if "analyticsdb_ips" in config:
+        data["analyticsdb_servers"] = common_utils.json_loads(config.get("analyticsdb_ips"), list())
+        return data
+
+    # use old way to obtain analyticsdb addresses
+    data["analyticsdb_servers"] = []
+>>>>>>> CHANGE (06b71e Use min-cluster-size for publishing correct data in relation)
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             ip = relation_get("private-address", unit, rid)
             if ip:
+<<<<<<< HEAD   (d70b5a Merge "do not set AUTH_MODE=keystone for agent if openstack )
                 analyticsdb_ip_list.append(ip)
     return {"analyticsdb_servers": analyticsdb_ip_list}
+=======
+                data["analyticsdb_servers"].append(ip)
+
+    return data
+>>>>>>> CHANGE (06b71e Use min-cluster-size for publishing correct data in relation)
 
 
 def get_context():
@@ -148,8 +170,8 @@ def get_context():
     ctx["logging"] = docker_utils.render_logging()
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
+    ctx["analytics_servers"] = list(common_utils.json_loads(leader_get("cluster_info"), dict()).values())
     ctx.update(controller_ctx())
-    ctx.update(analytics_ctx())
     ctx.update(analyticsdb_ctx())
     log("CTX: {}".format(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))

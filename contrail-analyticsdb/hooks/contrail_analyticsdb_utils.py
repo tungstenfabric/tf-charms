@@ -4,6 +4,7 @@ from charmhelpers.core.hookenv import (
     config,
     in_relation_hook,
     local_unit,
+    leader_get,
     related_units,
     relation_get,
     relation_set,
@@ -61,32 +62,33 @@ SERVICES = {
 }
 
 
+def get_cluster_info(address_type, own_ip):
+    cluster_info = dict()
+    for rid in relation_ids("analyticsdb-cluster"):
+        for unit in related_units(rid):
+            cluster_info[unit] = relation_get(address_type, unit, rid)
+    # add it's own ip address
+    cluster_info[local_unit()] = own_ip
+    return cluster_info
+
+
 def servers_ctx():
-    analytics_ip_list = []
+    data = {
+        "controller_servers": common_utils.json_loads(config.get("controller_ips"), list()),
+        "control_servers": common_utils.json_loads(config.get("controller_data_ips"), list())}
+
+    if "analytics_ips" in config:
+        data["analytics_servers"] = common_utils.json_loads(config.get("analytics_ips"), list())
+        return data
+
+    data["analytics_servers"] = []
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             utype = relation_get("unit-type", unit, rid)
             ip = relation_get("private-address", unit, rid)
             if ip and utype == "analytics":
-                analytics_ip_list.append(ip)
-
-    return {
-        "controller_servers": common_utils.json_loads(config.get("controller_ips"), list()),
-        "control_servers": common_utils.json_loads(config.get("controller_data_ips"), list()),
-        "analytics_servers": analytics_ip_list}
-
-
-def analyticsdb_ctx():
-    """Get the ipaddres of all analyticsdb nodes"""
-    analyticsdb_ip_list = list()
-    for rid in relation_ids("analyticsdb-cluster"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                analyticsdb_ip_list.append(ip)
-    # add it's own ip address
-    analyticsdb_ip_list.append(common_utils.get_ip())
-    return {"analyticsdb_servers": analyticsdb_ip_list}
+                data["analytics_servers"].append(ip)
+    return data
 
 
 def get_context():
@@ -111,8 +113,8 @@ def get_context():
     if not ctx.get("cloud_orchestrators"):
         ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
 
+    ctx["analyticsdb_servers"] = list(common_utils.json_loads(leader_get("cluster_info"), dict()).values())
     ctx.update(servers_ctx())
-    ctx.update(analyticsdb_ctx())
     log("CTX: {}".format(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
     return ctx
