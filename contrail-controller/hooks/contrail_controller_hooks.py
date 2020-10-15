@@ -140,8 +140,18 @@ def leader_elected():
     utils.update_charm_status()
 
 
+def update_relations(rid=None):
+    for rid in relation_ids("contrail-analytics"):
+        analytics_joined(rel_id=rid)
+    for rid in relation_ids("contrail-analyticsdb"):
+        analyticsdb_joined(rel_id=rid)
+    for rid in relation_ids("contrail-controller"):
+        contrail_controller_joined(rel_id=rid)
+
+
 @hooks.hook("leader-settings-changed")
 def leader_settings_changed():
+    update_relations()
     utils.update_charm_status()
 
 
@@ -238,14 +248,19 @@ def cluster_departed():
 
 def update_northbound_relations(rid=None):
     # controller_ips/data_ips are already dumped json
+    ip_list = leader_get("controller_ip_list")
+    data_ip_list = leader_get("controller_data_ip_list")
+    if len(common_utils.json_loads(leader_get("controller_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+        data_ip_list = '[]'
     settings = {
         "unit-type": "controller",
         "maintenance": config.get("maintenance"),
         "auth-mode": config.get("auth-mode"),
         "auth-info": config.get("auth_info"),
         "orchestrator-info": config.get("orchestrator_info"),
-        "controller_ips": leader_get("controller_ip_list"),
-        "controller_data_ips": leader_get("controller_data_ip_list"),
+        "controller_ips": ip_list,
+        "controller_data_ips": data_ip_list,
     }
 
     if rid:
@@ -260,6 +275,11 @@ def update_northbound_relations(rid=None):
 
 def update_southbound_relations(rid=None):
     # controller_ips/data_ips are already dumped json
+    ip_list = leader_get("controller_ip_list")
+    data_ip_list = leader_get("controller_data_ip_list")
+    if len(common_utils.json_loads(leader_get("controller_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+        data_ip_list = '[]'
     settings = {
         "maintenance": config.get("maintenance"),
         "analytics-server": json.dumps(utils.get_analytics_list()),
@@ -271,8 +291,8 @@ def update_southbound_relations(rid=None):
         "ssl-enabled": config.get("ssl_enabled") and common_utils.is_config_analytics_ssl_available(),
         # base64 encoded ca-cert
         "ca-cert": config.get("ca_cert"),
-        "controller_ips": leader_get("controller_ip_list"),
-        "controller_data_ips": leader_get("controller_data_ip_list"),
+        "controller_ips": ip_list,
+        "controller_data_ips": data_ip_list,
         "issu_controller_ips": config.get("issu_controller_ips"),
         "issu_controller_data_ips": config.get("issu_controller_data_ips"),
         "issu_analytics_ips": config.get("issu_analytics_ips"),
@@ -419,9 +439,20 @@ def analytics_joined(rel_id=None):
     update_southbound_relations()
 
 
+def _value_changed(rel_data, rel_key, cfg_key):
+    if rel_key in rel_data:
+        value = rel_data[rel_key]
+        if value is not None:
+            config[cfg_key] = value
+        elif value is None and config.get(cfg_key) is not None:
+            config.pop(cfg_key, None)
+
+
 @hooks.hook("contrail-analytics-relation-changed")
 @hooks.hook("contrail-analytics-relation-departed")
 def analytics_changed_departed():
+    data = relation_get()
+    _value_changed(data, "analytics_ips", "analytics_ips")
     update_southbound_relations()
     utils.update_ziu("analytics-changed")
     utils.update_charm_status()
