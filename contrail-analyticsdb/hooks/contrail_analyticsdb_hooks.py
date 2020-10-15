@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 
 import sys
+import json
 
 from charmhelpers.core.hookenv import (
     Hooks,
     UnregisteredHookError,
     config,
     log,
+    is_leader,
+    leader_get,
+    leader_set,
     relation_get,
     related_units,
     relation_ids,
     status_set,
     relation_set,
+    remote_unit,
+    ERROR,
 )
 
 import contrail_analyticsdb_utils as utils
@@ -57,7 +63,12 @@ def config_changed():
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
 def analyticsdb_joined():
-    settings = {'private-address': common_utils.get_ip()}
+    ip_list = leader_get("analyticsdb_ip_list")
+    if len(common_utils.json_loads(leader_get("analyticsdb_ip_list"), list())) < config.get("min-cluster-size"):
+        ip_list = '[]'
+
+    settings = {'private-address': common_utils.get_ip(),
+                "analyticsdb_ips": ip_list}
     relation_set(relation_settings=settings)
 
 
@@ -84,6 +95,7 @@ def analyticsdb_changed():
     _value_changed(data, "maintenance", "maintenance")
     _value_changed(data, "controller_ips", "controller_ips")
     _value_changed(data, "controller_data_ips", "controller_data_ips")
+    _value_changed(data, "analytics_ips", "analytics_ips")
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
     utils.update_ziu("analyticsdb-changed")
@@ -105,13 +117,30 @@ def analyticsdb_departed():
 
 @hooks.hook("analyticsdb-cluster-relation-joined")
 def analyticsdb_cluster_joined():
-    settings = {'private-address': common_utils.get_ip()}
+    ip = common_utils.get_ip()
+    settings = {"private-address": ip,
+                "unit-address": ip}
     relation_set(relation_settings=settings)
 
 
 @hooks.hook("analyticsdb-cluster-relation-changed")
 def analyticsdb_cluster_changed():
+    data = relation_get()
+    log("Peer relation changed with {}: {}".format(
+        remote_unit(), data))
+
+    ip = data.get("unit-address")
+    if not ip:
+        log("There is no unit-address or data-address in the relation")
+        return
+
+    if is_leader():
+        unit = remote_unit()
+        _address_changed(unit, ip)
+
+    update_relations()
     utils.update_ziu("cluster-changed")
+    utils.update_charm_status()
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -152,6 +181,59 @@ def nrpe_external_master_relation_changed():
 def stop():
     utils.stop_analyticsdb()
     utils.remove_created_files()
+
+
+def _address_changed(unit, ip):
+    ip_list = common_utils.json_loads(leader_get("analyticsdb_ip_list"), list())
+    ips = common_utils.json_loads(leader_get("analyticsdb_ips"), dict())
+    if ip in ip_list:
+        return
+    old_ip = ips.get(unit)
+    if old_ip:
+        index = ip_list.index(old_ip)
+        ip_list[index] = ip
+        ips[unit] = ip
+    else:
+        ip_list.append(ip)
+        ips[unit] = ip
+
+    log("IP_LIST: {}    IPS: {}".format(str(ip_list), str(ips)))
+    settings = {
+        "analyticsdb_ip_list": json.dumps(ip_list),
+        "analyticsdb_ips": json.dumps(ips)
+    }
+    leader_set(settings=settings)
+
+
+def update_relations(rid=None):
+    for rid in relation_ids("contrail-analyticsdb"):
+        analyticsdb_joined()
+
+
+@hooks.hook("leader-elected")
+def leader_elected():
+    ip = common_utils.get_ip()
+    ip_list = common_utils.json_loads(leader_get("analyticsdb_ip_list"), list())
+    ips = utils.get_analyticsdb_ips("unit-address", ip)
+    if not ip_list:
+        ip_list = ips.values()
+        log("IP_LIST: {}    IPS: {}".format(str(ip_list), str(ips)))
+        settings = {
+            "analyticsdb_ip_list": json.dumps(list(ip_list)),
+            "analyticsdb_ips": json.dumps(ips)
+        }
+        leader_set(settings=settings)
+    else:
+        current_ip_list = ips.values()
+        dead_ips = set(ip_list).difference(current_ip_list)
+        new_ips = set(current_ip_list).difference(ip_list)
+        if new_ips:
+            log("There are a new analyticsdbs that are not in the list: " + str(new_ips), level=ERROR)
+        if dead_ips:
+            log("There are a dead analyticsdbs that are in the list: " + str(dead_ips), level=ERROR)
+
+    update_relations()
+    utils.update_charm_status()
 
 
 def main():
