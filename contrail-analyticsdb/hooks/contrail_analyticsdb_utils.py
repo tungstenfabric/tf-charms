@@ -61,6 +61,17 @@ SERVICES = {
 }
 
 
+def get_analyticsdb_ips(address_type, own_ip):
+    analyticsdb_ips = dict()
+    for rid in relation_ids("analyticsdb-cluster"):
+        for unit in related_units(rid):
+            ip = relation_get(address_type, unit, rid)
+            analyticsdb_ips[unit] = ip
+    # add it's own ip address
+    analyticsdb_ips[local_unit()] = own_ip
+    return analyticsdb_ips
+
+
 def servers_ctx():
     analytics_ip_list = []
     for rid in relation_ids("contrail-analyticsdb"):

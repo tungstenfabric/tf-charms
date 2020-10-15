@@ -3,10 +3,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.egg-info
+.tox/
 *.project
 *.pydevproject
 *.settings
 .vscode
 bin/
 repo-info
+.gitignore
