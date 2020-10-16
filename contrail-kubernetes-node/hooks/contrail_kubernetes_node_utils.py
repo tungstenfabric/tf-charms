@@ -57,3 +57,12 @@ def update_charm_status():
     docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     status_set("active", "Unit is ready")
+
+
+def stop_kubernetes_node():
+    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+
+
+def remove_created_files():
+    common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_cni.env")
+    common_utils.remove_file_safe(CONFIGS_PATH + "/docker-compose.yaml")

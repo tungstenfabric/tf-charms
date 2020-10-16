@@ -667,6 +667,12 @@ def upgrade_charm():
     _notify_haproxy_services()
 
 
+@hooks.hook("stop")
+def stop():
+    utils.stop_controller()
+    utils.remove_created_files()
+
+
 def main():
     try:
         hooks.execute(sys.argv)

@@ -145,3 +145,14 @@ def import_cluster(juju_params):
         return False, 'Import failed ({}). Please check logs'.format(e)
 
     return True, "Success"
+
+
+def remove_created_files():
+    # Removes all config files, environment files, etc.
+    common_utils.remove_file_safe("/cluster_config.yml")
+    common_utils.remove_file_safe("/tmp/juju_environment")
+    common_utils.remove_file_safe("/etc/ansible/ansible.cfg")
+
+    image = "contrail-command-deployer"
+    if os.path.exists("/" + image):
+        os.rmdir("/" + image)
