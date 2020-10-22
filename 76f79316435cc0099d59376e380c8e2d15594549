@@ -1,0 +1,192 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "352f8668_13e4e166",
+        "filename": "contrail-analytics/hooks/common_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "please sync this file across all charms if you want to change it",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddcb371f_645130ca",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "please apply the same algorithm here as in controller",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "435bf577_e1b4074c",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "for such big changes it would be good to not refactor code in the future.",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12085d4c_4c4ba3ea",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "here I suggested to call update_relations... but let me check your setup and decide",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01c1092f_96774496",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "let\u0027s name it cluster_ip_list and cluster_ips",
+      "range": {
+        "startLine": 206,
+        "startChar": 9,
+        "endLine": 206,
+        "endChar": 28
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c17ddadc_01957836",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "data \u003d {\n        \"controller_servers\": common_utils.json_loads(config.get(\"controller_ips\"), list()),\n        \"control_servers\": common_utils.json_loads(config.get(\"controller_data_ips\"), list())}\nanalytics_ip_list \u003d config.get(\"analytics_ips\")\nif analytics_ip_list is not None:\n    data[\"analytics_servers\"] \u003d common_utils.json_loads(analytics_ip_list, list())\n    return data\n\nold code...",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d66b154d_b9c95d23",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "please see controller\u0027s code - for own list we should not maintain old way. we now that code of this charm is always new and can get this list from leader store",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b42d210d_7e80040c",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "if we are not planning to use return code then I suggest to not return them",
+      "range": {
+        "startLine": 436,
+        "startChar": 8,
+        "endLine": 436,
+        "endChar": 20
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34cfd313_cf78502b",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "and comparison with config is not required then",
+      "range": {
+        "startLine": 438,
+        "startChar": 29,
+        "endLine": 438,
+        "endChar": 57
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48a81b6c_24ebe2b8",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-22T20:18:59Z",
+      "side": 1,
+      "message": "please inverse condition\n\nif analytics_ip_list is not None:\n    return common_utils.json_loads(analytics_ip_list, list())\n\nold code...",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
