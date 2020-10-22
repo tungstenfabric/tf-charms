@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b5319070_f6e0a704",
+        "filename": "contrail-analytics/hooks/common_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "removal of the semicolon is the sync",
+      "parentUuid": "352f8668_13e4e166",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ddcb371f_645130ca",
         "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
         "patchSetId": 35
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "7bfd34a2_439c9eb9",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "i\u0027m not sure that i understand you correctly",
+      "parentUuid": "ddcb371f_645130ca",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "435bf577_e1b4074c",
         "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
         "patchSetId": 35
@@ -50,6 +86,24 @@
       "revId": "76f79316435cc0099d59376e380c8e2d15594549",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "096e4f7c_f4cced66",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "435bf577_e1b4074c",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
     },
     {
       "key": {
@@ -93,6 +147,30 @@
     },
     {
       "key": {
+        "uuid": "d5f20f8e_d9e7903a",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "so inside of the charm we use cluster_ips/cluster_ip_list keys [leader_get() and leader_set()]\nand outside we send old key names with cluster_ips/cluster_ip_list value?",
+      "parentUuid": "01c1092f_96774496",
+      "range": {
+        "startLine": 206,
+        "startChar": 9,
+        "endLine": 206,
+        "endChar": 28
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c17ddadc_01957836",
         "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
         "patchSetId": 35
@@ -110,6 +188,24 @@
     },
     {
       "key": {
+        "uuid": "5b65aa3e_52195377",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c17ddadc_01957836",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d66b154d_b9c95d23",
         "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
         "patchSetId": 35
@@ -124,6 +220,24 @@
       "revId": "76f79316435cc0099d59376e380c8e2d15594549",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9bb5433_c873d12e",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d66b154d_b9c95d23",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
     },
     {
       "key": {
@@ -150,6 +264,30 @@
     },
     {
       "key": {
+        "uuid": "11438ddc_4fd8572f",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b42d210d_7e80040c",
+      "range": {
+        "startLine": 436,
+        "startChar": 8,
+        "endLine": 436,
+        "endChar": 20
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34cfd313_cf78502b",
         "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
         "patchSetId": 35
@@ -173,6 +311,30 @@
     },
     {
       "key": {
+        "uuid": "8f953713_de78ce13",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 438,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34cfd313_cf78502b",
+      "range": {
+        "startLine": 438,
+        "startChar": 29,
+        "endLine": 438,
+        "endChar": 57
+      },
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48a81b6c_24ebe2b8",
         "filename": "contrail-controller/hooks/contrail_controller_utils.py",
         "patchSetId": 35
@@ -187,6 +349,24 @@
       "revId": "76f79316435cc0099d59376e380c8e2d15594549",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f79f9572_c86cba86",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-22T23:46:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48a81b6c_24ebe2b8",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
     }
   ]
 }
