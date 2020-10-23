@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a64dc659_b9d3afa9",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 35
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 958
+      },
+      "writtenOn": "2020-10-23T13:39:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12085d4c_4c4ba3ea",
+      "revId": "76f79316435cc0099d59376e380c8e2d15594549",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01c1092f_96774496",
         "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
         "patchSetId": 35
