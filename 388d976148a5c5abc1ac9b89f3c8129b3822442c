@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f7a8596_2c5fd419",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_hooks.py",
+        "patchSetId": 44
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-25T18:32:58Z",
+      "side": 1,
+      "message": "cluster_info?\n\nbtw, I\u0027ve realised that two data structs is overhead - we can leave just cluster_info and take info from it where it\u0027s required. what do you think?",
+      "range": {
+        "startLine": 196,
+        "startChar": 46,
+        "endLine": 196,
+        "endChar": 57
+      },
+      "revId": "388d976148a5c5abc1ac9b89f3c8129b3822442c",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58af6b51_8cb6ee79",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 44
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-25T18:32:58Z",
+      "side": 1,
+      "message": "ok, let\u0027s stay with this for now.",
+      "revId": "388d976148a5c5abc1ac9b89f3c8129b3822442c",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4ea8e0e_c8309aec",
+        "filename": "contrail-controller/hooks/contrail_controller_hooks.py",
+        "patchSetId": 44
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-25T18:32:58Z",
+      "side": 1,
+      "message": "empty \u0027return\u0027 is not required",
+      "range": {
+        "startLine": 452,
+        "startChar": 4,
+        "endLine": 452,
+        "endChar": 10
+      },
+      "revId": "388d976148a5c5abc1ac9b89f3c8129b3822442c",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40a480a9_10e89e3c",
+        "filename": "contrail-controller/hooks/contrail_controller_utils.py",
+        "patchSetId": 44
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-25T18:32:58Z",
+      "side": 1,
+      "message": "just write\n\nreturn common_utils.json_loads(analytics_ip_list, list())\n\nand remove \u0027else\u0027 keyword. several \u0027return\u0027 is not so bad.",
+      "range": {
+        "startLine": 99,
+        "startChar": 8,
+        "endLine": 99,
+        "endChar": 78
+      },
+      "revId": "388d976148a5c5abc1ac9b89f3c8129b3822442c",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
