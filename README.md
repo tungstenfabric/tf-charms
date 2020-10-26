@@ -89,10 +89,12 @@ git clone https://github.com/Juniper/contrail-charms -b R5
 - With bundle:
     - Create or modify the Juju deployment bundle yaml file to point to machines in which the contrail-charms should be deployed and to include options you need.
     - Deploy the bundle using the command `juju deploy <bundle_yaml_file>`
-    - [Example of bundle.yaml file for deployment of OpenStack and Contrail in Amazon environment.](examples/contrail-docker-bundle-ha.yaml)
-    - [Example of bundle.yaml file for deployment of Kubernetes and Contrail in Amazon environment (all-in-one).](examples/contrail-docker-bundle-k8s-aio.yaml)
-    - [Example of bundle.yaml file for deployment of Kubernetes and Contrail in Nested mode.](examples/contrail-bundle-k8s-nested-mode.yaml)
-    - [Example of bundle.yaml file for Contrail CNI (K8S) Deployment Using Existing Keystone.](examples/contrail-bundle-k8s-openstack.yaml)
+    - [Example of bundle.yaml file for deployment of OpenStack and Contrail in Amazon environment for Ubuntu 18.04.](examples/contrail-openstack-bionic/bundle.yaml)
+    - [Example of bundle.yaml file for deployment of OpenStack and Contrail without analyticsdb in Amazon environment for Ubuntu 18.04.](examples/contrail-openstack-without-analyticsdb-bionic/bundle.yaml)
+    - [Example of bundle.yaml file for deployment of OpenStack and Contrail in Amazon environment for Ubuntu 20.04.](examples/contrail-openstack-focal/bundle.yaml)
+    - [Example of bundle.yaml file for deployment of Kubernetes and Contrail in Amazon environment.](examples/contrail-k8s/bundle.yaml)
+    - [Example of bundle.yaml file for deployment of Kubernetes and Contrail in Nested mode.](examples/contrail-k8s-nested/bundle.yaml)
+    - [Example of bundle.yaml file for Contrail CNI (K8S) Deployment Using Existing Keystone.](examples/contrail-hybrid-k8s-openstack/bundle.yaml)
 
 - Manually
 
@@ -101,6 +103,8 @@ git clone https://github.com/Juniper/contrail-charms -b R5
     [How to deploy Contrail with Kubernetes](./manual-deploy-kubernetes.md)
 
     [Using the Manual cloud with Juju](https://docs.jujucharms.com/2.4/en/clouds-manual)
+
+    * Analyticsdb is optional and can be omitted. In this case analyticsdb, alarm and snmp will not be installed.
 
 6. You can check the status of your deployment using `juju status` command.
 [Unit status. Juju documentation.](https://docs.jujucharms.com/2.4/en/reference-status)
@@ -113,7 +117,7 @@ API/MGMT network - network where API services are listening on and for accessing
 
 By default, charms are using the default network for API/MGMT and CTRL/DATA.
 
-To specify API/MGMT network set `control-network` parameter for contrail-controller, contrail-analytics, contrail-analyticsdb and contrail-kubernetes-master if is applicable. It can be the IP addresses with netmasks of the control network or physical device name.
+To specify API/MGMT network set `control-network` parameter for contrail-controller and contrail-analytics. If contrail-analyticsdb or contrail-kubernetes-master is applied set `control-network` parameter for it as well. It can be the IP addresses with netmasks of the control network or physical device name.
 
 To specify CTRL/DATA network set `data-network` parameter for contrail-controller. It can be the IP addresses with netmasks of the control network or physical device name. If `data-network` isn't specified it will use the same network as `control-network`.
 
