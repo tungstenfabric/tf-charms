@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a73f7a6e_f0d7ef11",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-26T14:36:07Z",
+      "side": 1,
+      "message": "please add link to new bundles",
+      "revId": "5f199c0d13a375888995a126339d88d5e7197935",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7a60996_01debbc5",
+        "filename": "README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-10-26T14:36:07Z",
+      "side": 1,
+      "message": "please add small note that analyticsdb is optional and can be omitted and in this case analyticsdb, alar, snmp will not be installed",
+      "revId": "5f199c0d13a375888995a126339d88d5e7197935",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
