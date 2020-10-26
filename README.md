@@ -113,7 +113,7 @@ API/MGMT network - network where API services are listening on and for accessing
 
 By default, charms are using the default network for API/MGMT and CTRL/DATA.
 
-To specify API/MGMT network set `control-network` parameter for contrail-controller, contrail-analytics, contrail-analyticsdb and contrail-kubernetes-master if is applicable. It can be the IP addresses with netmasks of the control network or physical device name.
+To specify API/MGMT network set `control-network` parameter for contrail-controller and contrail-analytics. If contrail-analyticsdb or contrail-kubernetes-master is applied set `control-network` parameter for it as well. It can be the IP addresses with netmasks of the control network or physical device name.
 
 To specify CTRL/DATA network set `data-network` parameter for contrail-controller. It can be the IP addresses with netmasks of the control network or physical device name. If `data-network` isn't specified it will use the same network as `control-network`.
 
