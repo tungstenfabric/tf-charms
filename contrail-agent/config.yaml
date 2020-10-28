@@ -18,6 +18,10 @@ options:
     type: boolean
     default: true
     description: |
+      Deprecated.
+      Will be removed later.
+      vrouter contianer must detect its name automatically.
+
       Use fqdn for vrouter_hostname or use gethostname instead.
       fqdn is used in R5.1 and in further releases.
       R5.0 releases used hostname that doesn’t always return
