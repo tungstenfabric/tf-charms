@@ -175,8 +175,6 @@ def get_context():
     ctx["max_vm_flows"] = config.get("max-vm-flows")
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
-    # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
-    ctx["hostname"] = socket.getfqdn() if config.get("hostname-use-fqdn", True) else socket.gethostname()
     iface = config.get("physical-interface")
     ctx["physical_interface"] = iface
     gateway_ip = config.get("vhost-gateway")
