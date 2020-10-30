@@ -142,6 +142,7 @@ def analyticsdb_ctx():
         data["analyticsdb_servers"] = common_utils.json_loads(config.get("analyticsdb_ips"), list())
         return data
 
+    log("analyticsdb_ips is not in config. calculating...")
     # use old way to obtain analyticsdb addresses
     data["analyticsdb_servers"] = []
     for rid in relation_ids("contrail-analyticsdb"):
