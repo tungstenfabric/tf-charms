@@ -684,20 +684,15 @@ def upgrade_charm():
     utils.update_charm_status()
     config_changed()
     for rid in relation_ids("contrail-analytics"):
-        if related_units(rid):
-            analytics_joined(rel_id=rid)
+        analytics_joined(rel_id=rid)
     for rid in relation_ids("contrail-analyticsdb"):
-        if related_units(rid):
-            analyticsdb_joined(rel_id=rid)
+        analyticsdb_joined(rel_id=rid)
     for rid in relation_ids("contrail-controller"):
-        if related_units(rid):
-            contrail_controller_joined(rel_id=rid)
+        contrail_controller_joined(rel_id=rid)
     for rid in relation_ids("contrail-issu"):
-        if related_units(rid):
-            contrail_issu_relation_joined(rel_id=rid)
+        contrail_issu_relation_joined(rel_id=rid)
     for rid in relation_ids("controller-cluster"):
-        if related_units(rid):
-            cluster_joined(rel_id=rid)
+        cluster_joined(rel_id=rid)
     _notify_haproxy_services()
 
 
