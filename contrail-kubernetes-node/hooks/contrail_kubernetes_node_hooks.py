@@ -8,6 +8,7 @@ from charmhelpers.core.hookenv import (
     UnregisteredHookError,
     config,
     log,
+    relation_id,
     relation_get,
     relation_ids,
     status_set,
@@ -57,20 +58,21 @@ def contrail_kubernetes_config_changed():
 
 
 @hooks.hook("cni-relation-joined")
-def cni_joined(rel_id=None):
-    cidr = config.get("pod_subnets")
-    if not cidr:
+def cni_joined():
+    _notify_kubernetes(rid=relation_id())
+
+
+def _notify_kubernetes(rid=None):
+    rids = [rid] if rid else relation_ids("cni")
+    if not rids:
         return
-    data = {
-        "cidr": cidr,
+
+    settings = {
+        "cidr": config.get("pod_subnets"),
         "cni-conf-file": "/etc/cni/net.d/10-contrail.conf"
     }
-    relation_set(relation_id=rel_id, relation_settings=data)
-
-
-def _notify_kubernetes():
-    for rid in relation_ids("cni"):
-        cni_joined(rid)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
 
 
 @hooks.hook("upgrade-charm")
