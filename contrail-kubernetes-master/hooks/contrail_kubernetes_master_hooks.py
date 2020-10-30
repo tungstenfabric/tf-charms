@@ -37,11 +37,6 @@ def install():
     status_set("blocked", "Missing relation to contrail-controller")
 
 
-@hooks.hook("leader-elected")
-def leader_elected():
-    _notify_controller()
-
-
 @hooks.hook("config-changed")
 def config_changed():
     if config.changed("nested_mode"):
@@ -65,6 +60,11 @@ def config_changed():
 
     docker_utils.config_changed()
     utils.update_charm_status()
+
+
+@hooks.hook("leader-elected")
+def leader_elected():
+    _notify_controller()
 
 
 @hooks.hook("contrail-controller-relation-joined")
