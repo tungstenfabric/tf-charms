@@ -20,7 +20,6 @@ from charmhelpers.core.hookenv import (
     remote_unit,
     open_port,
     close_port,
-    ERROR,
 )
 
 import contrail_analytics_utils as utils
@@ -50,17 +49,10 @@ def install():
 def config_changed():
     utils.update_nrpe_config()
     if config.changed("control-network"):
-        ip = common_utils.get_ip()
-
-        settings = {'private-address': ip}
-        rnames = ("contrail-analytics", "contrail-analyticsdb",
-                  "analytics-cluster", "http-services")
-        for rname in rnames:
-            for rid in relation_ids(rname):
-                relation_set(relation_id=rid, relation_settings=settings)
-
-        if is_leader():
-            _address_changed(local_unit(), ip)
+        _update_cluster()
+        if is_leader() and _address_changed(local_unit(), common_utils.get_ip()):
+            _update_analytics()
+            _update_analyticsdb()
 
     docker_utils.config_changed()
     utils.update_charm_status()
@@ -68,23 +60,36 @@ def config_changed():
     _notify_proxy_services()
 
     # leave it as latest - in case of exception in previous steps
-    # config.changed doesn't work sometimes...
+    # config.changed doesn't work sometimes (when we saved config in this hook before)
     if config.get("saved-image-tag") != config["image-tag"]:
         utils.update_ziu("image-tag")
         config["saved-image-tag"] = config["image-tag"]
         config.save()
 
 
-def _value_changed(rel_data, rel_key, cfg_key):
-    if rel_key not in rel_data:
-        # data is absent in relation. it means that remote charm doesn't
-        # send it due to lack of information
-        return
-    value = rel_data[rel_key]
-    if value is not None and value != config.get(cfg_key):
-        config[cfg_key] = value
-    elif value is None and config.get(cfg_key) is not None:
-        config.pop(cfg_key, None)
+@hooks.hook("leader-elected")
+def leader_elected():
+    current_info = utils.get_cluster_info("unit-address", common_utils.get_ip())
+    saved_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    log("Cluster current info: {}".format(str(current_info)))
+    log("Cluster saved info: {}".format(str(saved_info)))
+    if not saved_info:
+        log("Cluster info: {}".format(str(current_info)))
+        settings = {
+            "cluster_info": json.dumps(current_info)
+        }
+        leader_set(settings=settings)
+        _update_analytics()
+        _update_analyticsdb()
+
+    utils.update_charm_status()
+
+
+@hooks.hook("leader-settings-changed")
+def leader_settings_changed():
+    _update_analytics()
+    _update_analyticsdb()
+    utils.update_charm_status()
 
 
 @hooks.hook("contrail-analytics-relation-joined")
@@ -93,9 +98,7 @@ def contrail_analytics_joined(rid=None):
     ip_list = '[]'
     if len(cluster_info) >= config.get("min-cluster-size"):
         ip_list = json.dumps(list(cluster_info.values()))
-    settings = {
-        "private-address": common_utils.get_ip(),
-        "analytics_ips": ip_list}
+    settings = {"analytics_ips": ip_list}
     relation_set(relation_settings=settings, relation_id=rid)
 
 
@@ -109,7 +112,6 @@ def contrail_analytics_changed():
     _value_changed(data, "maintenance", "maintenance")
     _value_changed(data, "controller_ips", "controller_ips")
     _value_changed(data, "controller_data_ips", "controller_data_ips")
-    _value_changed(data, "analyticsdb_ips", "analyticsdb_ips")
     config.save()
     # TODO: handle changing of all values
     # TODO: set error if orchestrator is changing and container was started
@@ -123,9 +125,10 @@ def contrail_analytics_departed():
     units = [unit for rid in relation_ids("contrail-analytics")
              for unit in related_units(rid)]
     if not units:
-        for key in ["auth_info", "auth_mode", "orchestrator_info", "rabbitmq_hosts"]:
+        keys = ["auth_info", "auth_mode", "orchestrator_info", "rabbitmq_hosts",
+                "controller_ips", "controller_data_ips"]
+        for key in keys:
             config.pop(key, None)
-    config.save()
     utils.update_charm_status()
     _notify_proxy_services()
 
@@ -136,9 +139,7 @@ def contrail_analyticsdb_joined(rid=None):
     ip_list = '[]'
     if len(cluster_info) >= config.get("min-cluster-size"):
         ip_list = json.dumps(list(cluster_info.values()))
-
     settings = {
-        "private-address": common_utils.get_ip(),
         "unit-type": "analytics",
         "analytics_ips": ip_list}
     relation_set(relation_settings=settings, relation_id=rid)
@@ -146,18 +147,25 @@ def contrail_analyticsdb_joined(rid=None):
 
 @hooks.hook("contrail-analyticsdb-relation-changed")
 def contrail_analyticsdb_changed():
+    data = relation_get()
+    _value_changed(data, "analyticsdb_ips", "analyticsdb_ips")
+    config.save()
     utils.update_ziu("analyticsdb-changed")
     utils.update_charm_status()
 
 
 @hooks.hook("contrail-analyticsdb-relation-departed")
 def contrail_analyticsdb_departed():
+    units = [unit for rid in relation_ids("contrail-analyticsdb")
+             for unit in related_units(rid)]
+    if not units:
+        config.pop("analyticsdb_ips", None)
     utils.update_charm_status()
 
 
 @hooks.hook("analytics-cluster-relation-joined")
 def analytics_cluster_joined():
-    settings = {"private-address": common_utils.get_ip()}
+    settings = {"unit-address": common_utils.get_ip()}
     relation_set(relation_settings=settings)
     utils.update_charm_status()
 
@@ -168,16 +176,71 @@ def analytics_cluster_changed():
     log("Peer relation changed with {}: {}".format(
         remote_unit(), data))
 
-    ip = data.get("private-address")
+    ip = data.get("unit-address")
     if not ip:
-        log("There is no private-address in the relation")
+        log("There is no unit-address in the relation")
     elif is_leader():
         unit = remote_unit()
         if _address_changed(unit, ip):
-            update_relations()
+            _update_analytics()
+            _update_analyticsdb()
             utils.update_charm_status()
 
     utils.update_ziu("cluster-changed")
+
+
+@hooks.hook("analytics-cluster-relation-departed")
+def analytics_cluster_departed():
+    if not is_leader():
+        return
+    unit = remote_unit()
+    cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    cluster_info.pop(unit, None)
+    log("Unit {} departed. Cluster info: {}".format(unit, str(cluster_info)))
+    settings = {"cluster_info": json.dumps(cluster_info)}
+    leader_set(settings=settings)
+
+    _update_analytics()
+    _update_analyticsdb()
+    utils.update_charm_status()
+
+
+def _address_changed(unit, ip):
+    cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    if unit in cluster_info and ip == cluster_info[unit]:
+        return False
+    cluster_info[unit] = ip
+    log("Cluster info: {}".format(str(cluster_info)))
+    settings = {"cluster_info": json.dumps(cluster_info)}
+    leader_set(settings=settings)
+    return True
+
+
+def _update_analytics():
+    for rid in relation_ids("contrail-analytics"):
+        contrail_analytics_joined(rid=rid)
+
+
+def _update_analyticsdb():
+    for rid in relation_ids("contrail-analyticsdb"):
+        contrail_analyticsdb_joined(rid=rid)
+
+
+def _update_cluster():
+    for rid in relation_ids("analytics-cluster"):
+        analytics_cluster_joined(rid=rid)
+
+
+def _value_changed(rel_data, rel_key, cfg_key):
+    if rel_key not in rel_data:
+        # data is absent in relation. it means that remote charm doesn't
+        # send it due to lack of information
+        return
+    value = rel_data[rel_key]
+    if value is not None and value != config.get(cfg_key):
+        config[cfg_key] = value
+    elif value is None and config.get(cfg_key) is not None:
+        config.pop(cfg_key, None)
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -202,19 +265,6 @@ def tls_certificates_relation_departed():
         utils.update_charm_status()
 
 
-def _address_changed(unit, ip):
-    cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
-    if ip in cluster_info.values():
-        return False
-    cluster_info[unit] = ip
-    log("Cluster info: {}".format(str(cluster_info)))
-    settings = {
-        "cluster_info": json.dumps(cluster_info)
-    }
-    leader_set(settings=settings)
-    return True
-
-
 @hooks.hook("update-status")
 def update_status():
     utils.update_ziu("update-status")
@@ -223,6 +273,16 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    _update_cluster()
+    saved_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    if is_leader() and not saved_info:
+        current_info = utils.get_cluster_info("unit-address", common_utils.get_ip())
+        log("Cluster info: {}".format(str(current_info)))
+        settings = {"cluster_info": json.dumps(current_info)}
+        leader_set(settings=settings)
+        _update_analytics()
+        _update_analyticsdb()
+
     _notify_proxy_services()
     utils.update_charm_status()
 
@@ -294,44 +354,6 @@ def nrpe_external_master_relation_changed():
 def stop():
     utils.stop_analytics()
     utils.remove_created_files()
-
-
-@hooks.hook("leader-settings-changed")
-def leader_settings_changed():
-    update_relations()
-    utils.update_charm_status()
-
-
-def update_relations(rid=None):
-    for rid in relation_ids("contrail-analytics"):
-        contrail_analytics_joined(rid=rid)
-    for rid in relation_ids("contrail-analyticsdb"):
-        contrail_analyticsdb_joined(rid=rid)
-
-
-@hooks.hook("leader-elected")
-def leader_elected():
-    ip = common_utils.get_ip()
-    current_info = utils.get_cluster_info("private-address", ip)
-    saved_info = common_utils.json_loads(leader_get("cluster_info"), dict())
-    if not saved_info:
-        log("Cluster info: {}".format(str(current_info)))
-        settings = {
-            "cluster_info": json.dumps(current_info)
-        }
-        leader_set(settings=settings)
-    else:
-        log("Cluster info: {}".format(str(current_info)))
-        current_ip_list = current_info.values()
-        dead_ips = set(saved_info.values()).difference(current_ip_list)
-        new_ips = set(current_ip_list).difference(saved_info.values())
-        if new_ips:
-            log("There are a new analytics' that are not in the list: " + str(new_ips), level=ERROR)
-        if dead_ips:
-            log("There are a dead analytics' that are in the list: " + str(dead_ips), level=ERROR)
-
-    update_relations()
-    utils.update_charm_status()
 
 
 def main():

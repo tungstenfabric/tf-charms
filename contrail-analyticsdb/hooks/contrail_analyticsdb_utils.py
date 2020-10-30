@@ -81,6 +81,7 @@ def servers_ctx():
         data["analytics_servers"] = common_utils.json_loads(config.get("analytics_ips"), list())
         return data
 
+    log("analytics_ips is not in config. calculating...")
     data["analytics_servers"] = []
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
