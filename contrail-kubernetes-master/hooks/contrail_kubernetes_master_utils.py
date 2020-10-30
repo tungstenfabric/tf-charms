@@ -4,6 +4,7 @@ import base64
 
 from charmhelpers.core.hookenv import (
     config,
+    local_unit,
     log,
     relation_get,
     related_units,
@@ -34,6 +35,16 @@ SERVICES = {
         "kube-manager",
     ]
 }
+
+
+def get_cluster_info(address_type, own_ip):
+    cluster_info = dict()
+    for rid in relation_ids("analyticsdb-cluster"):
+        for unit in related_units(rid):
+            cluster_info[unit] = relation_get(address_type, unit, rid)
+    # add it's own ip address
+    cluster_info[local_unit()] = own_ip
+    return cluster_info
 
 
 def kubernetes_token():
@@ -86,18 +97,7 @@ def get_context():
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx["contrail_version"] = common_utils.get_contrail_version()
-
-    # self IP-s
-    kubemanager_ip_list = list()
-    for rid in relation_ids("kubernetes-master-cluster"):
-        for unit in related_units(rid):
-            ip = relation_get("private-address", unit, rid)
-            if ip:
-                kubemanager_ip_list.append(ip)
-    # add it's own ip address
-    kubemanager_ip_list.append(common_utils.get_ip())
-
-    ctx["kubemanager_servers"] = kubemanager_ip_list
+    ctx["kubemanager_servers"] = list(common_utils.json_loads(leader_get("cluster_info"), dict()).values())
     # get contrail configuration from relation
     ips = common_utils.json_loads(config.get("controller_ips"), list())
     data_ips = common_utils.json_loads(config.get("controller_data_ips"), list())
