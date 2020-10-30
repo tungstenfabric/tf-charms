@@ -98,6 +98,7 @@ def get_analytics_list():
     if analytics_ip_list is not None:
         return common_utils.json_loads(analytics_ip_list, list())
 
+    log("analytics_ips is not in config. calculating...")
     analytics_ip_list = []
     for rid in relation_ids("contrail-analytics"):
         for unit in related_units(rid):
