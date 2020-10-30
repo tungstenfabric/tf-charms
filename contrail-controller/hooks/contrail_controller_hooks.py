@@ -104,7 +104,8 @@ def config_changed():
         config["saved-image-tag"] = config["image-tag"]
         config.save()
 
-    _notify_haproxy_services()
+    update_http_relations()
+    update_https_relations()
     update_northbound_relations()
     update_southbound_relations()
     update_issu_relations()
@@ -140,23 +141,18 @@ def leader_elected():
     utils.update_charm_status()
 
 
-def update_relations(rid=None):
-    for rid in relation_ids("contrail-analytics"):
-        analytics_joined(rel_id=rid)
-    for rid in relation_ids("contrail-analyticsdb"):
-        analyticsdb_joined(rel_id=rid)
-    for rid in relation_ids("contrail-controller"):
-        contrail_controller_joined(rel_id=rid)
-
-
 @hooks.hook("leader-settings-changed")
 def leader_settings_changed():
-    update_relations()
+    update_northbound_relations()
+    update_southbound_relations()
     utils.update_charm_status()
 
 
-@hooks.hook("controller-cluster-relation-joined")
-def cluster_joined(rel_id=None):
+def update_cluster_relations(rid=None):
+    rids = [rid] if rid else relation_ids("controller-cluster")
+    if not rids:
+        return
+
     ip = common_utils.get_ip()
     settings = {
         "unit-address": ip,
@@ -166,8 +162,13 @@ def cluster_joined(rel_id=None):
     if config.get('local-rabbitmq-hostname-resolution'):
         settings["rabbitmq-hostname"] = utils.get_contrail_rabbit_hostname()
 
-    relation_set(relation_id=rel_id, relation_settings=settings)
-    utils.update_charm_status()
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("controller-cluster-relation-joined")
+def cluster_joined():
+    update_cluster_relations(rid=relation_id())
 
 
 @hooks.hook("controller-cluster-relation-changed")
@@ -247,6 +248,10 @@ def cluster_departed():
 
 
 def update_northbound_relations(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-analytics") + relation_ids("contrail-analyticsdb")
+    if not rids:
+        return
+
     # controller_ips/data_ips are already dumped json
     ip_list = leader_get("controller_ip_list")
     data_ip_list = leader_get("controller_data_ip_list")
@@ -263,17 +268,15 @@ def update_northbound_relations(rid=None):
         "controller_data_ips": data_ip_list,
     }
 
-    if rid:
-        relation_set(relation_id=rid, relation_settings=settings)
-        return
-
-    for rid in relation_ids("contrail-analytics"):
-        relation_set(relation_id=rid, relation_settings=settings)
-    for rid in relation_ids("contrail-analyticsdb"):
+    for rid in rids:
         relation_set(relation_id=rid, relation_settings=settings)
 
 
 def update_southbound_relations(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-controller")
+    if not rids:
+        return
+
     # controller_ips/data_ips are already dumped json
     ip_list = leader_get("controller_ip_list")
     data_ip_list = leader_get("controller_data_ip_list")
@@ -301,11 +304,15 @@ def update_southbound_relations(rid=None):
         "zookeeper_connection_details": json.dumps(utils.get_zookeeper_connection_details()),
     }
 
-    for rid in ([rid] if rid else relation_ids("contrail-controller")):
+    for rid in rids:
         relation_set(relation_id=rid, relation_settings=settings)
 
 
 def update_issu_relations(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-issu")
+    if not rids:
+        return
+
     # controller_ips/data_ips are already dumped json
     settings = {
         "unit-type": "issu",
@@ -315,13 +322,13 @@ def update_issu_relations(rid=None):
         "issu_analytics_ips": json.dumps(utils.get_analytics_list()),
     }
 
-    for rid in ([rid] if rid else relation_ids("contrail-issu")):
+    for rid in rids:
         relation_set(relation_id=rid, relation_settings=settings)
 
 
 @hooks.hook("contrail-controller-relation-joined")
-def contrail_controller_joined(rel_id=None):
-    update_southbound_relations(rid=(rel_id if rel_id else relation_id()))
+def contrail_controller_joined():
+    update_southbound_relations(rid=relation_id())
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -434,9 +441,8 @@ def _choose_main_orchestrator(cloud_orchestrators):
 
 
 @hooks.hook("contrail-analytics-relation-joined")
-def analytics_joined(rel_id=None):
-    update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
-    update_southbound_relations()
+def analytics_joined():
+    update_northbound_relations(rid=relation_id())
 
 
 def _value_changed(rel_data, rel_key, cfg_key):
@@ -462,8 +468,8 @@ def analytics_changed_departed():
 
 
 @hooks.hook("contrail-analyticsdb-relation-joined")
-def analyticsdb_joined(rel_id=None):
-    update_northbound_relations(rid=(rel_id if rel_id else relation_id()))
+def analyticsdb_joined():
+    update_northbound_relations(rid=relation_id())
 
 
 @hooks.hook("contrail-analyticsdb-relation-changed")
@@ -537,15 +543,6 @@ def _http_services(vip):
     return result
 
 
-@hooks.hook("http-services-relation-joined")
-def http_services_joined(rel_id=None):
-    vip = config.get("vip")
-    if not vip:
-        raise Exception("VIP must be set for allow relation to haproxy")
-    relation_set(relation_id=rel_id,
-                 services=yaml.dump(_http_services(str(vip))))
-
-
 def _https_services_tcp(vip):
     name = local_unit().replace("/", "-")
     addr = common_utils.get_ip()
@@ -590,36 +587,62 @@ def _https_services_http(vip):
     ]
 
 
-@hooks.hook("https-services-relation-joined")
-def https_services_joined(rel_id=None):
+def _configure_ports(func, ports):
+    for port in ports:
+        try:
+            func(port, "TCP")
+        except Exception:
+            pass
+
+
+def update_http_relations(rid=None):
+    rids = [rid] if rid else relation_ids("http-services")
+    if not rids:
+        return
+
     vip = config.get("vip")
-    if not vip:
-        raise Exception("VIP must be set for allow relation to haproxy")
+    _configure_ports(close_port if vip else open_port, ["8082", "8080"])
+
+    settings = yaml.dump(_http_services(str(vip)))
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+def update_https_relations(rid=None):
+    rids = [rid] if rid else relation_ids("https-services")
+    if not rids:
+        return
+
+    vip = config.get("vip")
+    _configure_ports(close_port if vip else open_port, ["8143"])
+
     mode = config.get("haproxy-https-mode", "tcp")
     if mode == "tcp":
         data = _https_services_tcp(str(vip))
     elif mode == "http":
         data = _https_services_http(str(vip))
-    else:
-        raise Exception("Invalid haproxy-https-mode: {}. Possible values: tcp or http".format(mode))
-    relation_set(relation_id=rel_id,
-                 services=yaml.dump(data))
+    settings = yaml.dump(data)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
 
 
-def _notify_haproxy_services():
+@hooks.hook("http-services-relation-joined")
+def http_services_joined():
     vip = config.get("vip")
-    func = close_port if vip else open_port
-    for port in ["8082", "8080", "8143"]:
-        try:
-            func(port, "TCP")
-        except Exception:
-            pass
-    for rid in relation_ids("http-services"):
-        if related_units(rid):
-            http_services_joined(rid)
-    for rid in relation_ids("https-services"):
-        if related_units(rid):
-            https_services_joined(rid)
+    if not vip:
+        raise Exception("VIP must be set for allow relation to haproxy")
+    update_http_relations(rid=relation_id())
+
+
+@hooks.hook("https-services-relation-joined")
+def https_services_joined():
+    vip = config.get("vip")
+    if not vip:
+        raise Exception("VIP must be set for allow relation to haproxy")
+    mode = config.get("haproxy-https-mode", "tcp")
+    if mode not in ("tcp", "http"):
+        raise Exception("Invalid haproxy-https-mode: {}. Possible values: tcp or http".format(mode))
+    update_https_relations(rid=relation_id())
 
 
 @hooks.hook('tls-certificates-relation-joined')
@@ -630,20 +653,26 @@ def tls_certificates_relation_joined():
 
 @hooks.hook('tls-certificates-relation-changed')
 def tls_certificates_relation_changed():
-    if common_utils.tls_changed(utils.MODULE, relation_get()):
-        update_southbound_relations()
-        _notify_haproxy_services()
-        utils.update_nrpe_config()
-        utils.update_charm_status()
+    if not common_utils.tls_changed(utils.MODULE, relation_get()):
+        return
+
+    update_southbound_relations()
+    update_http_relations()
+    update_https_relations()
+    utils.update_nrpe_config()
+    utils.update_charm_status()
 
 
 @hooks.hook('tls-certificates-relation-departed')
 def tls_certificates_relation_departed():
-    if common_utils.tls_changed(utils.MODULE, None):
-        update_southbound_relations()
-        _notify_haproxy_services()
-        utils.update_nrpe_config()
-        utils.update_charm_status()
+    if not common_utils.tls_changed(utils.MODULE, None):
+        return
+
+    update_southbound_relations()
+    update_http_relations()
+    update_https_relations()
+    utils.update_nrpe_config()
+    utils.update_charm_status()
 
 
 @hooks.hook('nrpe-external-master-relation-changed')
@@ -652,8 +681,8 @@ def nrpe_external_master_relation_changed():
 
 
 @hooks.hook("contrail-issu-relation-joined")
-def contrail_issu_relation_joined(rel_id=None):
-    update_issu_relations(rid=(rel_id if rel_id else relation_id()))
+def contrail_issu_relation_joined():
+    update_issu_relations(rid=relation_id())
 
 
 @hooks.hook('contrail-issu-relation-changed')
@@ -683,22 +712,12 @@ def update_status():
 def upgrade_charm():
     utils.update_charm_status()
     config_changed()
-    for rid in relation_ids("contrail-analytics"):
-        if related_units(rid):
-            analytics_joined(rel_id=rid)
-    for rid in relation_ids("contrail-analyticsdb"):
-        if related_units(rid):
-            analyticsdb_joined(rel_id=rid)
-    for rid in relation_ids("contrail-controller"):
-        if related_units(rid):
-            contrail_controller_joined(rel_id=rid)
-    for rid in relation_ids("contrail-issu"):
-        if related_units(rid):
-            contrail_issu_relation_joined(rel_id=rid)
-    for rid in relation_ids("controller-cluster"):
-        if related_units(rid):
-            cluster_joined(rel_id=rid)
-    _notify_haproxy_services()
+    update_northbound_relations()
+    update_southbound_relations()
+    update_issu_relations()
+    update_cluster_relations()
+    update_http_relations()
+    update_https_relations()
 
 
 @hooks.hook("stop")
