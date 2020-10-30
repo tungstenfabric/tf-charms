@@ -6,10 +6,13 @@ from charmhelpers.core.hookenv import (
     Hooks,
     UnregisteredHookError,
     config,
+    local_unit,
     log,
+    relation_id,
     relation_get,
     relation_ids,
     related_units,
+    remote_unit,
     status_set,
     relation_set,
     is_leader,
@@ -37,11 +40,6 @@ def install():
     status_set("blocked", "Missing relation to contrail-controller")
 
 
-@hooks.hook("leader-elected")
-def leader_elected():
-    _notify_controller()
-
-
 @hooks.hook("config-changed")
 def config_changed():
     if config.changed("nested_mode"):
@@ -50,11 +48,9 @@ def config_changed():
 
     utils.update_nrpe_config()
     if config.changed("control-network"):
-        settings = {'private-address': common_utils.get_ip()}
-        rnames = ("contrail-controller", "contrail-kubernetes-config")
-        for rname in rnames:
-            for rid in relation_ids(rname):
-                relation_set(relation_id=rid, relation_settings=settings)
+        _notify_cluster()
+        if is_leader():
+            _address_changed(local_unit(), common_utils.get_ip())
 
     _notify_contrail_kubernetes_node()
     if (config.changed("kubernetes_api_hostname") or
@@ -67,12 +63,44 @@ def config_changed():
     utils.update_charm_status()
 
 
-@hooks.hook("contrail-controller-relation-joined")
-def contrail_controller_joined(rel_id=None):
+@hooks.hook("leader-elected")
+def leader_elected():
+    current_info = utils.get_cluster_info("unit-address", common_utils.get_ip())
+    saved_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    log("Cluster current info: {}".format(str(current_info)))
+    log("Cluster saved info: {}".format(str(saved_info)))
+    if not saved_info:
+        log("Cluster info: {}".format(str(current_info)))
+        settings = {
+            "cluster_info": json.dumps(current_info)
+        }
+        leader_set(settings=settings)
+
+    _notify_controller()
+    utils.update_charm_status()
+
+
+@hooks.hook("leader-settings-changed")
+def leader_settings_changed():
+    _notify_controller()
+    utils.update_charm_status()
+
+
+def _notify_controller(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-controller")
+    if not rids:
+        return
+
     settings = {'unit-type': 'kubernetes'}
     settings.update(_get_orchestrator_info())
     settings.update(_get_k8s_info())
-    relation_set(relation_id=rel_id, relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("contrail-controller-relation-joined")
+def contrail_controller_joined():
+    _notify_controller(rid=relation_id())
 
 
 @hooks.hook("contrail-controller-relation-changed")
@@ -99,8 +127,68 @@ def contrail_cotroller_departed():
     if units:
         return
 
+    keys = ["auth_info", "orchestrator_info", "controller_ips", "controller_data_ips",
+            "analytics-server", "analyticsdb_enabled"]
+    for key in keys:
+        config.pop(key, None)
     utils.update_charm_status()
     status_set("blocked", "Missing relation to contrail-controller")
+
+
+def _notify_cluster(rid=None):
+    rids = [rid] if rid else relation_ids("kubernetes-master-cluster")
+    if not rids:
+        return
+
+    settings = {"unit-address": common_utils.get_ip()}
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("kubernetes-master-cluster-relation-joined")
+def cluster_joined():
+    _notify_cluster(rid=relation_id())
+
+
+@hooks.hook("kubernetes-master-cluster-relation-changed")
+def cluster_changed():
+    data = relation_get()
+    log("Peer relation changed with {}: {}".format(
+        remote_unit(), data))
+
+    ip = data.get("unit-address")
+    if not ip:
+        log("There is no unit-address in the relation")
+    elif is_leader():
+        unit = remote_unit()
+        _address_changed(unit, ip)
+        utils.update_charm_status()
+
+
+@hooks.hook("kubernetes-master-cluster-relation-departed")
+def cluster_departed():
+    if not is_leader():
+        return
+    unit = remote_unit()
+    cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    cluster_info.pop(unit, None)
+    log("Unit {} departed. Cluster info: {}".format(unit, str(cluster_info)))
+    settings = {"cluster_info": json.dumps(cluster_info)}
+    leader_set(settings=settings)
+
+    _notify_controller()
+    utils.update_charm_status()
+
+
+def _address_changed(unit, ip):
+    cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
+    if unit in cluster_info and ip == cluster_info[unit]:
+        return False
+    cluster_info[unit] = ip
+    log("Cluster info: {}".format(str(cluster_info)))
+    settings = {"cluster_info": json.dumps(cluster_info)}
+    leader_set(settings=settings)
+    return True
 
 
 @hooks.hook("kube-api-endpoint-relation-changed")
@@ -123,14 +211,24 @@ def kube_api_endpoint_changed():
     utils.update_charm_status()
 
 
+def _notify_contrail_kubernetes_node(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-kubernetes-config")
+    if not rids:
+        return
+
+    settings = {
+        "cluster_name": config.get("cluster_name"),
+        "pod_subnets": config.get("pod_subnets"),
+        "nested_mode": config.get("nested_mode"),
+        "nested_mode_config": config.get("nested_mode_config"),
+    }
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
 @hooks.hook("contrail-kubernetes-config-relation-joined")
-def contrail_kubernetes_config_joined(rel_id=None):
-    data = {}
-    data["cluster_name"] = config.get("cluster_name")
-    data["pod_subnets"] = config.get("pod_subnets")
-    data["nested_mode"] = config.get("nested_mode")
-    data["nested_mode_config"] = config.get("nested_mode_config")
-    relation_set(relation_id=rel_id, relation_settings=data)
+def contrail_kubernetes_config_joined():
+    _notify_contrail_kubernetes_node(rid=relation_id())
 
 
 @hooks.hook("contrail-kubernetes-config-relation-changed")
@@ -141,12 +239,6 @@ def contrail_kubernetes_config_changed(rel_id=None):
         return
     leader_set(settings={"kubernetes_workers": json.dumps(_collect_worker_ips())})
     _notify_controller()
-
-
-@hooks.hook("leader-settings-changed")
-def leader_settings_changed():
-    _notify_controller()
-    utils.update_charm_status()
 
 
 @hooks.hook("update-status")
@@ -169,18 +261,6 @@ def _update_config(data, key, data_key):
         changed = key in config
         config.pop(key, None)
     return changed
-
-
-def _notify_contrail_kubernetes_node():
-    for rid in relation_ids("contrail-kubernetes-config"):
-        if related_units(rid):
-            contrail_kubernetes_config_joined(rel_id=rid)
-
-
-def _notify_controller():
-    for rid in relation_ids("contrail-controller"):
-        if related_units(rid):
-            contrail_controller_joined(rel_id=rid)
 
 
 def _get_orchestrator_info():
