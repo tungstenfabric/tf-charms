@@ -333,11 +333,12 @@ def update_nrpe_config():
 
 
 def stop_analytics():
-    ctx = get_context()
     docker_utils.compose_down(ANALYTICS_CONFIGS_PATH + "/docker-compose.yaml")
-    if ctx["contrail_version"] >= 510 and ctx.get("analyticsdb_enabled"):
-        docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
+
+    if os.path.exists(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml"):
         docker_utils.compose_down(ANALYTICS_SNMP_CONFIGS_PATH + "/docker-compose.yaml")
+    if os.path.exists(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml"):
+        docker_utils.compose_down(ANALYTICS_ALARM_CONFIGS_PATH + "/docker-compose.yaml")
 
     # TODO: Redis is a common service. We can't stop it here
     if os.path.exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml"):
