@@ -308,6 +308,14 @@ def rsync_nrpe_checks(plugins_dir):
           options=['--executability'])
 
 
+def rsync_cronjobs():
+    charm_crons_dir = os.path.join(charm_dir(),
+                                    'files',
+                                    'cron.d/')
+    rsync(charm_crons_dir,
+          "/etc/cron.d/")
+
+
 def add_nagios_to_sudoers():
     sudoers_content = 'nagios ALL = NOPASSWD:SETENV: /usr/bin/contrail-status'
     cmd = ('sudo bash -c \'echo \"{}\" > /etc/sudoers.d/nagios\''

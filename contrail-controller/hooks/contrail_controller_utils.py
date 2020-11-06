@@ -469,6 +469,7 @@ def update_nrpe_config():
     nrpe_compat = nrpe.NRPE()
     component_ip = common_utils.get_ip()
     common_utils.rsync_nrpe_checks(plugins_dir)
+    common_utils.rsync_cronjobs()
     common_utils.add_nagios_to_sudoers()
 
     check_ui_cmd = 'check_http -H {} -p 8143 -S'.format(component_ip)
@@ -494,6 +495,13 @@ def update_nrpe_config():
         shortname=ctl_status_shortname,
         description='Check contrail-status',
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
+    )
+
+    db_dump = '/var/lib/nagios/contrail-controller-db-consistency-check.dump'
+    nrpe_compat.add_check(
+        shortname='contrail_controller_db_consistency',
+        description='Check contrail-controller DB consistency',
+        check_cmd='check-contrail-controller-db-consistency.sh {}'.format(db_dump)
     )
 
     nrpe_compat.write()
