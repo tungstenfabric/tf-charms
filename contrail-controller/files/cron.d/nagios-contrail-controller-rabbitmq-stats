@@ -1,0 +1,1 @@
+*/5 * * * * root /usr/local/lib/nagios/plugins/collect_rabbitmq_stats.sh

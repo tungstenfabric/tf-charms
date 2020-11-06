@@ -1,6 +1,7 @@
 import os
 import tempfile
 import socket
+import yaml
 
 from charmhelpers.core.hookenv import (
     action_fail,
@@ -495,6 +496,17 @@ def update_nrpe_config():
         description='Check contrail-status',
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
+
+    cmd = ""
+    # If value of queue_thresholds is incorrect we want the hook to fail
+    for item in yaml.safe_load(config.get('nagios_rmq_queue_thresholds')):
+        cmd += ' -c "{}" "{}" {} {}'.format(*item)
+    data_dir = "/var/lib/nagios/contrail-controller-rmq/queue_stats.dat"
+    nrpe_compat.add_check(
+        shortname='contrail_controller_rabbitmq_queues',
+        description='Check contrail-controller RabbitMQ queues',
+        check_cmd='{}/check_rabbitmq_queues.py{} {}'.format(
+                    "/usr/local/lib/nagios/plugins", cmd, data_dir))
 
     nrpe_compat.write()
 

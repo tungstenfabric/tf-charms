@@ -201,6 +201,20 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  nagios_rmq_queue_thresholds:
+    type: string
+    default: "[['\\*', '\\*', 100, 200]]"
+    description: |
+      List of RabbitMQ queue size check thresholds. Interpreted as YAML in
+      format [<vhost>, <queue>, <warn>, <crit>]
+      Per-queue thresholds can be expressed as a multi-line YAML array:
+      - ['/', 'queue1', 10, 20]
+      - ['/', 'queue2', 200, 300]
+      Or as a list of lists:
+      [['/', 'queue1', 10, 20], ['/', 'queue2', 200, 300]]
+      Wildcards '*' are accepted to monitor all vhosts and/or queues.
+      In case of multiple matches, only the first will apply: wildcards should
+      therefore be used last in order to avoid unexpected behavior.
   encap-priority:
     default: "MPLSoUDP,MPLSoGRE,VXLAN"
     type: string
