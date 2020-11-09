@@ -12,6 +12,7 @@ from charmhelpers.core.hookenv import (
     log,
     related_units,
     relation_get,
+    relation_id,
     relation_ids,
     relation_set,
     status_set,
@@ -70,14 +71,23 @@ def leader_settings_changed():
     _notify_nova()
 
 
-@hooks.hook("contrail-controller-relation-joined")
-def contrail_controller_joined(rel_id=None):
+def _notify_controller(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-controller")
+    if not rids:
+        return
+
     settings = {
         'unit-type': 'openstack',
         'use-internal-endpoints': config.get('use-internal-endpoints'),
     }
     settings.update(_get_orchestrator_info())
-    relation_set(relation_id=rel_id, relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("contrail-controller-relation-joined")
+def contrail_controller_joined():
+    _notify_controller(rid=relation_id())
 
 
 def _rebuild_config_from_controller_relation():
@@ -167,30 +177,6 @@ def _configure_metadata_shared_secret():
     leader_set(settings={"metadata-shared-secret": secret})
 
 
-def _notify_controller():
-    for rid in relation_ids("contrail-controller"):
-        if related_units(rid):
-            contrail_controller_joined(rid)
-
-
-def _notify_nova():
-    for rid in relation_ids("nova-compute"):
-        if related_units(rid):
-            nova_compute_joined(rid)
-
-
-def _notify_neutron():
-    for rid in relation_ids("neutron-api"):
-        if related_units(rid):
-            neutron_api_joined(rid)
-
-
-def _notify_heat():
-    for rid in relation_ids("heat-plugin"):
-        if related_units(rid):
-            heat_plugin_joined(rid)
-
-
 def _get_orchestrator_info():
     info = {"cloud_orchestrator": "openstack"}
     if config["enable-metadata-server"]:
@@ -207,8 +193,11 @@ def _get_orchestrator_info():
     return {"orchestrator-info": json.dumps(info)}
 
 
-@hooks.hook("heat-plugin-relation-joined")
-def heat_plugin_joined(rel_id=None):
+def _notify_heat(rid=None):
+    rids = [rid] if rid else relation_ids("heat-plugin")
+    if not rids:
+        return
+
     utils.deploy_openstack_code("contrail-openstack-heat-init", "heat")
 
     plugin_path = utils.get_component_sys_paths("heat") + "/vnc_api/gen/heat/resources"
@@ -243,11 +232,21 @@ def heat_plugin_joined(rel_id=None):
         "plugin-dirs": plugin_dirs,
         "subordinate_configuration": json.dumps(conf)
     }
-    relation_set(relation_id=rel_id, relation_settings=settings)
+
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
 
 
-@hooks.hook("neutron-api-relation-joined")
-def neutron_api_joined(rel_id=None):
+@hooks.hook("heat-plugin-relation-joined")
+def heat_plugin_joined():
+    _notify_heat(rid=relation_id())
+
+
+def _notify_neutron(rid=None):
+    rids = [rid] if rid else relation_ids("neutron-api")
+    if not rids:
+        return
+
     version = utils.get_openstack_version_codename('neutron')
     utils.deploy_openstack_code(
         "contrail-openstack-neutron-init", "neutron",
@@ -302,19 +301,25 @@ def neutron_api_joined(rel_id=None):
                     base + ".neutron_middleware:token_factory"
             }
         }]
-    relation_set(relation_id=rel_id, relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("neutron-api-relation-joined")
+def neutron_api_joined():
+    _notify_neutron(rid=relation_id())
 
     # if this hook raised after contrail-controller we need
     # to overwrite default config file after installation
     utils.write_configs()
 
 
-@hooks.hook("nova-compute-relation-joined")
-def nova_compute_joined(rel_id=None):
+def _notify_nova(rid=None):
+    rids = [rid] if rid else relation_ids("nova-compute")
+    if not rids:
+        return
+
     utils.deploy_openstack_code("contrail-openstack-compute-init", "nova")
-
-    utils.nova_patch()
-
     # create plugin config
     sections = {
         "DEFAULT": [
@@ -334,7 +339,14 @@ def nova_compute_joined(rel_id=None):
     settings = {
         "metadata-shared-secret": leader_get("metadata-shared-secret"),
         "subordinate_configuration": json.dumps(conf)}
-    relation_set(relation_id=rel_id, relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook("nova-compute-relation-joined")
+def nova_compute_joined():
+    utils.nova_patch()
+    _notify_nova(rid=relation_id())
 
 
 @hooks.hook("update-status")

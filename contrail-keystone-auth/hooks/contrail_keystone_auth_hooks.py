@@ -35,6 +35,10 @@ def _decode_cert(key):
 
 
 def update_relations(rid=None):
+    rids = [rid] if rid else relation_ids("contrail-auth")
+    if not rids:
+        return
+
     auth_info = config.get("auth_info")
     if auth_info:
         data = json.loads(auth_info)
@@ -43,7 +47,7 @@ def update_relations(rid=None):
     settings = {
         "auth-info": auth_info
     }
-    for rid in ([rid] if rid else relation_ids("contrail-auth")):
+    for rid in rids:
         relation_set(relation_id=rid, relation_settings=settings)
 
 

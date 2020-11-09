@@ -117,20 +117,40 @@ def controller_ctx():
 def analyticsdb_ctx():
     """Get the ipaddress of all contrail analyticsdb nodes"""
 
+<<<<<<< HEAD   (4aab5e Fix stop hook for analytics)
     data = {}
     if "analyticsdb_ips" in config:
         data["analyticsdb_servers"] = common_utils.json_loads(config.get("analyticsdb_ips"), list())
         return data
+=======
+    data = {"analyticsdb_enabled": True}
+    if common_utils.get_contrail_version() > 500:
+        data["analyticsdb_enabled"] = False
+        for rid in relation_ids("contrail-analyticsdb"):
+            if related_units(rid):
+                data["analyticsdb_enabled"] = True
+                break
 
-    # use old way to obtain analyticsdb addresses
-    data["analyticsdb_servers"] = []
+    data["analyticsdb_servers"] = get_analyticsdb_list()
+>>>>>>> CHANGE (dee476 do not use private-address for own purposes)
+
+
+def get_analyticsdb_list():
+    analyticsdb_ip_list = config.get("analyticsdb_ips")
+    if analyticsdb_ip_list is not None:
+        return common_utils.json_loads(analyticsdb_ip_list, list())
+
+    # NOTE: use old way of collecting ips.
+    # previously we collected units by private-address
+    # now we take collected list from leader through relation
+    log("analyticsdb_ips is not in config. calculating...")
+    analyticsdb_ip_list = []
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             ip = relation_get("private-address", unit, rid)
             if ip:
-                data["analyticsdb_servers"].append(ip)
-
-    return data
+                analyticsdb_ip_list.append(ip)
+    return analyticsdb_ip_list
 
 def get_context():
     ctx = {}
