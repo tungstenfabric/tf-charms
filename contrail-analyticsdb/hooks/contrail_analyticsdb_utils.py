@@ -75,20 +75,29 @@ def get_cluster_info(address_type, own_ip):
 def servers_ctx():
     data = {
         "controller_servers": common_utils.json_loads(config.get("controller_ips"), list()),
-        "control_servers": common_utils.json_loads(config.get("controller_data_ips"), list())}
+        "control_servers": common_utils.json_loads(config.get("controller_data_ips"), list()),
+        "analytics_servers": get_analytics_list()
+    }
+    return data
 
-    if "analytics_ips" in config:
-        data["analytics_servers"] = common_utils.json_loads(config.get("analytics_ips"), list())
-        return data
 
-    data["analytics_servers"] = []
+def get_analytics_list():
+    analytics_ip_list = config.get("analytics_ips")
+    if analytics_ip_list is not None:
+        return common_utils.json_loads(analytics_ip_list, list())
+
+    # NOTE: use old way of collecting ips.
+    # previously we collected units by private-address
+    # now we take collected list from leader through relation
+    log("analytics_ips is not in config. calculating...")
+    analytics_ip_list = []
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             utype = relation_get("unit-type", unit, rid)
             ip = relation_get("private-address", unit, rid)
             if ip and utype == "analytics":
-                data["analytics_servers"].append(ip)
-    return data
+                analytics_ip_list.append(ip)
+    return analytics_ip_list
 
 
 def get_context():
