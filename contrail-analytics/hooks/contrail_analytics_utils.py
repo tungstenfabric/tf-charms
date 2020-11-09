@@ -139,6 +139,7 @@ def analyticsdb_ctx():
                 break
 
     data["analyticsdb_servers"] = get_analyticsdb_list()
+    return data
 
 
 def get_analyticsdb_list():
