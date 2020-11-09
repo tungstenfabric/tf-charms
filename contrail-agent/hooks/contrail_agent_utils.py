@@ -606,6 +606,12 @@ def update_nrpe_config():
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
 
+    nrpe_compat.add_check(
+        shortname='contrail_vrouter_kernel_mod',
+        description='Check contrail vrouter kernel mod',
+        check_cmd='check-contrail-vrouter-kernel-mod.sh'
+    )
+
     nrpe_compat.write()
 
 
