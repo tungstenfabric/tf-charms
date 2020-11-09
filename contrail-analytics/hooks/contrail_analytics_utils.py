@@ -114,23 +114,22 @@ def controller_ctx():
     }
 
 
-def analyticsdb_ctx():
-    """Get the ipaddress of all contrail analyticsdb nodes"""
+def get_analyticsdb_list():
+    analyticsdb_ip_list = config.get("analyticsdb_ips")
+    if analyticsdb_ip_list is not None:
+        return common_utils.json_loads(analyticsdb_ip_list, list())
 
-    data = {}
-    if "analyticsdb_ips" in config:
-        data["analyticsdb_servers"] = common_utils.json_loads(config.get("analyticsdb_ips"), list())
-        return data
-
-    # use old way to obtain analyticsdb addresses
-    data["analyticsdb_servers"] = []
+    # NOTE: use old way of collecting ips.
+    # previously we collected units by private-address
+    # now we take collected list from leader through relation
+    log("analyticsdb_ips is not in config. calculating...")
+    analyticsdb_ip_list = []
     for rid in relation_ids("contrail-analyticsdb"):
         for unit in related_units(rid):
             ip = relation_get("private-address", unit, rid)
             if ip:
-                data["analyticsdb_servers"].append(ip)
-
-    return data
+                analyticsdb_ip_list.append(ip)
+    return analyticsdb_ip_list
 
 def get_context():
     ctx = {}
@@ -154,8 +153,8 @@ def get_context():
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
     ctx["analytics_servers"] = list(common_utils.json_loads(leader_get("cluster_info"), dict()).values())
+    ctx["analyticsdb_servers"] = get_analyticsdb_list()
     ctx.update(controller_ctx())
-    ctx.update(analyticsdb_ctx())
     log("CTX: {}".format(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
     return ctx
