@@ -105,7 +105,9 @@ def _get_default_gateway_iface():
 
 
 def _get_iface_gateway_ip(iface):
-    ifaces = [iface, "vhost0"]
+    ifaces = ["vhost0"]
+    if iface:
+        ifaces.append(iface)
     with open("/proc/net/route") as fh:
         for line in fh:
             fields = line.strip().split()
