@@ -603,9 +603,9 @@ def update_http_relations(rid=None):
     vip = config.get("vip")
     _configure_ports(close_port if vip else open_port, ["8082", "8080"])
 
-    settings = yaml.dump(_http_services(str(vip)))
+    data = yaml.dump(_http_services(str(vip)))
     for rid in rids:
-        relation_set(relation_id=rid, relation_settings=settings)
+        relation_set(relation_id=rid, services=data)
 
 
 def update_https_relations(rid=None):
@@ -618,12 +618,11 @@ def update_https_relations(rid=None):
 
     mode = config.get("haproxy-https-mode", "tcp")
     if mode == "tcp":
-        data = _https_services_tcp(str(vip))
+        data = yaml.dump(_https_services_tcp(str(vip)))
     elif mode == "http":
-        data = _https_services_http(str(vip))
-    settings = yaml.dump(data)
+        data = yaml.dump(_https_services_http(str(vip)))
     for rid in rids:
-        relation_set(relation_id=rid, relation_settings=settings)
+        relation_set(relation_id=rid, services=data)
 
 
 @hooks.hook("http-services-relation-joined")
