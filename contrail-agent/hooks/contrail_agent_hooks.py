@@ -76,7 +76,6 @@ def contrail_controller_joined():
 @hooks.hook("contrail-controller-relation-changed")
 def contrail_controller_changed():
     data = relation_get()
-    log("RelData: " + str(data))
 
     def _update_config(key, data_key):
         if data_key in data:
