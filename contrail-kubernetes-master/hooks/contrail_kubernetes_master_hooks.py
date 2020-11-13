@@ -100,7 +100,6 @@ def contrail_controller_joined():
 @hooks.hook("contrail-controller-relation-changed")
 def contrail_controller_changed():
     data = relation_get()
-    log("RelData: " + str(data))
 
     _update_config(data, "analytics_servers", "analytics-server")
     _update_config(data, "maintenance", "maintenance")
@@ -187,7 +186,6 @@ def _address_changed(unit, ip):
 @hooks.hook("kube-api-endpoint-relation-changed")
 def kube_api_endpoint_changed():
     data = relation_get()
-    log("RelData: " + str(data))
 
     changed = _update_config(data, "kubernetes_api_server", "hostname")
     changed |= _update_config(data, "kubernetes_api_port", "port")
