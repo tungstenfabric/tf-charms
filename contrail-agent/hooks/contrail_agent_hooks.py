@@ -52,6 +52,7 @@ def config_changed():
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
     # leave it as latest - in case of exception in previous steps

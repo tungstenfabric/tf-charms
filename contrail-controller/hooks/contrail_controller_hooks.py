@@ -95,6 +95,14 @@ def config_changed():
                 utils.update_hosts_file(ip, hostname, remove_hostname=True)
 
     docker_utils.config_changed()
+    tag = config.get('image-tag')
+    for image in IMAGES:
+        try:
+            docker_utils.pull(image, tag)
+        except Exception as e:
+            log("Can't load image {}".format(e))
+            status_set('error',
+                       'Image could not be pulled: {}:{}'.format(image, tag))
     utils.update_charm_status()
 
     # leave it after update_charm_status - in case of exception in previous steps
