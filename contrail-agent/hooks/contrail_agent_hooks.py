@@ -45,6 +45,7 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     utils.update_nrpe_config()
+
     # Charm doesn't support changing of some parameters.
     if config.changed("dpdk"):
         raise Exception("Configuration parameter dpdk couldn't be changed")
@@ -52,6 +53,7 @@ def config_changed():
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
     # leave it as latest - in case of exception in previous steps
