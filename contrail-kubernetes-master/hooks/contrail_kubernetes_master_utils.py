@@ -155,7 +155,7 @@ def update_charm_status():
             docker_utils.pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e))
-            status_set('blocked',
+            status_set('error',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
