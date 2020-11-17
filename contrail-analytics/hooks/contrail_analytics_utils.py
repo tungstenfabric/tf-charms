@@ -189,7 +189,7 @@ def get_context():
     return ctx
 
 
-def update_charm_status():
+def pull_images():
     ctx = get_context()
     tag = config.get('image-tag')
     images = IMAGES.get(ctx["contrail_version"], IMAGES.get(9999)).copy()
@@ -204,7 +204,7 @@ def update_charm_status():
                 docker_utils.pull(image, tag)
             except Exception as e:
                 log("Can't load image {}".format(e))
-                status_set('blocked',
+                status_set('error',
                            'Image could not be pulled: {}:{}'.format(image, tag))
                 return
     for image in IMAGES_OPTIONAL:
@@ -212,6 +212,10 @@ def update_charm_status():
             docker_utils.pull(image, tag)
         except Exception as e:
             log("Can't load optional image {}".format(e))
+
+
+def update_charm_status():
+    ctx = get_context()
 
     if config.get("maintenance"):
         log("ISSU Maintenance is in progress")

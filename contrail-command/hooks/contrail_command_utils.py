@@ -94,19 +94,22 @@ def update_status():
     return True
 
 
-def update_charm_status():
+
+def pull_images():
     tag = config.get('image-tag')
-
-    ctx = get_context()
-
     for image in IMAGES:
         try:
             docker_utils.pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e))
-            status_set('blocked',
+            status_set('error',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
+
+
+def update_charm_status():
+    tag = config.get('image-tag')
+    ctx = get_context()
 
     deployer_image = "contrail-command-deployer"
     deploy_ccd_code(deployer_image, tag)

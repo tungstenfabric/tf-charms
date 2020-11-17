@@ -148,17 +148,18 @@ def get_context():
     return ctx
 
 
-def update_charm_status():
+def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES:
         try:
             docker_utils.pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e))
-            status_set('blocked',
+            status_set('error',
                        'Image could not be pulled: {}:{}'.format(image, tag))
             return
 
+def update_charm_status():
     if config.get("maintenance") or config.get("ziu"):
         return
 

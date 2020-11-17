@@ -77,6 +77,7 @@ def config_changed():
         _notify_controller()
 
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
 
