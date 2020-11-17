@@ -34,6 +34,7 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
 

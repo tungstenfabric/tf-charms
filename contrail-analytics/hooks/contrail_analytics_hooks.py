@@ -56,6 +56,7 @@ def config_changed():
             _update_analyticsdb()
 
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
     _notify_proxy_services()

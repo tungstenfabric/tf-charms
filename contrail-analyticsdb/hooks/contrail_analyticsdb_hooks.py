@@ -50,6 +50,7 @@ def config_changed():
             _update_analyticsdb()
 
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
     # leave it as latest - in case of exception in previous steps

@@ -95,6 +95,7 @@ def config_changed():
                 utils.update_hosts_file(ip, hostname, remove_hostname=True)
 
     docker_utils.config_changed()
+    utils.pull_images()
     utils.update_charm_status()
 
     # leave it after update_charm_status - in case of exception in previous steps
