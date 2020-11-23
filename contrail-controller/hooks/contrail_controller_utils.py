@@ -88,7 +88,9 @@ def get_controller_ips(address_type, own_ip):
     controller_ips = dict()
     for rid in relation_ids("controller-cluster"):
         for unit in related_units(rid):
-            controller_ips[unit] = relation_get(address_type, unit, rid)
+            ip = relation_get(address_type, unit, rid)
+            if ip:
+                controller_ips[unit] = ip
     controller_ips[local_unit()] = own_ip
     return controller_ips
 
@@ -138,7 +140,7 @@ def get_context():
     ctx["apply_defaults"] = config.get("apply-defaults")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
-        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
+        ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()

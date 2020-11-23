@@ -66,7 +66,9 @@ def get_cluster_info(address_type, own_ip):
     cluster_info = dict()
     for rid in relation_ids("analyticsdb-cluster"):
         for unit in related_units(rid):
-            cluster_info[unit] = relation_get(address_type, unit, rid)
+            ip = relation_get(address_type, unit, rid)
+            if ip:
+                cluster_info[unit] = ip
     # add it's own ip address
     cluster_info[local_unit()] = own_ip
     return cluster_info
@@ -120,7 +122,7 @@ def get_context():
     ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
-        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
+        ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()
 
     ctx["analyticsdb_servers"] = list(common_utils.json_loads(leader_get("cluster_info"), dict()).values())
     ctx.update(servers_ctx())

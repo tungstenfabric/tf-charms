@@ -105,7 +105,9 @@ def get_cluster_info(address_type, own_ip):
     info = dict()
     for rid in relation_ids("analytics-cluster"):
         for unit in related_units(rid):
-            info[unit] = relation_get(address_type, unit, rid)
+            ip = relation_get(address_type, unit, rid)
+            if ip:
+                info[unit] = ip
     # add it's own ip address
     info[local_unit()] = own_ip
     return info
@@ -175,7 +177,7 @@ def get_context():
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
-        ctx["cloud_orchestrators"] = list(ctx.get("cloud_orchestrator")) if ctx.get("cloud_orchestrator") else list()
+        ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()
 
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["logging"] = docker_utils.render_logging()
