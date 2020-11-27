@@ -261,7 +261,11 @@ def update_certificates(module, cert, key, ca):
     for fname, data, perms in files:
         cfile = certs_path + fname
         old_hash = file_hash(cfile)
+        old_stat = os.stat(cfile)
         save_file(cfile, data, perms=perms)
+        # this code works under root and will save file with root
+        changed |= old_stat.st_uid != 0 or old_stat.st_gid != 0
+        changed |= oct(os.stat(cfile).st_mode)[-3:] != oct(perms)[-3:]
         changed |= (old_hash != file_hash(cfile))
         # re-create symlink to common place for contrail-status
         _try_os(os.remove, "/etc/contrail/ssl" + fname)
