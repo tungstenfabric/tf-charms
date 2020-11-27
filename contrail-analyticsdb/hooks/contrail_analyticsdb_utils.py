@@ -228,6 +228,36 @@ def update_nrpe_config():
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
 
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsdb_database_docker_status',
+        description='Check contrail-analyticsdb database docker status',
+        check_cmd='check-docker-ps.sh analyticsdatabase_cassandra_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsdb_nodemgr_docker_status',
+        description='Check contrail-analyticsdb nodemgr docker status',
+        check_cmd='check-docker-ps.sh analyticsdatabase_nodemgr_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsdb_query_engine_docker_status',
+        description='Check contrail-analyticsdb query_engine docker status',
+        check_cmd='check-docker-ps.sh analyticsdatabase_query-engine_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsdb_db_nodes_status',
+        description='Check contrail-analyticsdb db nodes status',
+        check_cmd='check_nodetool.py -c status'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsdb_db_compaction_status',
+        description='Check contrail-analyticsdb db compaction status',
+        check_cmd='check_nodetool.py -c compactionstats'
+    )
+
     nrpe_compat.write()
 
 
