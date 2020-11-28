@@ -170,9 +170,11 @@ def update_charm_status():
         missing_relations.append("contrail-controller")
     if not ctx.get("kubernetes_api_server"):
         missing_relations.append("kube-api-endpoint")
+    if config.get('tls_present', False) != config.get('ssl_enabled', False):
+        missing_relations.append("tls-certificates")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked',

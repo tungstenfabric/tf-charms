@@ -293,9 +293,11 @@ def _check_readyness(ctx):
         missing_relations.append("contrail-controller")
     if config.get("wait-for-external-plugin", False) and "plugin_settings" not in ctx:
         missing_relations.append("vrouter-plugin")
+    if config.get('tls_present', False) != config.get('ssl_enabled', False):
+        missing_relations.append("tls-certificates")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return False
     if not ctx.get("analytics_servers"):
         status_set('blocked',

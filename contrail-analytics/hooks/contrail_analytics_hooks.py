@@ -222,12 +222,14 @@ def analytics_cluster_departed():
 
 @hooks.hook('tls-certificates-relation-joined')
 def tls_certificates_relation_joined():
+    config['tls_present'] = True
     settings = common_utils.get_tls_settings(common_utils.get_ip())
     relation_set(relation_settings=settings)
 
 
 @hooks.hook('tls-certificates-relation-changed')
 def tls_certificates_relation_changed():
+    # it can be fired several times without server's cert
     if common_utils.tls_changed(utils.MODULE, relation_get()):
         _notify_proxy_services()
         utils.update_nrpe_config()
@@ -236,10 +238,11 @@ def tls_certificates_relation_changed():
 
 @hooks.hook('tls-certificates-relation-departed')
 def tls_certificates_relation_departed():
-    if common_utils.tls_changed(utils.MODULE, None):
-        _notify_proxy_services()
-        utils.update_nrpe_config()
-        utils.update_charm_status()
+    config['tls_present'] = False
+    common_utils.tls_changed(utils.MODULE, None)
+    _notify_proxy_services()
+    utils.update_nrpe_config()
+    utils.update_charm_status()
 
 
 def _address_changed(unit, ip):
