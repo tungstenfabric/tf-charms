@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import re
 import base64
@@ -242,6 +243,24 @@ def _try_os(func, *args, **kwargs):
         pass
 
 
+def file_read(path):
+    if not os.path.exists(path):
+        return None
+    with open(path, 'rb') as f:
+        return f.read()
+
+
+def data_hash(data):
+    if data is None:
+        return None
+    h = getattr(hashlib, 'md5')()
+    if isinstance(data, str):
+        h.update(data.encode())
+    else:
+        h.update(data)
+    return h.hexdigest()
+
+
 def update_certificates(module, cert, key, ca):
     certs_path = "/etc/contrail/ssl/{}".format(module)
     # order is important: containers wait for key file as signal to start
@@ -260,13 +279,12 @@ def update_certificates(module, cert, key, ca):
     changed = False
     for fname, data, perms in files:
         cfile = certs_path + fname
-        old_hash = file_hash(cfile)
-        old_stat = os.stat(cfile)
+        old_hash = hash(file_read(cfile))
+        new_hash = data_hash(data)
+        if old_hash == new_hash:
+            continue
+        changed = True
         save_file(cfile, data, perms=perms)
-        # this code works under root and will save file with root
-        changed |= old_stat.st_uid != 0 or old_stat.st_gid != 0
-        changed |= oct(os.stat(cfile).st_mode)[-3:] != oct(perms)[-3:]
-        changed |= (old_hash != file_hash(cfile))
         # re-create symlink to common place for contrail-status
         _try_os(os.remove, "/etc/contrail/ssl" + fname)
         _try_os(os.symlink, cfile, "/etc/contrail/ssl" + fname)
