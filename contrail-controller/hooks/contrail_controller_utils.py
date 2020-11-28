@@ -197,9 +197,11 @@ def _update_charm_status(ctx, services_to_run=None):
         missing_relations.append("contrail-analytics")
     if common_utils.get_ip() not in ctx.get("controller_servers"):
         missing_relations.append("contrail-cluster")
+    if config.get('tls_present', False) != config.get('ssl_enabled', False):
+        missing_relations.append("tls-certificates")
     if missing_relations:
         status_set('blocked',
-                   'Missing relations: ' + ', '.join(missing_relations))
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return
     if len(ctx.get("controller_servers")) < config.get("min-cluster-size"):
         status_set('blocked',
