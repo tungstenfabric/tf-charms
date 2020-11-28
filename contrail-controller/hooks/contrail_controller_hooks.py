@@ -647,12 +647,14 @@ def https_services_joined():
 
 @hooks.hook('tls-certificates-relation-joined')
 def tls_certificates_relation_joined():
+    config['tls_present'] = True
     settings = common_utils.get_tls_settings(common_utils.get_ip())
     relation_set(relation_settings=settings)
 
 
 @hooks.hook('tls-certificates-relation-changed')
 def tls_certificates_relation_changed():
+    # it can be fired several times without server's cert
     if not common_utils.tls_changed(utils.MODULE, relation_get()):
         return
 
@@ -665,9 +667,8 @@ def tls_certificates_relation_changed():
 
 @hooks.hook('tls-certificates-relation-departed')
 def tls_certificates_relation_departed():
-    if not common_utils.tls_changed(utils.MODULE, None):
-        return
-
+    config['tls_present'] = False
+    common_utils.tls_changed(utils.MODULE, None)
     update_southbound_relations()
     update_http_relations()
     update_https_relations()
