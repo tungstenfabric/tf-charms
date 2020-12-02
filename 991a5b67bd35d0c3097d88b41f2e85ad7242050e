@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bd116e8_d4b65d78",
+        "filename": "contrail-analyticsdb/files/plugins/check_nodetool.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-02T06:05:56Z",
+      "side": 1,
+      "message": "similar code is present in nodemgr which can print warning messages. maybe it\u0027s better to integrate such checks there and just check contrail-status here?",
+      "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b115ceba_eef8e2ca",
+        "filename": "contrail-analyticsdb/hooks/common_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-02T06:05:56Z",
+      "side": 1,
+      "message": "common_utils.py is similar in all charms. please copy new version to all charms. it should have equal content in each folder.",
+      "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
