@@ -342,6 +342,66 @@ def update_nrpe_config():
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
 
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_collector_docker_status',
+        description='Check contrail-analytics collector docker status',
+        check_cmd='check-docker-ps.sh analytics_collector_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_nodemgr_docker_status',
+        description='Check contrail-analytics nodemgr docker status',
+        check_cmd='check-docker-ps.sh analytics_nodemgr_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_api_docker_status',
+        description='Check contrail-analytics api docker status',
+        check_cmd='check-docker-ps.sh analytics_api_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_redis_docker_status',
+        description='Check contrail-analytics redis docker status',
+        check_cmd='check-docker-ps.sh redis_redis_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_alarmgen_docker_status',
+        description='Check contrail-analytics alarm-gen docker status',
+        check_cmd='check-docker-ps.sh analyticsalarm_alarm-gen_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_snmpcollector_docker_status',
+        description='Check contrail-analytics snmp-collector docker status',
+        check_cmd='check-docker-ps.sh analyticssnmp_snmp-collector_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_snmptopology_docker_status',
+        description='Check contrail-analytics snmptopology docker status',
+        check_cmd='check-docker-ps.sh analyticssnmp_topology_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_snmpnodemgr_docker_status',
+        description='Check contrail-analytics snmpnodemanager docker status',
+        check_cmd='check-docker-ps.sh analyticssnmp_nodemgr_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analytics_kafka_docker_status',
+        description='Check contrail-analytics kafka docker status',
+        check_cmd='check-docker-ps.sh analyticsalarm_kafka_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_analyticsalarms_nodemgr_docker_status',
+        description='Check contrail-analyticsalarm nodemgr docker status',
+        check_cmd='check-docker-ps.sh analyticsalarm_nodemgr_1'
+    )
+
     nrpe_compat.write()
 
 

@@ -607,6 +607,12 @@ def update_nrpe_config():
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
 
+    nrpe_compat.add_check(
+        shortname='contrail_agent_vrouter_nodemgr_docker_status',
+        description='Check contrail-agent vrouter nodemgr docker status',
+        check_cmd='check-docker-ps.sh vrouter_nodemgr_1'
+    )
+
     nrpe_compat.write()
 
 

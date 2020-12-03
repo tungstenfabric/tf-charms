@@ -500,6 +500,30 @@ def update_nrpe_config():
         check_cmd=common_utils.contrail_status_cmd(MODULE, plugins_dir)
     )
 
+    nrpe_compat.add_check(
+        shortname='contrail_controller_config_api_nodemgr_docker_status',
+        description='Check contrail-controller config api nodemgr docker status',
+        check_cmd='check-docker-ps.sh configapi_nodemgr_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_controller_config_api_devicemgr_docker_status',
+        description='Check contrail-controller config api devicemgr docker status',
+        check_cmd='check-docker-ps.sh configapi_devicemgr_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_controller_webui_web_docker_status',
+        description='Check contrail-controller webui web docker status',
+        check_cmd='check-docker-ps.sh webui_web_1'
+    )
+
+    nrpe_compat.add_check(
+        shortname='contrail_controller_webui_job_docker_status',
+        description='Check contrail-controller webui job docker status',
+        check_cmd='check-docker-ps.sh webui_job_1'
+    )
+
     nrpe_compat.write()
 
 
