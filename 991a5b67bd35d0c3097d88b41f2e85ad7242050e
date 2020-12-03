@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a113facf_07198f66",
+        "filename": "contrail-analyticsdb/files/plugins/check_nodetool.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1055
+      },
+      "writtenOn": "2020-12-03T03:42:53Z",
+      "side": 1,
+      "message": "Hi Andrey,\n\nThanks for the suggestion. However, in this particular case we are trying to have independent, simpler, checks to point to an underlying issue instead of a larger overall green/red checks. From an operational point of view this tends to be helpful during incidents as it helps ruling out potential causes more easily. It will also help having a clear history of the stability of each check, and also allows the engineers to downtime individual components without having to silence alerts for many subsystems. Hope it makes sense. In any case, any similar/redundant code can also be shared via a common library or utilities.\n\nDoes this sound reasonable? Please let me know your thoughts as this is the first time I contribute to this code base.",
+      "parentUuid": "4bd116e8_d4b65d78",
+      "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b115ceba_eef8e2ca",
         "filename": "contrail-analyticsdb/hooks/common_utils.py",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2020-12-02T06:05:56Z",
       "side": 1,
       "message": "common_utils.py is similar in all charms. please copy new version to all charms. it should have equal content in each folder.",
+      "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0f4f1ac_a8f5cb12",
+        "filename": "contrail-analyticsdb/hooks/common_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1055
+      },
+      "writtenOn": "2020-12-03T03:42:53Z",
+      "side": 1,
+      "message": "Hi Andrey,\n\nI will definitely do this for the \u0027docker ps\u0027 line as it will likely be used on other charms. However, we are also adding some sudoers permissions here that are very specific to analyticsdb (the nodetool/cassandra) lines. Is there a different location you suggest for these changes, or different recommended way to override the common_utils.py function to customise the contents of the sudoers file? As mentioned in a previous comment this is my first time contributing to the code base and would appreciate your input to make sure any changes are in line with the overall structure of the code.",
+      "parentUuid": "b115ceba_eef8e2ca",
       "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
