@@ -23,6 +23,9 @@ from charmhelpers.core.hookenv import (
 import contrail_controller_utils as utils
 
 
+config = config()
+
+
 def upgrade_ziu(args):
     utils.signal_ziu("ziu", 0)
     utils.update_ziu("start")
