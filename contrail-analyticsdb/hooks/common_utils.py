@@ -105,7 +105,7 @@ def remove_file_safe(path):
     _try_os(os.remove, path)
 
 
-def update_services_status(module, services):
+def check_contrail_status_old(module, services):
     try:
         output = check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-{} ; contrail-status".format(module), shell=True).decode('UTF-8')
     except Exception as e:
@@ -144,6 +144,57 @@ def update_services_status(module, services):
                 status_set(workload, "{} is not ready. Reason: {}"
                            .format(srv, desc if desc else status))
                 return False
+
+    status_set("active", "Unit is ready")
+    try:
+        tag = config.get('image-tag')
+        docker_utils.pull("contrail-node-init", tag)
+        version = docker_utils.get_contrail_version("contrail-node-init", tag)
+        application_version_set(version)
+    except CalledProcessError as e:
+        log("Couldn't detect installed application version: " + str(e))
+    return True
+
+
+def check_contrail_status(module, services):
+    try:
+        output = json.loads(check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-controller-nrpe ; sudo -E contrail-status --format json", shell=True).decode('UTF-8'))
+    except Exception as e:
+        log("Container is not ready to get contrail-status: " + str(e))
+        status_set("waiting", "Waiting services to run in container")
+        return False
+
+    statuses = output["pods"]
+
+    for group in services:
+        if group not in statuses:
+            status_set("waiting",
+                       "POD " + group + " is absent in the contrail-status")
+            return False
+        for srv in services[group]:
+            if not any(srv in key for key in statuses[group]):
+                status_set("waiting",
+                           srv + " is absent in the contrail-status")
+                return False
+            status = next(stat[srv] for stat in statuses[group] if srv in stat)
+            if status not in ["active", "backup"]:
+                workload = "waiting" if status == "initializing" else "blocked"
+                status_set(workload, "{} is not ready. Reason: {}"
+                           .format(srv, status))
+                return False
+    return True
+
+
+def update_services_status(module, services):
+    tag = config.get('image-tag')
+    contrail_version = get_contrail_version()
+
+    if contrail_version >= 1912:
+        if not check_contrail_status(module, services):
+            return False
+    else:
+        if not check_contrail_status_old(module, services):
+            return False
 
     status_set("active", "Unit is ready")
     try:
