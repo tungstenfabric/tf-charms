@@ -122,6 +122,24 @@
       "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d151b94_801f2312",
+        "filename": "contrail-analyticsdb/hooks/contrail_analyticsdb_utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 723
+      },
+      "writtenOn": "2020-12-09T07:34:54Z",
+      "side": 1,
+      "message": "Let me clarify docker container monitoring:\nCanonical\u0027s engineers are implementing checking according to list of checks: https://docs.google.com/spreadsheets/d/1COk4RP9N814yPMLx3lNSU0zxAm9xBdkQAxjRunCt7WM/edit#gid\u003d468358451 previously created by me and Przemek.\nList is based on past deployment or current monitoring solution for various customers for which granulation of checks matter (eg. service X is available while Y is not during outage period etc).\n\nImportant point here is that these checks are supplementary to existing contrail-status and serve purpose of integration with nagios or other monitoring solution for which such approach (different service monitoring) is preferred.",
+      "parentUuid": "f3149ead_c44cc520",
+      "revId": "991a5b67bd35d0c3097d88b41f2e85ad7242050e",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
