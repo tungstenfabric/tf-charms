@@ -8,7 +8,8 @@ from charmhelpers.core.hookenv import (
     application_version_set,
     config,
     log,
-    status_set
+    status_set,
+    ERROR,
 )
 
 import common_utils
@@ -100,10 +101,8 @@ def pull_images():
         try:
             docker_utils.pull(image, tag)
         except Exception as e:
-            log("Can't load image {}".format(e))
-            status_set('error',
-                       'Image could not be pulled: {}:{}'.format(image, tag))
-            return
+            log("Can't load image {}".format(e), level=ERROR)
+            raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
 
 
 def update_charm_status():

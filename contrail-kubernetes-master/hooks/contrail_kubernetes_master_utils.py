@@ -13,6 +13,7 @@ from charmhelpers.core.hookenv import (
     leader_get,
     leader_set,
     charm_dir,
+    ERROR,
 )
 from charmhelpers.contrib.charmsupport import nrpe
 
@@ -156,10 +157,8 @@ def pull_images():
         try:
             docker_utils.pull(image, tag)
         except Exception as e:
-            log("Can't load image {}".format(e))
-            status_set('error',
-                       'Image could not be pulled: {}:{}'.format(image, tag))
-            return
+            log("Can't load image {}".format(e), level=ERROR)
+            raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
 
 
 def update_charm_status():
