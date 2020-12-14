@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f133695a_7fb42454",
+        "filename": "contrail-agent/files/plugins/check_contrail_status_agent.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-14T14:22:21Z",
+      "side": 1,
+      "message": "please remove this empty line",
+      "revId": "27d1f2c8c2e69e3387d268796b9c466e65f969d1",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f4c67bb_12252b2f",
+        "filename": "contrail-agent/files/plugins/check_contrail_status_agent.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-14T14:22:21Z",
+      "side": 1,
+      "message": "please remove this empty line",
+      "revId": "27d1f2c8c2e69e3387d268796b9c466e65f969d1",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16098844_e0ff5a81",
+        "filename": "contrail-analyticsdb/files/plugins/check_contrail_status_analyticsdb.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-14T14:22:21Z",
+      "side": 1,
+      "message": "make it as in utils file",
+      "revId": "27d1f2c8c2e69e3387d268796b9c466e65f969d1",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f39d094_4cca29d8",
+        "filename": "contrail-analyticsdb/files/plugins/check_contrail_status_analyticsdb.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-14T14:22:21Z",
+      "side": 1,
+      "message": "if \u0027.\u0027 in str(cver):\n        if cver \u003d\u003d \u00275.0\u0027:\n            version \u003d 500\n        elif cver \u003d\u003d \u00275.1\u0027:\n            version \u003d 510\n        else:\n            print(\"CRITICAL: invalid version: {}\".format(cver))\n            sys.exit(CRITICAL)\n\n    check_contrail_status(SERVICES.get(ctx[\"version\"], SERVICES.get(9999)), version\u003dversion)",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 0
+      },
+      "revId": "27d1f2c8c2e69e3387d268796b9c466e65f969d1",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
