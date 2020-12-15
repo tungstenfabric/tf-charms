@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3f5f3bb_70f3406a",
+        "filename": "contrail-analyticsdb/files/plugins/check_contrail_status_analyticsdb.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-12-15T09:40:59Z",
+      "side": 1,
+      "message": "version !!!",
+      "range": {
+        "startLine": 112,
+        "startChar": 39,
+        "endLine": 112,
+        "endChar": 43
+      },
+      "revId": "0e4858300663fb9ebc40fb663986b949762101c8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
