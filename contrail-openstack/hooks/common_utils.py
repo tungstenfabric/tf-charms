@@ -105,7 +105,7 @@ def remove_file_safe(path):
     _try_os(os.remove, path)
 
 
-def update_services_status(module, services):
+def get_contrail_status_txt(module, services):
     try:
         output = check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-{} ; contrail-status".format(module), shell=True).decode('UTF-8')
     except Exception as e:
@@ -125,8 +125,34 @@ def update_services_status(module, services):
             continue
         if group and len(words) >= 2 and group in services:
             srv = words[0].split(":")[0]
-            statuses.setdefault(group, dict())[srv] = (
-                words[1], " ".join(words[2:]))
+            statuses.setdefault(group, list()).append(
+                {srv: ' '.join(words[1:])})
+    return statuses
+
+
+def get_contrail_status_json(module, services):
+    try:
+        output = json.loads(check_output("export CONTRAIL_STATUS_CONTAINER_NAME=contrail-status-{} ; contrail-status --format json".format(module), shell=True).decode('UTF-8'))
+    except Exception as e:
+        log("Container is not ready to get contrail-status: " + str(e))
+        status_set("waiting", "Waiting services to run in container")
+        return False
+
+    statuses = output["pods"]
+    return statuses
+
+
+def update_services_status(module, services):
+    tag = config.get('image-tag')
+    contrail_version = get_contrail_version()
+
+    if contrail_version >= 1912:
+        statuses = get_contrail_status_json(module, services)
+    else:
+        statuses = get_contrail_status_txt(module, services)
+
+    if not statuses:
+        return False
 
     for group in services:
         if group not in statuses:
@@ -134,15 +160,15 @@ def update_services_status(module, services):
                        "POD " + group + " is absent in the contrail-status")
             return False
         for srv in services[group]:
-            if srv not in statuses[group]:
+            if not any(srv in key for key in statuses[group]):
                 status_set("waiting",
                            srv + " is absent in the contrail-status")
                 return False
-            status, desc = statuses[group].get(srv)
+            status = next(stat[srv] for stat in statuses[group] if srv in stat)
             if status not in ["active", "backup"]:
                 workload = "waiting" if status == "initializing" else "blocked"
                 status_set(workload, "{} is not ready. Reason: {}"
-                           .format(srv, desc if desc else status))
+                           .format(srv, status))
                 return False
 
     status_set("active", "Unit is ready")
@@ -365,15 +391,12 @@ def get_contrail_version():
 
 def contrail_status_cmd(name, plugins_dir):
     script_name = 'check_contrail_status_{}.py'.format(name)
-    tag = config.get('image-tag')
-    cver = '5.1'
-    if '5.0' in tag:
-        cver = '5.0'
+    contrail_version = get_contrail_version()
 
     check_contrail_status_script = os.path.join(plugins_dir, script_name)
     check_contrail_status_cmd = (
         '{} {}'
-        .format(check_contrail_status_script, cver)
+        .format(check_contrail_status_script, contrail_version)
     )
     return check_contrail_status_cmd
 
