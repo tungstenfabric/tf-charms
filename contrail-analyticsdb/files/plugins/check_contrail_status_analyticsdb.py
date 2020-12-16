@@ -106,7 +106,9 @@ if __name__ == '__main__':
         else:
             print("CRITICAL: invalid version: {}".format(cver))
             sys.exit(CRITICAL)
-    else:
-        version = cver
+    elif not cver.isdigit():
+        print("CRITICAL: invalid version: {}".format(cver))
+        sys.exit(CRITICAL)
 
+    version = int(cver)
     check_contrail_status(SERVICES.get(version, SERVICES.get(9999)), version=version)
