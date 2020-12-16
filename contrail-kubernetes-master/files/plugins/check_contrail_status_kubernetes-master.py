@@ -86,4 +86,8 @@ def check_contrail_status(services, version=None):
 
 if __name__ == '__main__':
     cver = sys.argv[1]
-    check_contrail_status(SERVICES, version=cver)
+    if not cver.isdigit():
+        print("CRITICAL: invalid version: {}".format(cver))
+        sys.exit(CRITICAL)
+
+    check_contrail_status(SERVICES, version=int(cver))

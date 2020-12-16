@@ -98,15 +98,9 @@ def check_contrail_status(services, version=None):
 
 if __name__ == '__main__':
     cver = sys.argv[1]
-    if '.' in str(cver):
-        if cver == '5.0':
-            version = 500
-        elif cver == '5.1':
-            version = 510
-        else:
-            print("CRITICAL: invalid version: {}".format(cver))
-            sys.exit(CRITICAL)
-    else:
-        version = cver
+    if not cver.isdigit():
+        print("CRITICAL: invalid version: {}".format(cver))
+        sys.exit(CRITICAL)
+    version = int(cver)
 
     check_contrail_status(SERVICES.get(version, SERVICES.get(9999)), version=version)
