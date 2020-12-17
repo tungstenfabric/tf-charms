@@ -174,6 +174,7 @@ def get_context():
         if not isinstance(ssl_enabled, bool):
             ssl_enabled = False
     ctx["ssl_enabled"] = ssl_enabled
+    ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else 0
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
