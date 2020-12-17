@@ -109,6 +109,7 @@ def get_context():
     ctx["analytics_servers"] = ips
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
+    ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else 0
 
     ctx["cluster_name"] = config.get("cluster_name")
     ctx["cluster_project"] = config.get("cluster_project")
