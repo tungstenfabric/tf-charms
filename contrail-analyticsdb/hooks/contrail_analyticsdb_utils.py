@@ -114,6 +114,7 @@ def get_context():
         if not isinstance(ssl_enabled, bool):
             ssl_enabled = False
     ctx["ssl_enabled"] = ssl_enabled
+    ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else ''
     ctx["analyticsdb_minimum_diskgb"] = config.get("cassandra-minimum-diskgb")
     ctx["jvm_extra_opts"] = config.get("cassandra-jvm-extra-opts")
     ctx["container_registry"] = config.get("docker-registry")

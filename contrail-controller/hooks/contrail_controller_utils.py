@@ -144,6 +144,7 @@ def get_context():
         ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()
 
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
+    ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else ''
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["use_internal_endpoints"] = config.get("use_internal_endpoints", False)
     ctx["logging"] = docker_utils.render_logging()
