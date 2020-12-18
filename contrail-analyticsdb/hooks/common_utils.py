@@ -278,7 +278,7 @@ def file_read(path):
 
 def data_hash(data):
     if data is None:
-        return None
+        return ''
     h = getattr(hashlib, 'md5')()
     if isinstance(data, str):
         h.update(data.encode())
@@ -305,7 +305,7 @@ def update_certificates(module, cert, key, ca):
     changed = False
     for fname, data, perms in files:
         cfile = certs_path + fname
-        old_hash = hash(file_read(cfile))
+        old_hash = data_hash(file_read(cfile))
         new_hash = data_hash(data)
         if old_hash == new_hash:
             continue
@@ -315,6 +315,16 @@ def update_certificates(module, cert, key, ca):
         _try_os(os.remove, "/etc/contrail/ssl" + fname)
         _try_os(os.symlink, cfile, "/etc/contrail/ssl" + fname)
     return changed
+
+
+def get_certs_hash(module):
+    certs_path = "/etc/contrail/ssl/{}".format(module)
+    # order is important: containers wait for key file as signal to start
+    files = ["/certs/ca-cert.pem", "/certs/server.pem", "/private/server-privkey.pem"]
+    result = ''
+    for file in files:
+        result += data_hash(file_read(certs_path + file))
+    return result
 
 
 def render_and_log(template, conf_file, ctx, perms=0o600):
