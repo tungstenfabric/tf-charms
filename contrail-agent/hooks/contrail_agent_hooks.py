@@ -11,6 +11,7 @@ from charmhelpers.core.hookenv import (
     relation_get,
     relation_set,
     relation_ids,
+    relation_id,
     related_units,
     status_set,
     unit_private_ip,
@@ -134,11 +135,20 @@ def contrail_controller_node_departed():
     status_set("blocked", "Missing relation to contrail-controller")
 
 
-@hooks.hook('tls-certificates-relation-joined')
-def tls_certificates_relation_joined():
+def _update_tls(rid=None):
+    rids = [rid] if rid else relation_ids("tls-certificates")
+    if not rids:
+        return
+
     config['tls_present'] = True
     settings = common_utils.get_tls_settings(utils.get_vhost_ip())
-    relation_set(relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook('tls-certificates-relation-joined')
+def tls_certificates_relation_joined():
+    _update_tls(rid=relation_id())
 
 
 @hooks.hook('tls-certificates-relation-changed')
@@ -168,6 +178,10 @@ def vrouter_plugin_changed():
         plugin_ips[plugin_ip] = common_utils.json_loads(data.get("settings"), dict())
         config["plugin-ips"] = json.dumps(plugin_ips)
         config.save()
+
+    # to update config flags and certs params if any was changed
+    _update_tls()
+
     utils.update_charm_status()
 
 

@@ -220,11 +220,20 @@ def analytics_cluster_departed():
     utils.update_charm_status()
 
 
-@hooks.hook('tls-certificates-relation-joined')
-def tls_certificates_relation_joined():
+def _update_tls(rid=None):
+    rids = [rid] if rid else relation_ids("tls-certificates")
+    if not rids:
+        return
+
     config['tls_present'] = True
     settings = common_utils.get_tls_settings(common_utils.get_ip())
-    relation_set(relation_settings=settings)
+    for rid in rids:
+        relation_set(relation_id=rid, relation_settings=settings)
+
+
+@hooks.hook('tls-certificates-relation-joined')
+def tls_certificates_relation_joined():
+    _update_tls(rid=relation_id())
 
 
 @hooks.hook('tls-certificates-relation-changed')
@@ -275,6 +284,9 @@ def upgrade_charm():
         _update_analyticsdb()
 
     _notify_proxy_services()
+    # to update config flags and certs params if any was changed
+    _update_tls()
+
     utils.update_charm_status()
 
 
