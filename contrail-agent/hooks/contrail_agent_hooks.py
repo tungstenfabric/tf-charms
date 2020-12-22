@@ -181,9 +181,6 @@ def vrouter_plugin_changed():
         config["plugin-ips"] = json.dumps(plugin_ips)
         config.save()
 
-    # to update config flags and certs params if any was changed
-    _update_tls()
-
     utils.update_charm_status()
 
 
@@ -196,6 +193,9 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    # to update config flags and certs params if any was changed
+    _update_tls()
+
     utils.update_charm_status()
 
 
