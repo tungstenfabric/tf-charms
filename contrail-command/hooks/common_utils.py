@@ -146,7 +146,7 @@ def update_services_status(module, services):
     tag = config.get('image-tag')
     contrail_version = get_contrail_version()
 
-    if contrail_version >= 1912:
+    if contrail_version > 1912:
         statuses = get_contrail_status_json(module, services)
     else:
         statuses = get_contrail_status_txt(module, services)

@@ -57,7 +57,7 @@ def get_contrail_status_json(services):
 
 
 def check_contrail_status(services, version=None):
-    if version >= 1912:
+    if version > 1912:
         statuses = get_contrail_status_json(services)
     else:
         statuses = get_contrail_status_txt(services)

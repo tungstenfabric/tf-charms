@@ -100,7 +100,7 @@ def check_contrail_status(services, version=None):
         services.pop("analytics-alarm")
         services.pop("analytics-snmp")
 
-    if version >= 1912:
+    if version > 1912:
         statuses = get_contrail_status_json(services)
     else:
         statuses = get_contrail_status_txt(services)
