@@ -205,11 +205,11 @@ def update_charm_status():
 
 def update_nrpe_config():
     plugins_dir = '/usr/local/lib/nagios/plugins'
-    nrpe_compat = nrpe.NRPE()
+    nrpe_compat = nrpe.NRPE(primary=False)
     common_utils.rsync_nrpe_checks(plugins_dir)
     common_utils.add_nagios_to_sudoers()
 
-    ctl_status_shortname = 'check_contrail_status_' + MODULE
+    ctl_status_shortname = 'check_contrail_status_' + MODULE.replace('-', '_')
     nrpe_compat.add_check(
         shortname=ctl_status_shortname,
         description='Check contrail-status',
