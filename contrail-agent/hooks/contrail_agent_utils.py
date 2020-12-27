@@ -458,15 +458,16 @@ def is_reboot_required():
     # BOOT_IMAGE=/boot/vmlinuz-4.15.0-99-generic root=UUID=f343d78d-5f18-4723-a662-48db742bdc6a ro default_hugepagesz=1G hugepagesz=1G hugepages=2 hugepagesz=2M hugepages=1024
 
     data = check_output(['cat', '/proc/cmdline']).decode('UTF-8').split()
-    i = 0
-    while i < len(data):
-        if data[i] == 'hugepagesz=1G' and i + 1 < len(data) and data[i + 1].startswith('hugepages='):
+    # cmdline may have several occurencies for each parameter bug effective is last one
+    i = len(data) - 2
+    while i >= 0:
+        if data[i] == 'hugepagesz=1G' and data[i + 1].startswith('hugepages='):
             try:
                 amount = int(data[i + 1].split('=')[1])
             except ValueError:
                 amount = 0
             return amount < p_1g
-        i += 1
+        i -= 1
 
     return True
 
