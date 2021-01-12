@@ -22,10 +22,8 @@ Usage
 
 Contrail Controller are prerequisite service to deploy.
 
-Neutron API and Nova Compute should be deployed with legacy plugin management set to false:
+Neutron API should be deployed with legacy plugin management set to false:
 
-    nova-compute:
-      manage-neutron-plugin-legacy-mode: false
     neutron-api:
       manage-neutron-plugin-legacy-mode: false
 
