@@ -2,7 +2,7 @@ name: contrail-kubernetes-node
 summary: Contrail Kubernetes Worker node
 maintainer: Andrey Pavlov <andrey.mp@gmail.com>
 description: |
-  Contral CNI component within docker container.
+  Contrail CNI component within docker container.
 series:
   - xenial
   - bionic

@@ -1,0 +1,18 @@
+name: contrail-openstack-ironic
+summary: Contrail module for Ironic
+maintainer: Andrey Pavlov <andrey.mp@gmail.com>
+description: |
+  Contrail ironic notification manager component within docker container.
+series:
+  - xenial
+  - bionic
+  - focal
+subordinate: false
+requires:
+  contrail-controller:
+    interface: contrail-controller
+  tls-certificates:
+    interface: tls-certificates
+    optional: true
+  amqp:
+    interface: rabbitmq

@@ -2,7 +2,7 @@ name: contrail-controller
 summary: Contrail Controller Node
 maintainer: Andrey Pavlov <andrey.mp@gmail.com>
 description: |
-  Contral controller component within docker container.
+  Contrail controller component within docker container.
 series:
   - xenial
   - bionic
