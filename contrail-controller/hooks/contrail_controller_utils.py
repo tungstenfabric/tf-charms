@@ -722,15 +722,12 @@ def ziu_restart_db(stage):
 
 
 def finish_ziu():
-    ziu_stage = 5
-    if not check_ziu_stage_done_from_relations(ziu_stage):
+    if not check_ziu_stage_done_from_relations(5):
         action_fail("ZIU: stage 5 is not completed for controllers. Process couldn't be finished manually.")
         return
 
     log("ZIU: forcing stage 6 - skip broken agents if they are present.")
-    ziu_stage = 6
-    signal_ziu("finish-ziu", ziu_stage)
-    stages[ziu_stage](ziu_stage, "finish-ziu")
+    signal_ziu("ziu", 6)
 
 
 stages = {
