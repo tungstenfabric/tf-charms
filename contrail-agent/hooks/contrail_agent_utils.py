@@ -171,6 +171,7 @@ def get_context():
     ctx["module"] = MODULE
     ctx["ssl_enabled"] = config.get("ssl_enabled", False)
     ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else ''
+    ctx["l3mh_cidr"] = config.get("l3mh-cidr", None)
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")

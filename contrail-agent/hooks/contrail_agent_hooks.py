@@ -49,6 +49,8 @@ def config_changed():
     # Charm doesn't support changing of some parameters.
     if config.changed("dpdk"):
         raise Exception("Configuration parameter dpdk couldn't be changed")
+    if config.changed("l3mh-cidr"):
+        raise Exception("Configuration parameter l3mh-cidr couldn't be changed")
 
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()

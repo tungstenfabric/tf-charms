@@ -256,3 +256,10 @@ options:
     type: string
     description: |
       Maximum flows allowed per VM (given as % of maximum system flows) 
+  l3mh-cidr:
+    default: ""
+    type: string
+    description: |
+      CIDR for L3MH feature. Bypassed to vrouter-agent container to initialise
+      vhost0 in multi-homing mode. Please refer to vrouter documentation for more details.
+      Can not be changed after first start of vrouter.
