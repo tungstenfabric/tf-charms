@@ -25,6 +25,12 @@ options:
     description: |
       [default parameter, use action apply-defaults to change for release 2002 and further]
       Default router ASN
+  enable-4byte-as:
+    default: false
+    type: boolean
+    description: |
+      [default parameter, use action apply-defaults to change for release 2002 and further]
+      If set, AS Number can be 4 byte wide.
   auth-mode:
     type: string
     default: rbac

@@ -126,6 +126,7 @@ def get_context():
     ctx["module"] = MODULE
     ctx["log_level"] = config.get("log-level", "SYS_NOTICE")
     ctx["bgp_asn"] = config.get("bgp-asn", "64512")
+    ctx["enable_4byte_as"] = config.get("enable-4byte-as")
     ctx["encap_priority"] = config.get("encap-priority")
     ctx["vxlan_vn_id_mode"] = config.get("vxlan-vn-id-mode")
     ctx["flow_export_rate"] = config.get("flow-export-rate")
