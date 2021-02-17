@@ -140,6 +140,7 @@ def get_context():
     ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx["config_api_worker_count"] = config.get("config-api-worker-count")
     ctx["apply_defaults"] = config.get("apply-defaults")
+    ctx["huge_scale"] = config.get("huge-scale", False)
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
         ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()

@@ -224,3 +224,9 @@ options:
     type: int
     description: |
       Number of workers spawned inside config-api container.
+  huge-scale:
+    default: false
+    type: boolean
+    description: |
+      This option tunes some parameters in containers to provide setup
+      which is more reliable in huge scale configurations.
