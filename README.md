@@ -13,21 +13,25 @@ Deploying Contrail charms
 -------------------------
 
 1. Install cloud and juju on the dedicated machine from where the deploy is started:
-```
+
+```bash
     sudo apt-get update
     sudo apt-get upgrade
     sudo apt-get install juju
 ```
+
 [Installing juju](https://docs.jujucharms.com/2.4/en/getting-started)
 
 2. Configure juju:
-```
+
+```bash
 juju add-cloud <cloud-name>
 juju add-credential <cloud name>
 ```
 
 You can see possible clouds that you can use with `juju clouds` command.
-```
+
+```bash
 $ juju clouds
 Cloud        Regions  Default          Type        Description
 aws               15  us-east-1        ec2         Amazon Web Services
@@ -44,7 +48,8 @@ localhost          1  localhost        lxd         LXD Container Hypervisor
 ```
 
 You can add private or custom clouds for the following provider types:
-```
+
+```bash
 $ juju add-cloud
 Cloud Types
   maas
@@ -55,7 +60,8 @@ Cloud Types
 ```
 
 As an example for maas:
-```
+
+```bash
 juju add-cloud mymaas       #select cloud type: maas, enter the API endpoint url)
 juju add-credential mymaas  #add credentials
 ```
@@ -63,28 +69,32 @@ juju add-credential mymaas  #add credentials
 [Using MAAS with Juju](https://docs.jujucharms.com/2.4/en/clouds-maas)
 
 As an example for amazon:
-```
+
+```bash
 juju add-credential aws   #add credentials
 ```
 
 [Using Amazon with Juju](https://docs.jujucharms.com/2.4/en/help-aws)
 
 3. Create controller:
-```
+
+```bash
 juju bootstrap --bootstrap-series=xenial <cloud name> <controller name>
 ```
+
 [Bootstrapping controller](https://docs.jujucharms.com/2.4/en/controllers-creating)
 
 4. Download charms:
-```
+
+```bash
 git clone https://github.com/Juniper/contrail-charms -b R5
 ```
 
 5. Deploy Contrail:
 
-  You can deploy charms in bundle or manually.
+You can deploy charms in bundle or manually.
 
-  [Charm bundles](https://docs.jujucharms.com/2.4/en/charms-bundles)
+[Charm bundles](https://docs.jujucharms.com/2.4/en/charms-bundles)
 
 - With bundle:
     - Create or modify the Juju deployment bundle yaml file to point to machines in which the contrail-charms should be deployed and to include options you need.
@@ -109,9 +119,9 @@ git clone https://github.com/Juniper/contrail-charms -b R5
 6. You can check the status of your deployment using `juju status` command.
 [Unit status. Juju documentation.](https://docs.jujucharms.com/2.4/en/reference-status)
 
-
 Contrail's multi interface setup
 --------------------------------
+
 CTRL/DATA network - network for data traffic of workload and for control traffic between compute nodes and control services.
 API/MGMT network - network where API services are listening on and for accessing instances.
 
@@ -121,7 +131,7 @@ To specify API/MGMT network set `control-network` parameter for contrail-control
 
 To specify CTRL/DATA network set `data-network` parameter for contrail-controller. It can be the IP addresses with netmasks of the control network or physical device name. If `data-network` isn't specified it will use the same network as `control-network`.
 
-```
+```bash
 juju config contrail-controller control-network=192.168.0.0/24 data-network=ens4
 juju config contrail-analytics control-network=192.168.0.0/24
 juju config contrail-analyticsdb control-network=192.168.0.0/24
@@ -129,16 +139,28 @@ juju config contrail-analyticsdb control-network=192.168.0.0/24
 
 When contollers are placed in different AZ/networks then it can be possible to specify like this:
 
-```
+```bash
 juju config contrail-controller control-network="192.168.0.0/24 192.168.1.0/24 192.168.2.0/24" data-network=ens4
 ```
 
 In this case each controller will choose the address from its own network.
 
-
 Known issues
 ------------
 
+1. https://bugs.launchpad.net/charm-kubernetes-master/+bug/1916009
+
+Sometimes kubectl fails to exec commands in POD due to lack of ACL for kubectl.
+Cluster can be deployed but it might not work.
+
+2. https://bugs.launchpad.net/charm-percona-cluster/+bug/1916021
+
+Sometimes mysql can not start.
+Cluster is not up.
+
+3. https://bugs.launchpad.net/charm-nova-cloud-controller/+bug/1916038
+
+After successful cluster deploy tests may fail due to races in keepalive
 
 Configuration
 -------------
