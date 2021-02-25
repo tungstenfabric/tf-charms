@@ -48,7 +48,7 @@ def get_contrail_status_txt(services):
             continue
         if group and len(words) >= 2 and group in services:
             srv = words[0].split(':')[0]
-            statuses.setdefault(group, list()).append(
+            statuses.setdefault(group, dict()).update(
                 {srv: ' '.join(words[1:])})
 
     return statuses
@@ -64,7 +64,11 @@ def get_contrail_status_json(services):
         print(message)
         sys.exit(CRITICAL)
 
-    statuses = output["pods"]
+    statuses = dict()
+    for group in output["pods"]:
+        statuses[group] = dict()
+        for item in output["pods"][group]:
+            statuses[group].update(item)
     return statuses
 
 
@@ -80,18 +84,22 @@ def check_contrail_status(services, version=None):
                        .format(group))
             print(message)
             sys.exit(WARNING)
+        # expected services
         for srv in services[group]:
-            if not any(srv in key for key in statuses[group]):
+            # actual statuses
+            # actual service name can be present as a several workers like 'api-0', 'api-1', ...
+            stats = [statuses[group][x] for x in statuses[group] if x == srv or x.startswith(srv + '-')]
+            if not stats:
                 message = ('WARNING: {} is absent in the contrail-status'
                            .format(srv))
                 print(message)
                 sys.exit(WARNING)
-            status = next(stat[srv] for stat in statuses[group] if srv in stat)
-            if status not in ['active', 'backup']:
-                message = ('CRITICAL: {} is not ready. Reason: {}'
-                           .format(srv, status))
-                print(message)
-                sys.exit(CRITICAL)
+            for status in stats:
+                if status not in ['active', 'backup']:
+                    message = ('CRITICAL: {} is not ready. Reason: {}'
+                               .format(srv, status))
+                    print(message)
+                    sys.exit(CRITICAL)
     print('Contrail status OK')
     sys.exit()
 

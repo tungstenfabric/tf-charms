@@ -125,7 +125,7 @@ def get_contrail_status_txt(module, services):
             continue
         if group and len(words) >= 2 and group in services:
             srv = words[0].split(":")[0]
-            statuses.setdefault(group, list()).append(
+            statuses.setdefault(group, dict()).update(
                 {srv: ' '.join(words[1:])})
     return statuses
 
@@ -138,12 +138,15 @@ def get_contrail_status_json(module, services):
         status_set("waiting", "Waiting services to run in container")
         return False
 
-    statuses = output["pods"]
+    statuses = dict()
+    for group in output["pods"]:
+        statuses[group] = dict()
+        for item in output["pods"][group]:
+            statuses[group].update(item)
     return statuses
 
 
 def update_services_status(module, services):
-    tag = config.get('image-tag')
     contrail_version = get_contrail_version()
 
     if contrail_version > 1912:
@@ -159,17 +162,21 @@ def update_services_status(module, services):
             status_set("waiting",
                        "POD " + group + " is absent in the contrail-status")
             return False
+        # expected services
         for srv in services[group]:
-            if not any(srv in key for key in statuses[group]):
+            # actual statuses
+            # actual service name can be present as a several workers like 'api-0', 'api-1', ...
+            stats = [statuses[group][x] for x in statuses[group] if x == srv or x.startswith(srv + '-')]
+            if not stats:
                 status_set("waiting",
                            srv + " is absent in the contrail-status")
                 return False
-            status = next(stat[srv] for stat in statuses[group] if srv in stat)
-            if status not in ["active", "backup"]:
-                workload = "waiting" if status == "initializing" else "blocked"
-                status_set(workload, "{} is not ready. Reason: {}"
-                           .format(srv, status))
-                return False
+            for status in stats:
+                if status not in ["active", "backup"]:
+                    workload = "waiting" if status == "initializing" else "blocked"
+                    status_set(workload, "{} is not ready. Reason: {}"
+                               .format(srv, status))
+                    return False
 
     status_set("active", "Unit is ready")
     try:
