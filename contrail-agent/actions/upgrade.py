@@ -22,6 +22,7 @@ import contrail_agent_utils as utils
 def upgrade():
     params = {}
     params["stop_agent"] = action_get("stop-agent")
+    params["force"] = action_get("force")
     utils.action_upgrade(params)
 
 

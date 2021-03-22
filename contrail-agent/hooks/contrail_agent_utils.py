@@ -378,11 +378,11 @@ def remove_created_files():
 
 def action_upgrade(params):
     mode = config.get("maintenance")
-    if not mode:
+    if not mode and not params["force"]:
         return
     log("Upgrade action params: {}".format(params))
     stop_agent(params["stop_agent"])
-    if mode == 'issu':
+    if mode == 'issu' or params["force"]:
         _run_services(get_context())
     elif mode == 'ziu':
         update_ziu("upgrade")

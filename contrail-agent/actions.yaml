@@ -7,4 +7,10 @@ upgrade:
                 Do call sig quit for agent container or not. for versions 2003 and before this container
                 has a bug - if this signal will be sent then node can loose connectivity or hang.
             default: True
+        force:
+            type: boolean
+            description: |
+                A parameter to allow forced kernel module replacement for contrail vrouter agent charm.
+                If 'stop-agent' is False then 'force' would not work properly.
+            default: False
 
