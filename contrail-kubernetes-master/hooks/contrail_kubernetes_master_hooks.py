@@ -103,7 +103,6 @@ def contrail_controller_changed():
     data = relation_get()
 
     _update_config(data, "analytics_servers", "analytics-server")
-    _update_config(data, "analyticsdb_enabled", "analyticsdb_enabled")
     _update_config(data, "maintenance", "maintenance")
     _update_config(data, "controller_ips", "controller_ips")
     _update_config(data, "controller_data_ips", "controller_data_ips")
@@ -122,7 +121,7 @@ def contrail_cotroller_departed():
         return
 
     keys = ["auth_info", "orchestrator_info", "controller_ips", "controller_data_ips",
-            "analytics-server", "analyticsdb_enabled"]
+            "analytics-server"]
     for key in keys:
         config.pop(key, None)
     utils.update_charm_status()
