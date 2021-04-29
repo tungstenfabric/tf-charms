@@ -178,6 +178,7 @@ def get_context():
     ctx["sriov_physical_interface"] = config.get("sriov-physical-interface")
     ctx["sriov_numvfs"] = config.get("sriov-numvfs")
     ctx["max_vm_flows"] = config.get("max-vm-flows")
+    ctx["xflow_node_ip"] = config.get("xflow-node-ip")
     ctx["contrail_version"] = common_utils.get_contrail_version()
 
     # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
