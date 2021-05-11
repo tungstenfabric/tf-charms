@@ -339,6 +339,30 @@ def nova_patch():
     # patch -p 2 -i files/nova.diff -d ${::nova_path} -b -R
 
 
+def configure_apparmor():
+    apparmor_file = "/etc/apparmor.d/usr.bin.nova-compute"
+    new_line = "/var/lib/contrail/ports/** rw,"
+    if not os.path.exists(apparmor_file):
+        return
+
+    with open(apparmor_file) as f:
+        data = f.readlines()
+
+    new_data = []
+    for line in data:
+        if new_line in line:
+            return
+        if line.startswith("}"):
+            new_data.append("  " + new_line + "\n")
+        new_data.append(line)
+
+    with open(apparmor_file, "w") as f:
+        f.writelines(new_data)
+
+    service_restart("apparmor")
+    check_call(["/etc/init.d/apparmor", "reload"])
+
+
 def get_openstack_version_codename(dist):
     try:
         version = check_output(['./files/get_openstack_version_codename.sh',

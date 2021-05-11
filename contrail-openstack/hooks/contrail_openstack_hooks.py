@@ -319,6 +319,9 @@ def _notify_nova(rid=None):
     if not rids:
         return
 
+    # add apparmor exception for contrail/ports/
+    utils.configure_apparmor()
+
     utils.deploy_openstack_code("contrail-openstack-compute-init", "nova")
     # create plugin config
     sections = {
