@@ -1,0 +1,399 @@
+series: bionic
+
+machines:
+  "0":
+    constraints: cpu-cores=8 mem=32768 root-disk=307200
+  "1":
+    constraints: cpu-cores=8 mem=32768 root-disk=307200
+  "2":
+    constraints: cpu-cores=8 mem=32768 root-disk=307200
+  "3":
+    constraints: cpu-cores=2 mem=15360 root-disk=102400
+  "4":
+    constraints: cpu-cores=2 mem=15360 root-disk=102400
+
+applications:
+  ceph-mon:
+    charm: cs:ceph-mon-53
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      expected-osd-count: 3
+    constraints: arch=amd64
+  ceph-osd:
+    charm: cs:ceph-osd-308
+    channel: stable
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    options:
+      osd-devices: /dev/sdb
+    constraints: arch=amd64
+  easyrsa:
+    charm: cs:~containers/easyrsa-373
+    channel: stable
+    num_units: 1
+    to:
+    - "0"
+    constraints: arch=amd64
+  glance:
+    charm: cs:glance-303
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    expose: true
+    options:
+      debug: true
+      openstack-origin: cloud:bionic-ussuri
+      vip: 192.168.51.203
+    constraints: arch=amd64
+  hacluster-glance:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-heat:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-keystone:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-mysql:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-neutron:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-nova:
+    charm: cs:hacluster-74
+    channel: stable
+  hacluster-placement:
+    charm: cs:hacluster-74
+    channel: stable
+  haproxy:
+    charm: cs:haproxy-61
+    channel: stable
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    expose: true
+    options:
+      enable_monitoring: true
+      peering_mode: active-active
+      ssl_cert: SELFSIGNED
+    constraints: arch=amd64
+  heat:
+    charm: cs:heat-281
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    expose: true
+    options:
+      debug: true
+      openstack-origin: cloud:bionic-ussuri
+      vip: 192.168.51.202
+    constraints: arch=amd64
+  keepalived:
+    charm: cs:~containers/keepalived-64
+    channel: stable
+    options:
+      port: 10000
+      virtual_ip: 192.168.51.201
+  keystone:
+    charm: cs:keystone-321
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    expose: true
+    options:
+      admin-password: password
+      admin-role: admin
+      debug: true
+      openstack-origin: cloud:bionic-ussuri
+      preferred-api-version: 3
+      vip: 192.168.51.204
+    constraints: arch=amd64
+  memcached:
+    charm: cs:memcached-32
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      allow-ufw-ip6-softfail: true
+    constraints: arch=amd64
+  mysql:
+    charm: cs:percona-cluster-295
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      max-connections: 1500
+      min-cluster-size: 3
+      root-password: password
+      vip: 192.168.51.205
+    constraints: arch=amd64
+  neutron-api:
+    charm: cs:neutron-api-292
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    expose: true
+    options:
+      debug: true
+      manage-neutron-plugin-legacy-mode: false
+      neutron-security-groups: true
+      openstack-origin: cloud:bionic-ussuri
+      vip: 192.168.51.206
+    constraints: arch=amd64
+  nova-cloud-controller:
+    charm: cs:nova-cloud-controller-350
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    expose: true
+    options:
+      cache-known-hosts: false
+      console-access-protocol: novnc
+      debug: true
+      network-manager: Neutron
+      openstack-origin: cloud:bionic-ussuri
+      vip: 192.168.51.207
+    constraints: arch=amd64
+  nova-compute:
+    charm: cs:nova-compute-325
+    channel: stable
+    num_units: 2
+    to:
+    - "3"
+    - "4"
+    options:
+      debug: true
+      enable-live-migration: true
+      enable-resize: true
+      libvirt-image-backend: rbd
+      migration-auth-type: ssh
+      openstack-origin: cloud:bionic-ussuri
+      virt-type: kvm
+    constraints: arch=amd64
+  ntp:
+    charm: cs:ntp-41
+    channel: stable
+  openstack-dashboard:
+    charm: cs:openstack-dashboard-311
+    channel: stable
+    num_units: 1
+    to:
+    - lxd:2
+    expose: true
+    options:
+      debug: "true"
+      openstack-origin: cloud:bionic-ussuri
+    constraints: arch=amd64
+  placement:
+    charm: cs:placement-15
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      debug: true
+      openstack-origin: cloud:bionic-ussuri
+      vip: 192.168.51.208
+    constraints: arch=amd64
+  rabbitmq-server:
+    charm: cs:rabbitmq-server-108
+    channel: stable
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      min-cluster-size: 3
+    constraints: arch=amd64
+  tf-agent:
+    charm: cs:~juniper-os-software/contrail-agent-0
+    options:
+      docker-registry: hub.juniper.net/contrail-nightly
+      image-tag: master-latest
+      kernel-hugepages-1g: ""
+      log-level: SYS_DEBUG
+  tf-analytics:
+    charm: cs:~juniper-os-software/contrail-analytics-0
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    expose: true
+    options:
+      control-network: 192.168.51.0/24
+      docker-registry: hub.juniper.net/contrail-nightly
+      image-tag: master-latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 3
+    constraints: arch=amd64
+  tf-analyticsdb:
+    charm: cs:~juniper-os-software/contrail-analyticsdb-0
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    expose: true
+    options:
+      cassandra-jvm-extra-opts: -Xms16g -Xmx16g
+      cassandra-minimum-diskgb: "4"
+      control-network: 192.168.51.0/24
+      docker-registry: hub.juniper.net/contrail-nightly
+      image-tag: master-latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 3
+    constraints: arch=amd64
+  tf-command:
+    charm: cs:~juniper-os-software/contrail-command-2
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    options:
+      docker-registry: hub.juniper.net/contrail-nightly
+      haproxy-https-mode: tcp
+      image-tag: master-latest
+      vip: 192.168.51.201
+    constraints: arch=amd64
+  tf-controller:
+    charm: cs:~juniper-os-software/contrail-controller-0
+    num_units: 3
+    to:
+    - "0"
+    - "1"
+    - "2"
+    expose: true
+    options:
+      auth-mode: rbac
+      cassandra-jvm-extra-opts: -Xms16g -Xmx16g
+      cassandra-minimum-diskgb: "4"
+      control-network: 192.168.51.0/24
+      data-network: 10.0.0.0/16
+      docker-registry: hub.juniper.net/contrail-nightly
+      image-tag: master-latest
+      log-level: SYS_DEBUG
+      min-cluster-size: 3
+      vip: 192.168.51.201
+    constraints: arch=amd64
+  tf-keystone-auth:
+    charm: cs:~juniper-os-software/contrail-keystone-auth-0
+    num_units: 1
+    to:
+    - "0"
+    constraints: arch=amd64
+  tf-openstack:
+    charm: cs:~juniper-os-software/contrail-openstack-0
+    options:
+      docker-registry: hub.juniper.net/contrail-nightly
+      image-tag: master-latest
+  ubuntu:
+    charm: cs:ubuntu-18
+    channel: stable
+    num_units: 5
+    to:
+    - "0"
+    - "1"
+    - "2"
+    - "3"
+    - "4"
+    constraints: arch=amd64
+
+relations:
+# openstack
+- [ nova-compute:amqp, rabbitmq-server:amqp ]
+- [ nova-compute:image-service, glance:image-service ]
+- [ nova-cloud-controller:cloud-compute, nova-compute:cloud-compute ]
+- [ nova-compute:ceph, ceph-mon:client ]
+- [ placement:identity-service, keystone:identity-service ]
+- [ placement:placement, nova-cloud-controller:placement ]
+- [ placement:shared-db, mysql:shared-db ]
+- [ placement:ha, hacluster-placement:ha ]
+- [ keystone:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:identity-service, keystone:identity-service ]
+- [ glance:identity-service, keystone:identity-service ]
+- [ neutron-api:identity-service, keystone:identity-service ]
+- [ neutron-api:shared-db, mysql:shared-db ]
+- [ neutron-api:amqp, rabbitmq-server:amqp ]
+- [ glance:shared-db, mysql:shared-db ]
+- [ glance:amqp, rabbitmq-server:amqp ]
+- [ nova-cloud-controller:image-service, glance:image-service ]
+- [ nova-cloud-controller:amqp, rabbitmq-server:amqp ]
+- [ openstack-dashboard:identity-service, keystone:identity-service ]
+- [ nova-cloud-controller:shared-db, mysql:shared-db ]
+- [ nova-cloud-controller:neutron-api, neutron-api:neutron-api ]
+- [ heat:shared-db, mysql:shared-db ]
+- [ heat:amqp, rabbitmq-server:amqp ]
+- [ heat:identity-service, keystone:identity-service ]
+- [ mysql:ha, hacluster-mysql:ha ]
+- [ keystone:ha, hacluster-keystone:ha ]
+- [ heat:ha, hacluster-heat:ha ]
+- [ glance:ha, hacluster-glance:ha ]
+- [ neutron-api:ha, hacluster-neutron:ha ]
+- [ nova-cloud-controller:ha, hacluster-nova:ha ]
+- [ glance:ceph, ceph-mon:client ]
+- [ nova-cloud-controller:memcache, memcached:cache ]
+- [ ceph-osd:mon, ceph-mon:osd ]
+
+# contrail
+- [ tf-controller:contrail-analytics, tf-analytics:contrail-analytics ]
+- [ tf-controller:contrail-analyticsdb, tf-analyticsdb:contrail-analyticsdb ]
+- [ tf-analytics:contrail-analyticsdb, tf-analyticsdb:contrail-analyticsdb ]
+- [ tf-agent:contrail-controller, tf-controller:contrail-controller ]
+- [ tf-controller:contrail-auth, tf-keystone-auth:contrail-auth ]
+- [ tf-openstack:contrail-controller, tf-controller:contrail-controller ]
+- [ tf-command:contrail-controller, tf-controller:contrail-controller ]
+- [ tf-controller:tls-certificates, easyrsa:client ]
+- [ tf-analytics:tls-certificates, easyrsa:client ]
+- [ tf-analyticsdb:tls-certificates, easyrsa:client ]
+- [ tf-agent:tls-certificates, easyrsa:client ]
+- [ tf-controller:http-services, haproxy:reverseproxy ]
+- [ tf-controller:https-services, haproxy:reverseproxy ]
+- [ tf-analytics:http-services, haproxy:reverseproxy ]
+- [ tf-command:https-services, haproxy:reverseproxy ]
+
+# contrail-openstack
+- [ tf-keystone-auth:identity-admin, keystone:identity-admin ]
+- [ tf-openstack:neutron-api, neutron-api:neutron-plugin-api-subordinate ]
+- [ tf-openstack:heat-plugin, heat:heat-plugin-subordinate ]
+- [ tf-openstack:nova-compute, nova-compute:neutron-plugin ]
+- [ tf-agent:juju-info, nova-compute:juju-info ]
+
+- [ keepalived:juju-info, haproxy:juju-info ]
+- [ ubuntu:juju-info, ntp:juju-info ]

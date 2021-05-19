@@ -503,107 +503,16 @@ def contrail_auth_departed():
     utils.update_charm_status()
 
 
-def _http_services(vip):
-    name = local_unit().replace("/", "-")
-    addr = common_utils.get_ip()
-
-    mode = config.get("haproxy-http-mode", "http")
-
-    ssl_on_backend = config.get("ssl_enabled", False) and common_utils.is_config_analytics_ssl_available()
-    if ssl_on_backend:
-        servers = [[name, addr, 8082, "check inter 2000 rise 2 fall 3 ssl verify none"]]
-    else:
-        servers = [[name, addr, 8082, "check inter 2000 rise 2 fall 3"]]
-
-    result = [
-        {"service_name": "contrail-api",
-         "service_host": vip,
-         "service_port": 8082,
-         "servers": servers}
-    ]
-    if mode == 'http':
-        result[0]['service_options'] = [
-            "timeout client 3m",
-            "option nolinger",
-            "timeout server 3m",
-            "balance source"]
-    else:
-        result[0]['service_options'] = [
-            "mode http",
-            "balance source",
-            "hash-type consistent",
-            "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
-            "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
-            "option httpchk GET /",
-            "option forwardfor",
-            "redirect scheme https code 301 if { hdr(host) -i " + str(vip) + " } !{ ssl_fc }",
-            "rsprep ^Location:\\ http://(.*) Location:\\ https://\\1"]
-        result[0]['crts'] = ["DEFAULT"]
-
-    return result
-
-
-def _https_services_tcp(vip):
-    name = local_unit().replace("/", "-")
-    addr = common_utils.get_ip()
-    return [
-        {"service_name": "contrail-webui-https",
-         "service_host": vip,
-         "service_port": 8143,
-         "service_options": [
-             "mode tcp",
-             "option tcplog",
-             "balance source",
-             "cookie SERVERID insert indirect nocache",
-         ],
-         "servers": [[
-             name, addr, 8143,
-             "cookie " + addr + " weight 1 maxconn 1024 check port 8143"]]},
-    ]
-
-
-def _https_services_http(vip):
-    name = local_unit().replace("/", "-")
-    addr = common_utils.get_ip()
-    return [
-        {"service_name": "contrail-webui-https",
-         "service_host": vip,
-         "service_port": 8143,
-         "crts": ["DEFAULT"],
-         "service_options": [
-             "mode http",
-             "balance source",
-             "hash-type consistent",
-             "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
-             "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
-             "option httpchk GET /",
-             "option forwardfor",
-             "redirect scheme https code 301 if { hdr(host) -i " + str(vip) + " } !{ ssl_fc }",
-             "rsprep ^Location:\\ http://(.*) Location:\\ https://\\1",
-         ],
-         "servers": [[
-             name, addr, 8143,
-             "check fall 5 inter 2000 rise 2 ssl verify none"]]},
-    ]
-
-
-def _configure_ports(func, ports):
-    for port in ports:
-        try:
-            func(port, "TCP")
-        except Exception:
-            pass
-
-
 def update_http_relations(rid=None):
     rids = [rid] if rid else relation_ids("http-services")
     if not rids:
         return
 
     vip = config.get("vip")
-    _configure_ports(close_port if vip else open_port, ["8082", "8080"])
+    common_utils.configure_ports(close_port if vip else open_port, ["8082", "8080"])
 
-    data = yaml.dump(_http_services(str(vip)))
+    data = yaml.dump(common_utils.http_services(
+        "contrail-api", str(vip), 8082))
     for rid in rids:
         relation_set(relation_id=rid, services=data)
 
@@ -614,13 +523,15 @@ def update_https_relations(rid=None):
         return
 
     vip = config.get("vip")
-    _configure_ports(close_port if vip else open_port, ["8143"])
+    common_utils.configure_ports(close_port if vip else open_port, ["8143"])
 
     mode = config.get("haproxy-https-mode", "tcp")
     if mode == "tcp":
-        data = yaml.dump(_https_services_tcp(str(vip)))
+        data = yaml.dump(common_utils.https_services_tcp(
+            "contrail-webui-https", str(vip), 8143))
     elif mode == "http":
-        data = yaml.dump(_https_services_http(str(vip)))
+        data = yaml.dump(common_utils.https_services_http(
+            "contrail-webui-https", str(vip), 8143))
     for rid in rids:
         relation_set(relation_id=rid, services=data)
 

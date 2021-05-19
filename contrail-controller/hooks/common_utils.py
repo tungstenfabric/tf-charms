@@ -420,3 +420,93 @@ def contrail_status_cmd(name, plugins_dir):
 
 def is_config_analytics_ssl_available():
     return (get_contrail_version() >= 1910)
+
+
+def http_services(service_name, vip, port):
+    name = local_unit().replace("/", "-")
+    addr = get_ip()
+
+    mode = config.get("haproxy-http-mode", "http")
+    ssl_on_backend = config.get("ssl_enabled", False) and is_config_analytics_ssl_available()
+    if ssl_on_backend:
+        servers = [[name, addr, port, "check inter 2000 rise 2 fall 3 ssl verify none"]]
+    else:
+        servers = [[name, addr, port, "check inter 2000 rise 2 fall 3"]]
+
+    result = [{
+        "service_name": service_name,
+        "service_host": vip,
+        "service_port": port,
+        "servers": servers}]
+    if mode == 'http':
+        result[0]['service_options'] = [
+            "timeout client 3m",
+            "option nolinger",
+            "timeout server 3m",
+            "balance source"]
+    else:
+        result[0]['service_options'] = [
+            "mode http",
+            "balance source",
+            "hash-type consistent",
+            "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
+            "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
+            "option httpchk GET /",
+            "option forwardfor",
+            "redirect scheme https code 301 if { hdr(host) -i " + str(vip) + " } !{ ssl_fc }",
+            "rsprep ^Location:\\ http://(.*) Location:\\ https://\\1"]
+        result[0]['crts'] = ["DEFAULT"]
+
+    return result
+
+
+def https_services_tcp(service_name, vip, port):
+    name = local_unit().replace("/", "-")
+    addr = get_ip()
+    return [
+        {"service_name": service_name,
+         "service_host": vip,
+         "service_port": port,
+         "service_options": [
+             "mode tcp",
+             "option tcplog",
+             "balance source",
+             "cookie SERVERID insert indirect nocache",
+         ],
+         "servers": [[
+             name, addr, port,
+             "cookie " + addr + " weight 1 maxconn 1024 check port " + str(port)]]},
+    ]
+
+
+def https_services_http(service_name, vip, port):
+    name = local_unit().replace("/", "-")
+    addr = get_ip()
+    return [
+        {"service_name": service_name,
+         "service_host": vip,
+         "service_port": port,
+         "crts": ["DEFAULT"],
+         "service_options": [
+             "mode http",
+             "balance source",
+             "hash-type consistent",
+             "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
+             "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
+             "option httpchk GET /",
+             "option forwardfor",
+             "redirect scheme https code 301 if { hdr(host) -i " + str(vip) + " } !{ ssl_fc }",
+             "rsprep ^Location:\\ http://(.*) Location:\\ https://\\1",
+         ],
+         "servers": [[
+             name, addr, port,
+             "check fall 5 inter 2000 rise 2 ssl verify none"]]},
+    ]
+
+
+def configure_ports(func, ports):
+    for port in ports:
+        try:
+            func(port, "TCP")
+        except Exception:
+            pass

@@ -11,5 +11,6 @@ source /tmp/venv/bin/activate
 python3 -m pip install "ansible==2.9.7"
 
 export HOME=/root
+export orchestrator=juju
 
 $@

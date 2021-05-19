@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 import sys
+import yaml
 
 from charmhelpers.core.hookenv import (
     Hooks,
     UnregisteredHookError,
+    close_port,
     config,
     log,
+    open_port,
+    relation_id,
+    relation_ids,
     relation_get,
     relation_set,
     status_set,
 )
 
 import contrail_command_utils as utils
+import common_utils
 import docker_utils
 
 
@@ -30,6 +36,7 @@ def config_changed():
     docker_utils.config_changed()
     utils.pull_images()
     utils.update_charm_status()
+    update_https_relations()
 
 
 @hooks.hook("update-status")
@@ -40,6 +47,7 @@ def update_status():
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
     utils.update_charm_status()
+    update_https_relations()
 
 
 @hooks.hook("contrail-controller-relation-joined")
@@ -59,6 +67,36 @@ def contrail_controller_changed():
     config.save()
 
     utils.update_charm_status()
+
+
+def update_https_relations(rid=None):
+    rids = [rid] if rid else relation_ids("https-services")
+    if not rids:
+        return
+
+    vip = config.get("vip")
+    common_utils.configure_ports(close_port if vip else open_port, ["8079"])
+
+    mode = config.get("haproxy-https-mode", "tcp")
+    if mode == "tcp":
+        data = yaml.dump(common_utils.https_services_tcp(
+            "contrail-command-https", str(vip), 8079))
+    elif mode == "http":
+        data = yaml.dump(common_utils.https_services_tcp(
+            "contrail-command-https", str(vip), 8079))
+    for rid in rids:
+        relation_set(relation_id=rid, services=data)
+
+
+@hooks.hook("https-services-relation-joined")
+def https_services_joined():
+    vip = config.get("vip")
+    if not vip:
+        raise Exception("VIP must be set for allow relation to haproxy")
+    mode = config.get("haproxy-https-mode", "tcp")
+    if mode not in ("tcp", "http"):
+        raise Exception("Invalid haproxy-https-mode: {}. Possible values: tcp or http".format(mode))
+    update_https_relations(rid=relation_id())
 
 
 @hooks.hook("stop")
