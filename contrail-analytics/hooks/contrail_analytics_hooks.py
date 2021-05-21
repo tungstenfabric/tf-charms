@@ -291,57 +291,15 @@ def upgrade_charm():
     utils.update_charm_status()
 
 
-def _http_services(vip):
-    name = local_unit().replace("/", "-")
-    addr = common_utils.get_ip()
-
-    mode = config.get("haproxy-http-mode", "http")
-    ssl_on_backend = config.get("ssl_enabled", False) and common_utils.is_config_analytics_ssl_available()
-    if ssl_on_backend:
-        servers = [[name, addr, 8081, "check inter 2000 rise 2 fall 3 ssl verify none"]]
-    else:
-        servers = [[name, addr, 8081, "check inter 2000 rise 2 fall 3"]]
-
-    result = [{
-        "service_name": "contrail-analytics-api",
-        "service_host": vip,
-        "service_port": 8081,
-        "servers": servers}]
-    if mode == 'http':
-        result[0]['service_options'] = [
-            "timeout client 3m",
-            "option nolinger",
-            "timeout server 3m",
-            "balance source"]
-    else:
-        result[0]['service_options'] = [
-            "mode http",
-            "balance source",
-            "hash-type consistent",
-            "http-request set-header X-Forwarded-Proto https if { ssl_fc }",
-            "http-request set-header X-Forwarded-Proto http if !{ ssl_fc }",
-            "option httpchk GET /",
-            "option forwardfor",
-            "redirect scheme https code 301 if { hdr(host) -i " + str(vip) + " } !{ ssl_fc }",
-            "rsprep ^Location:\\ http://(.*) Location:\\ https://\\1"]
-        result[0]['crts'] = ["DEFAULT"]
-
-    return result
-
-
 def _notify_proxy_services(rid=None):
     rids = [rid] if rid else relation_ids("http-services")
     if not rids:
         return
 
     vip = config.get("vip")
-    func = close_port if vip else open_port
-    for port in ["8081"]:
-        try:
-            func(port, "TCP")
-        except Exception:
-            pass
-    data = list() if not vip else _http_services(str(vip))
+    common_utils.configure_ports(close_port if vip else open_port, ["8081"])
+    data = list() if not vip else common_utils.http_services(
+        "contrail-analytics-api", str(vip), 8081)
     settings = {"services": yaml.dump(data)}
     for rid in rids:
         relation_set(relation_id=rid, relation_settings=settings)
