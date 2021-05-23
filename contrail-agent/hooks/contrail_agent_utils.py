@@ -5,6 +5,7 @@ import yaml
 from subprocess import (
     check_call,
     check_output,
+    CalledProcessError
 )
 import netifaces
 from charmhelpers.core.hookenv import (
@@ -99,10 +100,19 @@ def _get_hugepages():
 def _get_default_gateway_iface():
     # TODO: get iface from route to CONTROL_NODES
     if hasattr(netifaces, "gateways"):
-        return netifaces.gateways()["default"][netifaces.AF_INET][1]
+        gateways = netifaces.gateways()
+        default_gw = gateways.get("default")
+        if default_gw and netifaces.AF_INET in default_gw and len(default_gw[netifaces.AF_INET]) > 1:
+            return default_gw[netifaces.AF_INET][1]
+        return None
 
-    data = check_output("ip route | grep ^default", shell=True).decode('UTF-8').split()
-    return data[data.index("dev") + 1]
+    try:
+        data = check_output("ip route | grep ^default", shell=True).decode('UTF-8').split()
+        return data[data.index("dev") + 1]
+    except CalledProcessError:
+        pass
+
+    return None
 
 
 def _get_iface_gateway_ip(iface):
@@ -566,12 +576,18 @@ def get_vhost_ip():
         addr = netifaces.ifaddresses("vhost0")
         if netifaces.AF_INET in addr and len(addr[netifaces.AF_INET]) > 0:
             return addr[netifaces.AF_INET][0]["addr"]
+        # do not try to check phys_int if vhost0 is already here
+        return None
     except ValueError:
         pass
 
     iface = config.get("physical-interface")
     if not iface:
         iface = _get_default_gateway_iface()
+    if not iface:
+        # there is no default interface
+        return None
+
     addr = netifaces.ifaddresses(iface)
     if netifaces.AF_INET in addr and len(addr[netifaces.AF_INET]) > 0:
         return addr[netifaces.AF_INET][0]["addr"]
@@ -592,7 +608,9 @@ def tsn_ctx():
             if ip:
                 tsn_ip_list.append(ip)
     # add own ip address
-    tsn_ip_list.append(get_vhost_ip())
+    vhost_ip = get_vhost_ip()
+    if vhost_ip:
+        tsn_ip_list.append(vhost_ip)
 
     result["tsn_nodes"] = tsn_ip_list
     return result
