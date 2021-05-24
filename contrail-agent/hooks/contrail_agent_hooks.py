@@ -117,9 +117,11 @@ def contrail_controller_changed():
                 break
 
     if "controller_data_ips" in data:
-        settings = {"vhost-address": utils.get_vhost_ip()}
-        for rid in relation_ids("agent-cluster"):
-            relation_set(relation_id=rid, relation_settings=settings)
+        vhost_ip = utils.get_vhost_ip()
+        if vhost_ip:
+            settings = {"vhost-address": vhost_ip}
+            for rid in relation_ids("agent-cluster"):
+                relation_set(relation_id=rid, relation_settings=settings)
 
     utils.update_ziu("controller-changed")
     utils.update_charm_status()
@@ -144,9 +146,11 @@ def _update_tls(rid=None):
         return
 
     config['tls_present'] = True
-    settings = common_utils.get_tls_settings(utils.get_vhost_ip())
-    for rid in rids:
-        relation_set(relation_id=rid, relation_settings=settings)
+    vhost_ip = utils.get_vhost_ip()
+    if vhost_ip:
+        settings = common_utils.get_tls_settings(vhost_ip)
+        for rid in rids:
+            relation_set(relation_id=rid, relation_settings=settings)
 
 
 @hooks.hook('tls-certificates-relation-joined')

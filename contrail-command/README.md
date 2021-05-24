@@ -63,6 +63,10 @@ Once ready deploy, relate and run action as follows:
 
             $ cat cert.pem | base64 > "cert.pem.b64"
 
+        Or just with
+
+            $ juju show-controller --format json | jq -r '.["tf-maas-controller"].details["ca-cert"]' | base64 > cert.pem.b64
+
     - juju-model-id: ID of JuJu model. You can get it from `juju show-controller` command.
 
             jc5-cloud:
