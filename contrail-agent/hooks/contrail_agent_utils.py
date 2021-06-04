@@ -399,7 +399,7 @@ def action_upgrade(params):
 
 
 def fix_dns_settings():
-    # in some bionic installations DNS is proxied by local instance
+    # in some bionic+ installations DNS is proxied by local instance
     # of systed-resolved service. this services applies DNS settings
     # that was taken overDHCP to exact interface - ens3 for example.
     # and when we move traffic from ens3 to vhost0 then local DNS
@@ -408,8 +408,8 @@ def fix_dns_settings():
     # while we don't know how to move DNS settings to vhost0 in
     # vrouter-agent container - let's remove local DNS proxy from
     # the path and send DNS requests directly to the HUB.
-    # this situation is observed only in bionic.
-    if lsb_release()['DISTRIB_CODENAME'] != 'bionic':
+    # this situation is observed only in bionic and next releases.
+    if lsb_release()['DISTRIB_CODENAME'] not in ['bionic', 'focal']:
         return
     if os.path.exists('/run/systemd/resolve/resolv.conf'):
         os.remove('/etc/resolv.conf')
