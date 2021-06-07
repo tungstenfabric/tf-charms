@@ -198,6 +198,8 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    # call this before calling update_tls to have correct name for certs generation
+    utils.fix_dns_settings()
     # to update config flags and certs params if any was changed
     _update_tls()
 
