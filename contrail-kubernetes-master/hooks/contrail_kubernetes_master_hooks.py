@@ -80,6 +80,13 @@ def config_changed():
     utils.pull_images()
     utils.update_charm_status()
 
+    # leave it as latest - in case of exception in previous steps
+    # config.changed doesn't work sometimes (when we saved config in this hook before)
+    if config.get("saved-image-tag") != config["image-tag"]:
+        utils.update_ziu("image-tag")
+        config["saved-image-tag"] = config["image-tag"]
+        config.save()
+
 
 def _notify_controller(rid=None):
     rids = [rid] if rid else relation_ids("contrail-controller")
@@ -109,6 +116,8 @@ def contrail_controller_changed():
     _update_config(data, "auth_info", "auth-info")
     _update_config(data, "orchestrator_info", "orchestrator-info")
     config.save()
+
+    utils.update_ziu("controller-changed")
 
     utils.update_charm_status()
 
@@ -156,6 +165,8 @@ def cluster_changed():
         unit = remote_unit()
         _address_changed(unit, ip)
         utils.update_charm_status()
+
+    utils.update_ziu("cluster-changed")
 
 
 @hooks.hook("kubernetes-master-cluster-relation-departed")
@@ -247,6 +258,7 @@ def update_status():
             # notify clients
             _notify_controller()
     # and update self
+    utils.update_ziu("update-status")
     utils.update_charm_status()
 
 
