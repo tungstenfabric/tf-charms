@@ -307,6 +307,9 @@ def _notify_proxy_services(rid=None):
 
 @hooks.hook("http-services-relation-joined")
 def http_services_joined():
+    vip = config.get("vip")
+    if not vip:
+        raise Exception("VIP must be set for allow relation to haproxy")
     _notify_proxy_services(rid=relation_id())
 
 
