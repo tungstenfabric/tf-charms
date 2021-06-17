@@ -6,7 +6,9 @@ from charmhelpers.core.hookenv import (
     config,
     local_unit,
     log,
+    in_relation_hook,
     relation_get,
+    relation_set,
     related_units,
     relation_ids,
     status_set,
@@ -162,10 +164,22 @@ def pull_images():
 
 
 def update_charm_status():
-    if config.get("maintenance") or config.get("ziu"):
+    ctx = get_context()
+
+    if config.get("maintenance"):
+        log("ISSU Maintenance is in progress")
+        status_set('maintenance', 'issu is in progress')
+        return
+    if int(config.get("ziu", -1)) > -1:
+        log("ZIU Maintenance is in progress")
+        status_set('maintenance',
+                   'ziu is in progress - stage/done = {}/{}'.format(config.get("ziu"), config.get("ziu_done")))
         return
 
-    ctx = get_context()
+    _update_charm_status(ctx)
+
+
+def _update_charm_status(ctx):
     missing_relations = []
     if not ctx.get("nested_mode") and not ctx.get("controller_servers"):
         missing_relations.append("contrail-controller")
@@ -191,15 +205,28 @@ def update_charm_status():
                    'Missing auth info in relation with contrail-controller.')
         return
 
-    changed = common_utils.render_and_log(
-        "kubemanager.env",
-        BASE_CONFIGS_PATH + "/common_kubemanager.env", ctx)
-    changed |= common_utils.render_and_log(
-        "/contrail-kubemanager.yaml",
-        CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    changed_dict = _render_configs(ctx)
+    changed = changed_dict["common"]
+
+    service_changed = changed_dict["kubernetes-master"]
+    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
+
+
+def _render_configs(ctx):
+    result = dict()
+
+    result['common'] = common_utils.apply_keystone_ca(MODULE, ctx)
+    result["common"] |= common_utils.render_and_log(
+        "kubemanager.env",
+        BASE_CONFIGS_PATH + "/common_kubemanager.env", ctx)
+
+    result["kubernetes-master"] = common_utils.render_and_log(
+        "/contrail-kubemanager.yaml",
+        CONFIGS_PATH + "/docker-compose.yaml", ctx)
+
+    return result
 
 
 def update_nrpe_config():
@@ -225,3 +252,87 @@ def stop_kubernetes_master():
 def remove_created_files():
     common_utils.remove_file_safe(BASE_CONFIGS_PATH + "/common_kubemanager.env")
     common_utils.remove_file_safe(CONFIGS_PATH + "/docker-compose.yaml")
+
+
+# ZUI code block
+
+ziu_relations = [
+    "contrail-controller",
+    "kubernetes-master-cluster",
+]
+
+
+def config_set(key, value):
+    if value is not None:
+        config[key] = value
+    else:
+        config.pop(key, None)
+    config.save()
+
+
+def signal_ziu(key, value):
+    log("ZIU: signal {} = {}".format(key, value))
+    for rname in ziu_relations:
+        for rid in relation_ids(rname):
+            relation_set(relation_id=rid, relation_settings={key: value})
+    config_set(key, value)
+
+
+def update_ziu(trigger):
+    if in_relation_hook():
+        ziu_stage = relation_get("ziu")
+        log("ZIU: stage from relation {}".format(ziu_stage))
+    else:
+        ziu_stage = config.get("ziu")
+        log("ZIU: stage from config {}".format(ziu_stage))
+    if ziu_stage is None:
+        return
+    ziu_stage = int(ziu_stage)
+    config_set("ziu", ziu_stage)
+    if ziu_stage > int(config.get("ziu_done", -1)):
+        log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
+        stages[ziu_stage](ziu_stage, trigger)
+
+
+def ziu_stage_noop(ziu_stage, trigger):
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_0(ziu_stage, trigger):
+    # update images
+    if trigger == "image-tag":
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_1(ziu_stage, trigger):
+    # stop API services
+    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+    signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_2(ziu_stage, trigger):
+    # start API services
+    ctx = get_context()
+    _render_configs(ctx)
+    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml")
+
+    result = common_utils.update_services_status(MODULE, SERVICES)
+    if result:
+        signal_ziu("ziu_done", ziu_stage)
+
+
+def ziu_stage_6(ziu_stage, trigger):
+    # finish
+    signal_ziu("ziu", None)
+    signal_ziu("ziu_done", None)
+
+
+stages = {
+    0: ziu_stage_0,
+    1: ziu_stage_1,
+    2: ziu_stage_2,
+    3: ziu_stage_noop,
+    4: ziu_stage_noop,
+    5: ziu_stage_noop,
+    6: ziu_stage_6,
+}
