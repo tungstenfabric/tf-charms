@@ -150,6 +150,13 @@ def get_context():
 
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
 
+    value = config.get("project_domain_name")
+    if value:
+        ctx["keystone_project_domain_name"] = value
+    value = config.get("user_domain_name")
+    if value:
+        ctx["keystone_user_domain_name"] = value
+
     return ctx
 
 
