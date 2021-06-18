@@ -1,0 +1,95 @@
+---
+applications:
+  contrail-agent-csn:
+    charm: cs:~juniper-os-software/contrail-agent
+    options:
+      csn-mode: tsn-no-forwarding
+
+  ironic-api:
+    charm: cs:~openstack-charmers/ironic-api
+    num_units: 3
+    to:
+    - lxd:0
+    - lxd:1
+    - lxd:2
+    options:
+      openstack-origin: cloud:bionic-train/proposed
+      vip: 10.92.76.130 192.168.2.189
+  ironic-api-hacluster:
+    charm: cs:hacluster-72
+    options:
+      cluster_count: 3
+  ironic-conductor:
+    charm: cs:~openstack-charmers/ironic-conductor
+    num_units: 1
+    to:
+    - "3"
+    options:
+      cleaning-network: ironic
+      default-deploy-interface: direct
+      default-network-interface: neutron
+      disable-secure-erase: true
+      enabled-deploy-interfaces: direct
+      enabled-network-interfaces: noop,flat,neutron
+      max-tftp-block-size: 1418
+      openstack-origin: cloud:bionic-train/proposed
+      provisioning-network: ironic
+      use-ipxe: false
+  nova-compute-ironic:
+    charm: cs:nova-compute
+    num_units: 1
+    to:
+    - "4"
+    options:
+      enable-live-migration: false
+      enable-resize: false
+      openstack-origin: cloud:bionic-train/proposed
+      virt-type: ironic
+
+machines:
+  "0":
+    constraints: tags=controller1
+  "1":
+    constraints: tags=controller2
+  "2":
+    constraints: tags=controller3
+  "3":
+    constraints: tags=controller5
+  "4":
+    constraints: tags=CSN
+
+relations:
+- - ironic-conductor:amqp
+  - rabbitmq-server:amqp
+- - ironic-conductor:identity-credentials
+  - keystone:identity-credentials
+- - ironic-conductor:shared-db
+  - mysql:shared-db
+- - nova-compute-ironic:amqp
+  - rabbitmq-server:amqp
+- - nova-compute-ironic:image-service
+  - glance:image-service
+- - nova-compute-ironic:cloud-credentials
+  - keystone:identity-credentials
+- - nova-compute-ironic:cloud-compute
+  - nova-cloud-controller:cloud-compute
+- - ceph-mon:client
+  - nova-compute-ironic:ceph
+- - contrail-agent-csn:juju-info
+  - nova-compute-ironic:juju-info
+- - contrail-agent-csn:contrail-controller
+  - contrail-controller:contrail-controller
+- - ironic-api:ha
+  - ironic-api-hacluster:ha
+- - ironic-conductor:ironic-api
+  - ironic-api:ironic-api
+- - ironic-api:amqp
+  - rabbitmq-server:amqp
+- - ironic-api:identity-service
+  - keystone:identity-service
+- - ironic-api:shared-db
+  - mysql:shared-db
+- - vault:certificates
+  - ironic-api:certificates
+- - nova-compute-ironic:ironic-api
+  - ironic-api:ironic-api
