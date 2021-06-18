@@ -76,16 +76,10 @@ options:
       Secure port to access a Kubernetes Cluster API.
       This parameter is optinal. If it's not specified then local kubernetes address will be used.
 
-  project_domain_name:
+  kubernetes_cluster_domain:
     type: string
     description: |
-      Redefenition of project domain name if this instance of kubemanager should
-      serve different domain in openstack than default one.
-  user_domain_name:
-    type: string
-    description: |
-      Redefenition of user domain name if this instance of kubemanager should
-      serve different domain in openstack than default one.
+      Redefenition KUBERNETES_CLUSTER_DOMAIN.
 
   nested_mode:
     type: boolean
