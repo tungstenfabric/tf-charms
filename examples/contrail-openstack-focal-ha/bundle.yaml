@@ -309,7 +309,7 @@ applications:
       zone: 3
     constraints: arch=amd64
   tf-agent:
-    charm: cs:contrail-agent
+    charm: cs:~juniper-os-software/contrail-agent
     options:
       docker-registry: tungstenfabric
       docker-registry-insecure: true
@@ -317,7 +317,7 @@ applications:
       kernel-hugepages-1g: ""
       log-level: SYS_DEBUG
   tf-analytics:
-    charm: cs:contrail-analytics
+    charm: cs:~juniper-os-software/contrail-analytics
     num_units: 3
     to:
     - "0"
@@ -334,7 +334,7 @@ applications:
       vip: 192.168.51.201
     constraints: arch=amd64
   tf-analyticsdb:
-    charm: cs:contrail-analyticsdb
+    charm: cs:~juniper-os-software/contrail-analyticsdb
     num_units: 3
     to:
     - "0"
@@ -352,7 +352,7 @@ applications:
       min-cluster-size: 3
     constraints: arch=amd64
   tf-controller:
-    charm: cs:contrail-controller
+    charm: cs:~juniper-os-software/contrail-controller
     num_units: 3
     to:
     - "0"
@@ -373,13 +373,13 @@ applications:
       vip: 192.168.51.201
     constraints: arch=amd64
   tf-keystone-auth:
-    charm: cs:contrail-keystone-auth
+    charm: cs:~juniper-os-software/contrail-keystone-auth
     num_units: 1
     to:
     - "0"
     constraints: arch=amd64
   tf-openstack:
-    charm: cs:contrail-openstack
+    charm: cs:~juniper-os-software/contrail-openstack
     options:
       docker-registry: tungstenfabric
       docker-registry-insecure: true
