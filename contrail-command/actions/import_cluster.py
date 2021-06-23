@@ -18,7 +18,7 @@ _add_path(_root)
 
 from charmhelpers.core.hookenv import (
     action_fail,
-    action_get,
+    function_get,
     action_set,
     log
 )
@@ -41,11 +41,11 @@ def _decode_cert(key):
 
 def import_cluster():
     juju_params = {}
-    juju_params["juju_controller"] = action_get("juju-controller")
-    juju_params["juju_cacert_path"] = _decode_cert(action_get("juju-ca-cert"))
-    juju_params["juju_model_id"] = action_get("juju-model-id")
-    juju_params["juju_controller_password"] = action_get("juju-controller-password")
-    juju_params["juju_controller_user"] = action_get("juju-controller-user")
+    juju_params["juju_controller"] = function_get("juju-controller")
+    juju_params["juju_cacert_path"] = _decode_cert(function_get("juju-ca-cert"))
+    juju_params["juju_model_id"] = function_get("juju-model-id")
+    juju_params["juju_controller_password"] = function_get("juju-controller-password")
+    juju_params["juju_controller_user"] = function_get("juju-controller-user")
 
     res, message = utils.import_cluster(juju_params)
     if not res:

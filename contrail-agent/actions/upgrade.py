@@ -15,14 +15,14 @@ def _add_path(path):
 _add_path(_hooks)
 _add_path(_root)
 
-from charmhelpers.core.hookenv import action_get
+from charmhelpers.core.hookenv import function_get
 import contrail_agent_utils as utils
 
 
 def upgrade():
     params = {}
-    params["stop_agent"] = action_get("stop-agent")
-    params["force"] = action_get("force")
+    params["stop_agent"] = function_get("stop-agent")
+    params["force"] = function_get("force")
     utils.action_upgrade(params)
 
 

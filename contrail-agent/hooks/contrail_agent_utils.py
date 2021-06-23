@@ -20,6 +20,7 @@ from charmhelpers.core.hookenv import (
     relation_set,
     WARNING,
     ERROR,
+    function_get,
 )
 
 from charmhelpers.core.host import (
@@ -391,8 +392,8 @@ def action_upgrade(params):
     if not mode and not params["force"]:
         return
     log("Upgrade action params: {}".format(params))
-    stop_agent(params["stop_agent"])
     if mode == 'issu' or params["force"]:
+        stop_agent(params["stop_agent"])
         _run_services(get_context())
     elif mode == 'ziu':
         update_ziu("upgrade")
@@ -684,8 +685,8 @@ def ziu_stage_0(ziu_stage, trigger):
 def ziu_stage_5(ziu_stage, trigger):
     # wait for upgrade action and then signal
     if trigger == 'upgrade':
-        ctx = get_context()
-        _run_services(ctx)
+        stop_agent(function_get("stop-agent"))
+        _run_services(get_context())
         signal_ziu("ziu_done", ziu_stage)
 
 
