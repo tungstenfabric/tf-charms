@@ -187,6 +187,8 @@ def _update_tls(rid=None):
 
 @hooks.hook('tls-certificates-relation-joined')
 def tls_certificates_relation_joined():
+    # in cross-model rellations we have to provide own name to be sure that we'll find it in response
+    relation_set(unit_name=local_unit().replace('/', '_'))
     _update_tls(rid=relation_id())
 
 
