@@ -150,12 +150,11 @@ def get_context():
 
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
 
-    value = config.get("project_domain_name")
+    value = config.get("kubernetes_cluster_domain")
     if value:
-        ctx["keystone_project_domain_name"] = value
-    value = config.get("user_domain_name")
-    if value:
-        ctx["keystone_user_domain_name"] = value
+        ctx["kubernetes_cluster_domain"] = value
+    elif ctx.get("keystone_project_domain_name"):
+        ctx["kubernetes_cluster_domain"] = ctx["keystone_project_domain_name"]
 
     return ctx
 
