@@ -28,6 +28,7 @@ applications:
     charm: cs:~juniper-os-software/contrail-agent
     options:
       log-level: SYS_DEBUG
+      docker_runtime: auto
     annotations:
       gui-x: "357"
       gui-y: "-77.5254037844386"
@@ -39,6 +40,7 @@ applications:
     expose: true
     options:
       log-level: SYS_DEBUG
+      docker_runtime: auto
     annotations:
       gui-x: "629"
       gui-y: "-495.884757729337"
@@ -51,6 +53,7 @@ applications:
     options:
       cassandra-jvm-extra-opts: -Xms1g -Xmx2g
       cassandra-minimum-diskgb: "4"
+      docker_runtime: auto
       log-level: SYS_DEBUG
     annotations:
       gui-x: "17"
@@ -65,6 +68,7 @@ applications:
       auth-mode: rbac
       cassandra-jvm-extra-opts: -Xms1g -Xmx2g
       cassandra-minimum-diskgb: "4"
+      docker_runtime: auto
       log-level: SYS_DEBUG
     annotations:
       gui-x: "325"
@@ -84,6 +88,7 @@ applications:
       ip_fabric_snat: true
       log-level: SYS_DEBUG
       service_subnets: 10.96.0.0/12
+      docker_runtime: auto
     annotations:
       gui-x: "-179"
       gui-y: "-285.47453518040516"
@@ -91,11 +96,15 @@ applications:
     charm: cs:~juniper-os-software/contrail-kubernetes-node
     options:
       log-level: SYS_DEBUG
+      docker_runtime: auto
     annotations:
       gui-x: "-583"
       gui-y: "-274.29485820795605"
   contrail-openstack:
     charm: cs:~juniper-os-software/contrail-openstack
+    options:
+      log-level: SYS_DEBUG
+      docker_runtime: auto
     annotations:
       gui-x: "813"
       gui-y: "-319.1152422706632"
@@ -345,14 +354,8 @@ applications:
     annotations:
       gui-x: "473"
       gui-y: "615.2949192431122"
-  docker:
-    charm: cs:~containers/docker-59
-    options:
-      docker_runtime: custom
-      docker_runtime_key_url: https://download.docker.com/linux/ubuntu/gpg
-      docker_runtime_package: docker-ce
-      docker_runtime_repo: deb [arch={ARCH}] https://download.docker.com/linux/ubuntu
-        {CODE} stable
+  containerd:
+    charm: cs:~containers/containerd-80
     annotations:
       gui-x: "-395"
       gui-y: "171.2949192431122"
@@ -375,8 +378,8 @@ relations:
 - [ kubernetes-master:etcd, etcd:db ]
 - [ kubernetes-worker:certificates, easyrsa:client ]
 - [ etcd:certificates, easyrsa:client ]
-- [ kubernetes-master:container-runtime, docker:docker ]
-- [ kubernetes-worker:container-runtime, docker:docker ]
+- [ kubernetes-master:container-runtime, containerd:containerd ]
+- [ kubernetes-worker:container-runtime, containerd:containerd ]
 
 # openstack
 - [ nova-compute:amqp, rabbitmq-server:amqp ]
