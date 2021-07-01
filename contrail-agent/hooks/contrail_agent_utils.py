@@ -288,8 +288,12 @@ def update_charm_status():
     fix_dns_settings()
 
     if config.get("maintenance"):
-        log("Maintenance is in progress")
-        common_utils.update_services_status(MODULE, SERVICES)
+        log("ISSU Maintenance is in progress")
+        status_set('maintenance', 'ISSU is in progress')
+        return
+    if int(config.get("ziu", -1)) > -1:
+        log("ZIU Maintenance is in progress")
+        status_set('maintenance', 'ZIU is in progress')
         return
 
     ctx = get_context()
@@ -388,7 +392,7 @@ def remove_created_files():
 
 
 def action_upgrade(params):
-    mode = config.get("maintenance")
+    mode = "ziu" if int(config.get("ziu", -1)) > -1 else config.get("maintenance")
     if not mode and not params["force"]:
         return
     log("Upgrade action params: {}".format(params))

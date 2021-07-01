@@ -100,8 +100,6 @@ def contrail_controller_changed():
     maintenance = None
     if "maintenance" in data:
         maintenance = "issu"
-    if "ziu" in data or "ziu_done" in data:
-        maintenance = "ziu"
     if maintenance:
         config["maintenance"] = maintenance
     else:
@@ -156,7 +154,7 @@ def _update_tls(rid=None):
 
 @hooks.hook('tls-certificates-relation-joined')
 def tls_certificates_relation_joined():
-    # in cross-model rellations we have to provide own name to be sure that we'll find it in response
+    # in cross-model relations we have to provide own name to be sure that we'll find it in response
     relation_set(unit_name=local_unit().replace('/', '_'))
     _update_tls(rid=relation_id())
 
