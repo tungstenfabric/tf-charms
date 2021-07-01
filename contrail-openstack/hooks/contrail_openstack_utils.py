@@ -16,6 +16,7 @@ from charmhelpers.core.hookenv import (
     log,
     WARNING,
     INFO,
+    ERROR,
     relation_ids,
     relation_get,
     related_units,
@@ -31,48 +32,6 @@ from charmhelpers.core.templating import render
 
 config = config()
 
-
-PACKAGE_CODENAMES = {
-    'nova': {
-        12: 'liberty',
-        13: 'mitaka',
-        14: 'newton',
-        15: 'ocata',
-        16: 'pike',
-        17: 'queens',
-        18: 'rocky',
-        19: 'stein',
-        20: 'train',
-        21: 'ussuri',
-        22: 'victoria',
-    },
-    'neutron': {
-        7: 'liberty',
-        8: 'mitaka',
-        9: 'newton',
-        10: 'ocata',
-        11: 'pike',
-        12: 'queens',
-        13: 'rocky',
-        14: 'stein',
-        15: 'train',
-        16: 'ussuri',
-        17: 'victoria',
-    },
-    'heat': {
-        5: 'liberty',
-        6: 'mitaka',
-        7: 'newton',
-        8: 'ocata',
-        9: 'pike',
-        10: 'queens',
-        11: 'rocky',
-        12: 'stein',
-        13: 'train',
-        14: 'ussuri',
-        15: 'victoria',
-    },
-}
 
 # for each plugin dictionary:
 # key - destination path. must be existing folder.
@@ -269,9 +228,14 @@ def get_component_sys_paths(component):
                         component]).decode('UTF-8')
 
 
-def deploy_openstack_code(image, component, env_dict=None):
+def deploy_openstack_code(image, component):
+    log("Deploy openstack code for {} from {}".format(component, image))
     tag = config.get('image-tag')
-    docker_utils.pull(image, tag)
+    try:
+        docker_utils.pull(image, tag)
+    except Exception as e:
+        log("Can't load image {}".format(e), level=ERROR)
+        raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
 
     # remove previous attempt
     docker_utils.remove_container_by_image(image)
@@ -298,6 +262,8 @@ def deploy_openstack_code(image, component, env_dict=None):
                     raise
                 for folder in files[item][1]:
                     try:
+                        # old case for version<1912
+                        # there we had different structure in init containers
                         docker_utils.cp(name, folder, dst)
                     except Exception:
                         pass
@@ -312,7 +278,7 @@ def deploy_openstack_code(image, component, env_dict=None):
 
 
 def nova_patch():
-    version = get_openstack_version_codename('nova')
+    version = get_openstack_component_version('nova')
     if version != 15:
         # patch is required only for Ocata.
         # lower versions are not supported.
@@ -363,9 +329,9 @@ def configure_apparmor():
     check_call(["/etc/init.d/apparmor", "reload"])
 
 
-def get_openstack_version_codename(dist):
+def get_openstack_component_version(dist):
     try:
-        version = check_output(['./files/get_openstack_version_codename.sh',
+        version = check_output(['./files/get_openstack_component_version.sh',
                                 dist]).decode('UTF-8')
         if not version:
             log("Version of {} couldn't be detected.".format(dist), level=WARNING)

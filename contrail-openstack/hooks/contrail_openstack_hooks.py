@@ -21,6 +21,7 @@ from charmhelpers.core.hookenv import (
     is_leader,
     unit_private_ip,
 )
+from charmhelpers.core.host import service_restart
 
 import common_utils
 import contrail_openstack_utils as utils
@@ -42,11 +43,12 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     notify_nova = False
+    tag_changed = config.changed("image-tag")
     changed = docker_utils.config_changed()
-    if changed or config.changed("image-tag"):
+    if changed or tag_changed:
         notify_nova = True
-        _notify_neutron()
-        _notify_heat()
+        _notify_neutron(redeploy=True)
+        _notify_heat(redeploy=True)
 
     if is_leader():
         _configure_metadata_shared_secret()
@@ -55,7 +57,7 @@ def config_changed():
     _notify_controller()
 
     if notify_nova:
-        _notify_nova()
+        _notify_nova(redeploy=True)
 
 
 @hooks.hook("leader-elected")
@@ -193,12 +195,14 @@ def _get_orchestrator_info():
     return {"orchestrator-info": json.dumps(info)}
 
 
-def _notify_heat(rid=None):
+def _notify_heat(rid=None, redeploy=False):
     rids = [rid] if rid else relation_ids("heat-plugin")
     if not rids:
         return
 
-    utils.deploy_openstack_code("contrail-openstack-heat-init", "heat")
+    if redeploy:
+        utils.deploy_openstack_code("contrail-openstack-heat-init", "heat")
+        service_restart('heat-engine')
 
     plugin_path = utils.get_component_sys_paths("heat") + "/vnc_api/gen/heat/resources"
     plugin_dirs = config.get("heat-plugin-dirs")
@@ -239,20 +243,20 @@ def _notify_heat(rid=None):
 
 @hooks.hook("heat-plugin-relation-joined")
 def heat_plugin_joined():
-    _notify_heat(rid=relation_id())
+    _notify_heat(rid=relation_id(), redeploy=True)
 
 
-def _notify_neutron(rid=None):
+def _notify_neutron(rid=None, redeploy=False):
     rids = [rid] if rid else relation_ids("neutron-api")
     if not rids:
         return
 
-    version = utils.get_openstack_version_codename('neutron')
-    utils.deploy_openstack_code(
-        "contrail-openstack-neutron-init", "neutron",
-        {"OPENSTACK_VERSION": utils.PACKAGE_CODENAMES['neutron'][version]})
+    if redeploy:
+        utils.deploy_openstack_code("contrail-openstack-neutron-init", "neutron")
+        service_restart('neutron-server')
 
     # create plugin config
+    version = utils.get_openstack_component_version('neutron')
     contrail_version = common_utils.get_contrail_version()
     plugin_path = utils.get_component_sys_paths("neutron")
     base = "neutron_plugin_contrail.plugins.opencontrail"
@@ -307,14 +311,14 @@ def _notify_neutron(rid=None):
 
 @hooks.hook("neutron-api-relation-joined")
 def neutron_api_joined():
-    _notify_neutron(rid=relation_id())
+    _notify_neutron(rid=relation_id(), redeploy=True)
 
     # if this hook raised after contrail-controller we need
     # to overwrite default config file after installation
     utils.write_configs()
 
 
-def _notify_nova(rid=None):
+def _notify_nova(rid=None, redeploy=True):
     rids = [rid] if rid else relation_ids("nova-compute")
     if not rids:
         return
@@ -322,7 +326,10 @@ def _notify_nova(rid=None):
     # add apparmor exception for contrail/ports/
     utils.configure_apparmor()
 
-    utils.deploy_openstack_code("contrail-openstack-compute-init", "nova")
+    if redeploy:
+        utils.deploy_openstack_code("contrail-openstack-compute-init", "nova")
+        service_restart('nova-compute')
+
     # create plugin config
     sections = {
         "DEFAULT": [
@@ -349,7 +356,7 @@ def _notify_nova(rid=None):
 @hooks.hook("nova-compute-relation-joined")
 def nova_compute_joined():
     utils.nova_patch()
-    _notify_nova(rid=relation_id())
+    _notify_nova(rid=relation_id(), redeploy=True)
 
 
 @hooks.hook("update-status")
