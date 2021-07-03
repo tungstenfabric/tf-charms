@@ -7,3 +7,11 @@ options:
       to keystone - this is only required if you are providing a privately
       signed ssl_cert and ssl_key.
       This certificate will be provided to Contrail's keystone clients.
+  region:
+    type: string
+    description: |
+      Defines a keystone region that contrail-controller has to operate in,
+      this is necessary in scenario with multi-region keystone setup because
+      keystone would report all defined regions. But TF's control plane needs
+      to know which one has to be used thus desired keystone region has be to
+      checked against a list of regions provided by keystone for match.
