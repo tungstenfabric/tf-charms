@@ -232,7 +232,7 @@ def compose_kill(path, signal, service=None):
     check_call(cmd)
 
 
-def _get_container_id(path, service):
+def get_container_id(path, service):
     cmd = [DOCKER_COMPOSE_CLI, "-f", path, "ps", "-q", service]
     try:
         cnt_id = check_output(cmd).decode('UTF-8').rstrip().strip("'")
@@ -248,7 +248,7 @@ def _get_container_id(path, service):
 def get_container_state(path, service):
     # returns None or State dict from docker
     # status must be None when compose returns error or empty ID for service
-    cnt_id = _get_container_id(path, service)
+    cnt_id = get_container_id(path, service)
     if not cnt_id:
         return None
     try:
@@ -318,7 +318,7 @@ def create(image, tag):
 
 
 def restart_container(path, service):
-    cnt_id = _get_container_id(path, service)
+    cnt_id = get_container_id(path, service)
     if not cnt_id:
         return None
     cmd = [DOCKER_CLI, "restart", cnt_id]

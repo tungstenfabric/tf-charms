@@ -239,19 +239,20 @@ def _update_charm_status(ctx, services_to_run=None):
 
 
 def _has_provisioning_finished():
-    result_config = _has_provisioning_finished_for_container("configapi_provisioner_1", CONFIG_API_CONFIGS_PATH)
+    result_config = _has_provisioning_finished_for_container(CONFIG_API_CONFIGS_PATH)
     log("Readyness of provisioner for configapi: {}".format(result_config))
     # TODO: remove checking of contol for R2008 when provisioner will be ready
-    result_control = _has_provisioning_finished_for_container("control_provisioner_1", CONTROL_CONFIGS_PATH)
+    result_control = _has_provisioning_finished_for_container(CONTROL_CONFIGS_PATH)
     log("Readyness of provisioner for control: {}".format(result_control))
 
     return result_config and result_control
 
 
-def _has_provisioning_finished_for_container(name, configs_path):
+def _has_provisioning_finished_for_container(configs_path):
+    cnt_id = docker_utils.get_container_id(configs_path + "/docker-compose.yaml", "provisioner")
     try:
         # check tail first. for R2008 and further this should work
-        data = docker_utils.execute(name, ['ps', '-ax'])
+        data = docker_utils.execute(cnt_id, ['ps', '-ax'])
         return '/provision.sh' not in data
     except Exception:
         pass
