@@ -632,6 +632,8 @@ def update_status():
 
 @hooks.hook("upgrade-charm")
 def upgrade_charm():
+    if utils.has_provisioning_finished():
+        config['apply-defaults'] = False
     utils.update_charm_status()
     config_changed()
     update_northbound_relations()

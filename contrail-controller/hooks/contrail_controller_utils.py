@@ -234,11 +234,11 @@ def _update_charm_status(ctx, services_to_run=None):
 
     common_utils.update_services_status(MODULE, SERVICES)
 
-    if _has_provisioning_finished():
+    if has_provisioning_finished():
         config['apply-defaults'] = False
 
 
-def _has_provisioning_finished():
+def has_provisioning_finished():
     result_config = _has_provisioning_finished_for_container(CONFIG_API_CONFIGS_PATH)
     log("Readyness of provisioner for configapi: {}".format(result_config))
     # TODO: remove checking of contol for R2008 when provisioner will be ready
