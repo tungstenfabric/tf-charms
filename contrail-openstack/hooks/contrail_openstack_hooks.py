@@ -43,7 +43,8 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     notify_nova = False
-    tag_changed = config.changed("image-tag")
+    tag_changed = config.get("saved-image-tag") != config["image-tag"]
+    log("saved-image-tag = {}, current image-tag = {}".format(config.get("saved-image-tag"), config.get("image-tag")))
     changed = docker_utils.config_changed()
     if changed or tag_changed:
         notify_nova = True
@@ -58,6 +59,8 @@ def config_changed():
 
     if notify_nova:
         _notify_nova(redeploy=True)
+
+    config["saved-image-tag"] = config["image-tag"]
 
 
 @hooks.hook("leader-elected")
@@ -201,8 +204,11 @@ def _notify_heat(rid=None, redeploy=False):
         return
 
     if redeploy:
+        log("Redeploy code for heat-engine")
         utils.deploy_openstack_code("contrail-openstack-heat-init", "heat")
         service_restart('heat-engine')
+    else:
+        log("Redeploy flag is false.")
 
     plugin_path = utils.get_component_sys_paths("heat") + "/vnc_api/gen/heat/resources"
     plugin_dirs = config.get("heat-plugin-dirs")
@@ -252,8 +258,11 @@ def _notify_neutron(rid=None, redeploy=False):
         return
 
     if redeploy:
+        log("Redeploy code for neutron-server")
         utils.deploy_openstack_code("contrail-openstack-neutron-init", "neutron")
         service_restart('neutron-server')
+    else:
+        log("Redeploy flag is false.")
 
     # create plugin config
     version = utils.get_openstack_component_version('neutron')
@@ -318,7 +327,7 @@ def neutron_api_joined():
     utils.write_configs()
 
 
-def _notify_nova(rid=None, redeploy=True):
+def _notify_nova(rid=None, redeploy=False):
     rids = [rid] if rid else relation_ids("nova-compute")
     if not rids:
         return
@@ -327,8 +336,11 @@ def _notify_nova(rid=None, redeploy=True):
     utils.configure_apparmor()
 
     if redeploy:
+        log("Redeploy code for nova-compute")
         utils.deploy_openstack_code("contrail-openstack-compute-init", "nova")
         service_restart('nova-compute')
+    else:
+        log("Redeploy flag is false.")
 
     # create plugin config
     sections = {
@@ -381,6 +393,7 @@ def upgrade_charm():
     _notify_neutron()
     _notify_heat()
     _notify_controller()
+    config["saved-image-tag"] = config["image-tag"]
 
 
 def main():
