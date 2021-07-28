@@ -1,7 +1,6 @@
 #!/bin/bash -ex
 
-my_file="$(readlink -e "$0")"
-my_dir="$(dirname $my_file)"
+my_dir=$(realpath $(dirname "$0"))
 
 bundle="$1"
 if [ ! -f "$my_dir/../examples/$bundle/bundle.yaml" ]; then

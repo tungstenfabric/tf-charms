@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
-my_file="$(readlink -e "$0")"
-my_dir="$(dirname $my_file)"
+my_dir=$(realpath $(dirname "$0"))
 
 function write_repo_info() {
   local folder=$1
