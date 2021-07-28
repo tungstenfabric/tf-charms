@@ -118,6 +118,7 @@ def identity_admin_changed():
         auth_info = json.dumps(auth_info)
         config["auth_info"] = auth_info
         # save list of regions in case of multi-region setup
+        # service_region is a space-separated string in that case
         config["service_region"] = relation_get("service_region")
     else:
         config.pop("auth_info", None)
@@ -135,7 +136,7 @@ def identity_admin_departed():
     if count > 0:
         return
     config.pop("auth_info", None)
-    config.pop("service_region")
+    config.pop("service_region", None)
 
     update_relations()
     update_status()
@@ -148,6 +149,24 @@ def update_status():
         status_set('blocked', 'Missing relations: identity')
     else:
         status_set("active", "Unit is ready")
+
+
+@hooks.hook("upgrade-charm")
+def upgrade_charm():
+    # previosly it was stored in auth_info only
+    # new code searchs for it in separate field
+    region = config.get("service_region")
+    if region:
+        return
+
+    auth_info = config.get("auth_info")
+    if not auth_info:
+        return
+    data = json.loads(auth_info)
+    config["service_region"] = data.pop("keystone_region")
+    auth_info = json.dumps(auth_info)
+    config["auth_info"] = auth_info
+    config.save()
 
 
 def main():
