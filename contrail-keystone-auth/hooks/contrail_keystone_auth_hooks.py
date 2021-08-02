@@ -164,7 +164,7 @@ def upgrade_charm():
         return
     data = json.loads(auth_info)
     config["service_region"] = data.pop("keystone_region")
-    auth_info = json.dumps(auth_info)
+    auth_info = json.dumps(data)
     config["auth_info"] = auth_info
     config.save()
 
