@@ -267,3 +267,10 @@ options:
     type: string
     description: |
       VIP of xflow servicegroups.
+  vrouter-module-options:
+    type: string
+    description: |
+      Vrouter kernel module options.
+      This string is passed to agent container as env variable VROUTER_MODULE_OPTIONS.
+      Format is "<parameter>=<value> <parameter>=<value>"
+      E.g. "vr_flow_hold_limit=8196 vr_mpls_labels=196000 vr_nexthops=521000 vr_vrfs=65536"
