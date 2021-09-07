@@ -118,7 +118,7 @@ applications:
     expose: true
     options:
       authorization-mode: Node,RBAC
-      channel: 1.20/stable
+      channel: 1.21/stable
       enable-dashboard-addons: false
       enable-keystone-authorization: true
       enable-metrics: false
@@ -198,7 +198,7 @@ applications:
     to:
     - "2"
     options:
-      channel: 1.20/stable
+      channel: 1.21/stable
       ingress: false
     annotations:
       gui-x: "-595"
