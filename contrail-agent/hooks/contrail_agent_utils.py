@@ -37,7 +37,6 @@ from charmhelpers.core import sysctl
 from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.templating import render
 import common_utils
-import docker_utils
 
 
 MODULE = "agent"
@@ -242,7 +241,7 @@ def get_context():
         ctx["analytics_servers"] = common_utils.json_loads(config.get("issu_analytics_ips"), list())
         # orchestrator_info and auth_info can be taken from old relation
 
-    ctx["logging"] = docker_utils.render_logging()
+    ctx["logging"] = common_utils.container_engine().render_logging()
     log("CTX: " + str(ctx))
 
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
@@ -265,22 +264,22 @@ def compile_kernel_modules():
         return
 
     path = CONFIGS_PATH + "/docker-compose.yaml"
-    state = docker_utils.get_container_state(path, "vrouter-kernel-init")
+    state = common_utils.container_engine().get_container_state(path, "vrouter-kernel-init")
     if state and state.get('Status', '').lower() != 'running':
-        docker_utils.restart_container(path, "vrouter-kernel-init")
+        common_utils.container_engine().restart_container(path, "vrouter-kernel-init")
 
 
 def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES + (IMAGES_DPDK if config["dpdk"] else IMAGES_KERNEL):
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
     for image in IMAGES_OPTIONAL:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load optional image {}".format(e))
 
@@ -311,6 +310,8 @@ def _check_readyness(ctx):
         missing_relations.append("vrouter-plugin")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -353,7 +354,7 @@ def _run_services(ctx):
         "vrouter.env",
         BASE_CONFIGS_PATH + "/common_vrouter.env", ctx)
     changed |= common_utils.render_and_log("vrouter.yaml", CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     if is_reboot_required():
         status_set('blocked',
@@ -365,15 +366,15 @@ def _run_services(ctx):
 def stop_agent(stop_agent=True):
     path = CONFIGS_PATH + "/docker-compose.yaml"
     if stop_agent:
-        docker_utils.compose_kill(path, "SIGQUIT", "vrouter-agent")
+        common_utils.container_engine().compose_kill(path, "SIGQUIT", "vrouter-agent")
         # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
         for i in range(0, 12):
-            state = docker_utils.get_container_state(path, "vrouter-agent")
+            state = common_utils.container_engine().get_container_state(path, "vrouter-agent")
             if not state or state.get('Status', '').lower() != 'running':
                 break
         else:
             raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and re-run operation.")
-    docker_utils.compose_down(path)
+    common_utils.container_engine().compose_down(path)
     # remove all built vrouter.ko
     modules = '/lib/modules'
     for item in os.listdir(modules):

@@ -20,7 +20,6 @@ from charmhelpers.core.hookenv import (
 
 import contrail_agent_utils as utils
 import common_utils
-import docker_utils
 
 hooks = Hooks()
 config = config()
@@ -38,7 +37,7 @@ def install():
         if utils.is_reboot_required():
             utils.reboot()
 
-    docker_utils.install()
+    common_utils.container_engine().install()
     if config["dpdk"]:
         utils.fix_libvirt()
     utils.update_charm_status()
@@ -52,10 +51,12 @@ def config_changed():
         raise Exception("Configuration parameter dpdk couldn't be changed")
     if config.changed("l3mh-cidr"):
         raise Exception("Configuration parameter l3mh-cidr couldn't be changed")
+    if config.changed("container_runtime"):
+        raise Exception("Configuration parameter container_runtime couldn't be changed")
 
     if not config["dpdk"]:
         utils.prepare_hugepages_kernel_mode()
-    docker_utils.config_changed()
+    common_utils.container_engine().config_changed()
     utils.pull_images()
     utils.update_charm_status()
 
@@ -170,6 +171,23 @@ def tls_certificates_relation_changed():
 def tls_certificates_relation_departed():
     config['tls_present'] = False
     common_utils.tls_changed(utils.MODULE, None)
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-joined')
+@hooks.hook('container-runtime-relation-changed')
+def container_runtime_relation_changed():
+    data = relation_get()
+    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
+        config['containerd_present'] = True
+    else:
+        config['containerd_present'] = False
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-departed')
+def container_runtime_relation_departed():
+    config['containerd_present'] = False
     utils.update_charm_status()
 
 
