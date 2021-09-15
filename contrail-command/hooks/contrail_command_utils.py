@@ -105,6 +105,25 @@ def pull_images():
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
 
 
+def get_proxy_env():
+    http_proxy = config.get("http_proxy")
+    https_proxy = config.get("https_proxy")
+    no_proxy = config.get("no_proxy")
+
+    env = {}
+    if http_proxy:
+        env["http_proxy"] = http_proxy
+    if https_proxy:
+        env["https_proxy"] = https_proxy
+    command_ip = common_utils.get_ip()
+    if no_proxy:
+        env["no_proxy"] = no_proxy + "," + command_ip + "/32"
+    else:
+        env["no_proxy"] = command_ip + "/32"
+
+    return env
+
+
 def update_charm_status():
     tag = config.get('image-tag')
     ctx = get_context()
@@ -117,10 +136,13 @@ def update_charm_status():
         return
 
     changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
+    if config.changed("http_proxy") or config.changed("https_proxy") or config.changed("no_proxy"):
+        changed = True
 
     if changed or not config.get("command_deployed"):
+        env = get_proxy_env()
         dst = '/' + deployer_image + '/docker/deploy_contrail_command'
-        check_call('./files/deploy_contrail_command.sh ' + dst, shell=True)
+        check_call('./files/deploy_contrail_command.sh ' + dst, shell=True, env=env)
         config["command_deployed"] = True
 
     update_status()
@@ -138,9 +160,10 @@ def import_cluster(juju_params):
 
     common_utils.render_and_log('juju_environment', '/tmp/juju_environment', juju_params)
     deployer_image = "contrail-command-deployer"
+    env = get_proxy_env()
     dst = '/' + deployer_image + '/docker/deploy_contrail_command'
     try:
-        check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst, shell=True)
+        check_call('. /tmp/juju_environment ; ./files/deploy_contrail_command.sh ' + dst, shell=True, env=env)
         status_set('active', 'Cluster is imported')
     except Exception as e:
         return False, 'Import failed ({}). Please check logs'.format(e)
