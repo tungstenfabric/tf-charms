@@ -82,7 +82,7 @@ def update_status():
 
     try:
         output = check_output(
-            "curl -k https://{}:8079 | grep '<title>'".format(command_ip),
+            "curl -sSk https://{}:8079 | grep '<title>'".format(command_ip),
             shell=True).decode('UTF-8')
     except Exception:
         status_set("waiting", "URL is not ready {}:8079".format(command_ip))
@@ -110,7 +110,7 @@ def get_proxy_env():
     https_proxy = config.get("https_proxy")
     no_proxy = config.get("no_proxy")
 
-    env = {}
+    env = os.environ.copy()
     if http_proxy:
         env["http_proxy"] = http_proxy
     if https_proxy:
