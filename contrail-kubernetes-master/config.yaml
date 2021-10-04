@@ -108,6 +108,12 @@ options:
       "KUBERNESTES_NESTED_VROUTER_VIP": "10.10.10.5"
       }
 
+  container_runtime:
+    type: string
+    default: docker
+    description: |
+      Container runtime valid values are "docker" and "containerd".
+      Warning! The changes will not be applied after the package is installed.
   docker_runtime:
     type: string
     default: upstream

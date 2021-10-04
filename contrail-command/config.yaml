@@ -13,7 +13,12 @@ options:
       This network will be used for all services in the charm.
       In Contrail this network is called as API(/MGMT) network.
       If not specified, default network will be used.
-
+  container_runtime:
+    type: string
+    default: docker
+    description: |
+      Container runtime valid values are "docker" and "containerd".
+      Warning! The changes will not be applied after the package is installed.
   docker_runtime:
     type: string
     default: upstream

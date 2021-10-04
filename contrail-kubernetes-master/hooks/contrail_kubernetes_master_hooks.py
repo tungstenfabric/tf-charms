@@ -22,7 +22,6 @@ from charmhelpers.core.hookenv import (
 
 import contrail_kubernetes_master_utils as utils
 import common_utils
-import docker_utils
 
 
 hooks = Hooks()
@@ -36,7 +35,7 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
-    docker_utils.install()
+    common_utils.container_engine().install()
     status_set("blocked", "Missing relation to contrail-controller")
 
 
@@ -59,6 +58,9 @@ def leader_elected():
 
 @hooks.hook("config-changed")
 def config_changed():
+    # Charm doesn't support changing of some parameters.
+    if config.changed("container_runtime"):
+        raise Exception("Configuration parameter container_runtime couldn't be changed")
     if config.changed("nested_mode"):
         raise Exception('Nested mode cannot be changed after deployment.')
     # TODO: analyze other params and raise exception if readonly params were changed
@@ -76,7 +78,7 @@ def config_changed():
             config.changed("pod_subnets")):
         _notify_controller()
 
-    docker_utils.config_changed()
+    common_utils.container_engine().config_changed()
     utils.pull_images()
     utils.update_charm_status()
 
@@ -181,6 +183,23 @@ def cluster_departed():
     leader_set(settings=settings)
 
     _notify_controller()
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-joined')
+@hooks.hook('container-runtime-relation-changed')
+def container_runtime_relation_changed():
+    data = relation_get()
+    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
+        config['containerd_present'] = True
+    else:
+        config['containerd_present'] = False
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-departed')
+def container_runtime_relation_departed():
+    config['containerd_present'] = False
     utils.update_charm_status()
 
 

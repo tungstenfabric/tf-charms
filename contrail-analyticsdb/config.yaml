@@ -28,6 +28,12 @@ options:
     description: |
       Log level for contrail services. Valid values are:
       SYS_EMERG, SYS_ALERT, SYS_CRIT, SYS_ERR, SYS_WARN, SYS_NOTICE, SYS_INFO, SYS_DEBUG
+  container_runtime:
+    type: string
+    default: docker
+    description: |
+      Container runtime valid values are "docker" and "containerd".
+      Warning! The changes will not be applied after the package is installed.
   docker_runtime:
     type: string
     default: upstream

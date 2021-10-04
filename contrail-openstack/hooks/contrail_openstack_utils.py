@@ -10,7 +10,6 @@ import requests
 from six.moves.urllib.parse import urlparse
 
 import common_utils
-import docker_utils
 from charmhelpers.core.hookenv import (
     config,
     log,
@@ -22,6 +21,7 @@ from charmhelpers.core.hookenv import (
     related_units,
     leader_get,
     leader_set,
+    status_set,
     application_version_set,
 )
 from charmhelpers.core.host import (
@@ -228,21 +228,30 @@ def get_component_sys_paths(component):
                         component]).decode('UTF-8')
 
 
+def _check_readyness():
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        status_set('blocked', 'Missing or incomplete relations: containerd')
+        return False
+    return True
+
+
 def deploy_openstack_code(image, component):
+    if not _check_readyness():
+        return
     log("Deploy openstack code for {} from {}".format(component, image))
     tag = config.get('image-tag')
     try:
-        docker_utils.pull(image, tag)
+        common_utils.container_engine().pull(image, tag)
     except Exception as e:
         log("Can't load image {}".format(e), level=ERROR)
         raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
 
     # remove previous attempt
-    docker_utils.remove_container_by_image(image)
+    common_utils.container_engine().remove_container_by_image(image)
 
     path = get_component_sys_paths(component)
     files = PLUGIN_FILES[component]
-    name = docker_utils.create(image, tag)
+    name = common_utils.container_engine().create(image, tag)
     try:
         for item in files:
             dst = item.format(python_path=path)
@@ -254,7 +263,7 @@ def deploy_openstack_code(image, component):
                 # docker copies content of src folder if dst folder is not present
                 # and directory itself if dst is present
                 # therefore we copy content from container into tmp and then content of tmp into dst
-                docker_utils.cp(name, src, tmp_folder)
+                common_utils.container_engine().cp(name, src, tmp_folder)
                 copy_tree(tmp_folder, dst)
                 shutil.rmtree(tmp_folder, ignore_errors=True)
             except Exception:
@@ -264,14 +273,14 @@ def deploy_openstack_code(image, component):
                     try:
                         # old case for version<1912
                         # there we had different structure in init containers
-                        docker_utils.cp(name, folder, dst)
+                        common_utils.container_engine().cp(name, folder, dst)
                     except Exception:
                         pass
     finally:
-        docker_utils.remove_container_by_image(image)
+        common_utils.container_engine().remove_container_by_image(image)
 
     try:
-        version = docker_utils.get_contrail_version(image, tag)
+        version = common_utils.container_engine().get_contrail_version(image, tag)
         application_version_set(version)
     except CalledProcessError as e:
         log("Couldn't detect installed application version: " + str(e))

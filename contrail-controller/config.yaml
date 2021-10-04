@@ -80,6 +80,12 @@ options:
     description: |
       Defines how much flow records will be exported by vRouter agent
       to the Contrail Collector when a flow is created or deleted.
+  container_runtime:
+    type: string
+    default: docker
+    description: |
+      Container runtime valid values are "docker" and "containerd".
+      Warning! The changes will not be applied after the package is installed.
   docker_runtime:
     type: string
     default: upstream

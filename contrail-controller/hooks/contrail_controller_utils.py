@@ -21,7 +21,6 @@ from charmhelpers.core.hookenv import (
 from charmhelpers.contrib.charmsupport import nrpe
 from charmhelpers.core.unitdata import kv
 import common_utils
-import docker_utils
 
 config = config()
 
@@ -142,7 +141,7 @@ def get_context():
     ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else ''
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["use_internal_endpoints"] = config.get("use_internal_endpoints", False)
-    ctx["logging"] = docker_utils.render_logging()
+    ctx["logging"] = common_utils.container_engine().render_logging()
 
     ips = common_utils.json_loads(leader_get("controller_ip_list"), list())
     data_ips = common_utils.json_loads(leader_get("controller_data_ip_list"), list())
@@ -158,13 +157,13 @@ def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
     for image in IMAGES_OPTIONAL:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load optional image {}".format(e))
 
@@ -193,6 +192,8 @@ def _update_charm_status(ctx, services_to_run=None):
         missing_relations.append("contrail-cluster")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -217,20 +218,20 @@ def _update_charm_status(ctx, services_to_run=None):
     changed = changed_dict["common"]
 
     service_changed = changed_dict["config-api"]
-    docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["config-database"]
-    docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["control"]
-    docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     service_changed = changed_dict["webui"]
-    docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     # redis is a common service that needs own synchronized env
     service_changed = changed_dict["redis"]
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
 
@@ -249,16 +250,16 @@ def has_provisioning_finished():
 
 
 def _has_provisioning_finished_for_container(configs_path):
-    cnt_id = docker_utils.get_container_id(configs_path + "/docker-compose.yaml", "provisioner")
+    cnt_id = common_utils.container_engine().get_container_id(configs_path + "/docker-compose.yaml", "provisioner")
     try:
         # check tail first. for R2008 and further this should work
-        data = docker_utils.execute(cnt_id, ['ps', '-ax'])
+        data = common_utils.container_engine().execute(cnt_id, ['ps', '-ax'])
         return '/provision.sh' not in data
     except Exception:
         pass
     try:
         # for R2005 let's check exit status
-        state = docker_utils.get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
+        state = common_utils.container_engine().get_container_state(configs_path + "/docker-compose.yaml", "provisioner")
         if not state:
             return False
         if state.get('Status').lower() == 'running':
@@ -501,14 +502,14 @@ def update_nrpe_config():
 
 
 def stop_controller():
-    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
 
     # TODO: Redis is common service. We can't stop it here.
     if os.path.exists(REDIS_CONFIGS_PATH + "/docker-compose.yaml"):
-        docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+        common_utils.container_engine().compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
 
 
 def remove_created_files():
@@ -661,9 +662,9 @@ def ziu_stage_0(ziu_stage, trigger):
 
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
-    docker_utils.compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
     signal_ziu("ziu_done", ziu_stage)
 
 
@@ -671,9 +672,9 @@ def ziu_stage_2(ziu_stage, trigger):
     # start API services
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
-    docker_utils.compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(CONFIG_API_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(WEBUI_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:
@@ -699,7 +700,7 @@ def ziu_stage_6(ziu_stage, trigger):
 def ziu_restart_control(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(CONTROL_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:
@@ -709,7 +710,7 @@ def ziu_restart_control(stage):
 def ziu_restart_db(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(CONFIG_DATABASE_CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:

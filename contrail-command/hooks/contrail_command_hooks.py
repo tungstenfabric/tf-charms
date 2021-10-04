@@ -18,7 +18,6 @@ from charmhelpers.core.hookenv import (
 
 import contrail_command_utils as utils
 import common_utils
-import docker_utils
 
 
 hooks = Hooks()
@@ -28,12 +27,15 @@ config = config()
 @hooks.hook("install.real")
 def install():
     status_set('maintenance', 'Installing...')
-    docker_utils.install()
+    common_utils.container_engine().install()
 
 
 @hooks.hook("config-changed")
 def config_changed():
-    docker_utils.config_changed()
+    # Charm doesn't support changing of some parameters.
+    if config.changed("container_runtime"):
+        raise Exception("Configuration parameter container_runtime couldn't be changed")
+    common_utils.container_engine().config_changed()
     utils.pull_images()
     utils.update_charm_status()
     update_https_relations()
@@ -97,6 +99,23 @@ def https_services_joined():
     if mode not in ("tcp", "http"):
         raise Exception("Invalid haproxy-https-mode: {}. Possible values: tcp or http".format(mode))
     update_https_relations(rid=relation_id())
+
+
+@hooks.hook('container-runtime-relation-joined')
+@hooks.hook('container-runtime-relation-changed')
+def container_runtime_relation_changed():
+    data = relation_get()
+    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
+        config['containerd_present'] = True
+    else:
+        config['containerd_present'] = False
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-departed')
+def container_runtime_relation_departed():
+    config['containerd_present'] = False
+    utils.update_charm_status()
 
 
 @hooks.hook("stop")

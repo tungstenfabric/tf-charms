@@ -15,7 +15,6 @@ from charmhelpers.core.hookenv import (
 )
 from charmhelpers.contrib.charmsupport import nrpe
 import common_utils
-import docker_utils
 
 
 config = config()
@@ -120,7 +119,7 @@ def get_context():
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    ctx["logging"] = docker_utils.render_logging()
+    ctx["logging"] = common_utils.container_engine().render_logging()
     ctx["contrail_version"] = common_utils.get_contrail_version()
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
@@ -139,13 +138,13 @@ def pull_images():
     images = IMAGES.get(ctx["contrail_version"], IMAGES.get(9999))
     for image in images:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
     for image in IMAGES_OPTIONAL:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load optional image {}".format(e))
 
@@ -174,6 +173,8 @@ def _update_charm_status(ctx):
         missing_relations.append("contrail-analytics")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -197,7 +198,7 @@ def _update_charm_status(ctx):
 
     changed_dict = _render_configs(ctx)
     changed = changed_dict["common"] or changed_dict["analytics-database"]
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
 
@@ -234,7 +235,7 @@ def update_nrpe_config():
 
 
 def stop_analyticsdb():
-    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIGS_PATH + "/docker-compose.yaml")
 
 
 def remove_created_files():
@@ -327,7 +328,7 @@ def ziu_stage_6(ziu_stage, trigger):
 def ziu_restart_db(stage):
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES.get(ctx["contrail_version"], SERVICES.get(9999)))
     if result:

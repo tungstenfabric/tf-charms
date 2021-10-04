@@ -29,7 +29,6 @@ from charmhelpers.core.unitdata import kv
 
 import contrail_controller_utils as utils
 import common_utils
-import docker_utils
 
 hooks = Hooks()
 config = config()
@@ -45,13 +44,16 @@ def install():
     if config.get('local-rabbitmq-hostname-resolution'):
         utils.update_rabbitmq_cluster_hostnames()
 
-    docker_utils.install()
+    common_utils.container_engine().install()
     utils.update_charm_status()
 
 
 @hooks.hook("config-changed")
 def config_changed():
     utils.update_nrpe_config()
+    # Charm doesn't support changing of some parameters.
+    if config.changed("container_runtime"):
+        raise Exception("Configuration parameter container_runtime couldn't be changed")
     auth_mode = config.get("auth-mode")
     if auth_mode not in ("rbac", "cloud-admin", "no-auth"):
         raise Exception("Config is invalid. auth-mode must one of: "
@@ -94,7 +96,7 @@ def config_changed():
             for ip, hostname in rabbitmq_hosts:
                 utils.update_hosts_file(ip, hostname, remove_hostname=True)
 
-    docker_utils.config_changed()
+    common_utils.container_engine().config_changed()
     utils.pull_images()
     utils.update_charm_status()
 
@@ -622,6 +624,23 @@ def contrail_issu_relation_changed():
     for name in ["rabbitmq_connection_details", "cassandra_connection_details", "zookeeper_connection_details"]:
         issu_data.update(common_utils.json_loads(rel_data.get(name), dict()))
     utils.update_issu_state(issu_data)
+
+
+@hooks.hook('container-runtime-relation-joined')
+@hooks.hook('container-runtime-relation-changed')
+def container_runtime_relation_changed():
+    data = relation_get()
+    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
+        config['containerd_present'] = True
+    else:
+        config['containerd_present'] = False
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-departed')
+def container_runtime_relation_departed():
+    config['containerd_present'] = False
+    utils.update_charm_status()
 
 
 @hooks.hook("update-status")

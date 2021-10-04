@@ -8,6 +8,10 @@ series:
   - bionic
   - focal
 subordinate: true
+provides:
+  container-runtime:
+    interface: container-runtime
+    scope: container
 requires:
   cni:
     interface: kubernetes-cni

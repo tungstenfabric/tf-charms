@@ -5,7 +5,6 @@ from charmhelpers.core.hookenv import (
     ERROR,
 )
 import common_utils
-import docker_utils
 
 
 config = config()
@@ -31,7 +30,7 @@ def get_context():
     if ctx["nested_mode"]:
         ctx["nested_mode_config"] = common_utils.json_loads(config.get("nested_mode_config"), dict())
 
-    ctx["logging"] = docker_utils.render_logging()
+    ctx["logging"] = common_utils.container_engine().render_logging()
 
     log("CTX: {}".format(ctx))
     return ctx
@@ -41,7 +40,7 @@ def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
@@ -49,19 +48,27 @@ def pull_images():
 
 def update_charm_status():
     ctx = get_context()
+    missing_relations = []
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
+    if missing_relations:
+        status_set('blocked',
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
+        return
+
     changed = common_utils.render_and_log(
         "cni.env",
         BASE_CONFIGS_PATH + "/common_cni.env", ctx)
     changed |= common_utils.render_and_log(
         "/contrail-cni.yaml",
         CONFIGS_PATH + "/docker-compose.yaml", ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed)
 
     status_set("active", "Unit is ready")
 
 
 def stop_kubernetes_node():
-    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIGS_PATH + "/docker-compose.yaml")
 
 
 def remove_created_files():

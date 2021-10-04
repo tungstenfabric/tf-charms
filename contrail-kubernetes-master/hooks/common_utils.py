@@ -8,7 +8,8 @@ from subprocess import CalledProcessError, check_call, check_output
 
 import netifaces
 
-import docker_utils
+import containerd_engine
+import docker_engine
 from charmhelpers.contrib.network.ip import (
     get_address_in_network,
     get_iface_addr
@@ -30,6 +31,20 @@ from charmhelpers.core.host import (
 from charmhelpers.core.templating import render
 
 config = config()
+
+_container_engine = None
+
+
+def container_engine():
+    global _container_engine
+    if _container_engine:
+        return _container_engine
+
+    if config.get("container_runtime", "docker") == "containerd":
+        _container_engine = containerd_engine.Containerd()
+    else:
+        _container_engine = docker_engine.Docker()
+    return _container_engine
 
 
 def get_ip(config_param="control-network", fallback=None):
@@ -181,8 +196,8 @@ def update_services_status(module, services):
     status_set("active", "Unit is ready")
     try:
         tag = config.get('image-tag')
-        docker_utils.pull("contrail-node-init", tag)
-        version = docker_utils.get_contrail_version("contrail-node-init", tag)
+        container_engine().pull("contrail-node-init", tag)
+        version = container_engine().get_contrail_version("contrail-node-init", tag)
         application_version_set(version)
     except CalledProcessError as e:
         log("Couldn't detect installed application version: " + str(e))

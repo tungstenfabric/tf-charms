@@ -13,7 +13,6 @@ from charmhelpers.core.hookenv import (
 )
 
 import common_utils
-import docker_utils
 from subprocess import (
     check_call,
     check_output
@@ -52,29 +51,29 @@ def get_context():
 
 
 def deploy_ccd_code(image, tag):
-    docker_utils.remove_container_by_image(image)
+    common_utils.container_engine().remove_container_by_image(image)
 
-    name = docker_utils.create(image, tag)
+    name = common_utils.container_engine().create(image, tag)
     try:
         src = '/' + image
         tmp_folder = os.path.join('/tmp', str(uuid.uuid4()))
-        docker_utils.cp(name, src, tmp_folder)
+        common_utils.container_engine().cp(name, src, tmp_folder)
         try:
             os.mkdir(tmp_folder + '/docker')
             os.mkdir('/etc/ansible')
         except Exception:
             pass
 
-        docker_utils.cp(name, '/bin/deploy_contrail_command',
-                        tmp_folder + '/docker/')
-        docker_utils.cp(name, '/etc/ansible/ansible.cfg', '/etc/ansible/')
+        common_utils.container_engine().cp(name, '/bin/deploy_contrail_command',
+                                           tmp_folder + '/docker/')
+        common_utils.container_engine().cp(name, '/etc/ansible/ansible.cfg', '/etc/ansible/')
 
         dst = '/' + image
         copy_tree(tmp_folder, dst)
 
         shutil.rmtree(tmp_folder, ignore_errors=True)
     finally:
-        docker_utils.remove_container_by_image(image)
+        common_utils.container_engine().remove_container_by_image(image)
 
 
 def update_status():
@@ -99,7 +98,7 @@ def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
@@ -131,8 +130,15 @@ def update_charm_status():
     deployer_image = "contrail-command-deployer"
     deploy_ccd_code(deployer_image, tag)
 
+    missing_relations = []
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
+        return
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
+    if missing_relations:
+        status_set('blocked',
+                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
         return
 
     changed = common_utils.render_and_log('cluster_config.yml.j2', '/cluster_config.yml', ctx)
@@ -147,7 +153,7 @@ def update_charm_status():
 
     update_status()
 
-    version = docker_utils.get_contrail_version("contrail-command", tag)
+    version = common_utils.container_engine().get_contrail_version("contrail-command", tag)
     application_version_set(version)
 
 

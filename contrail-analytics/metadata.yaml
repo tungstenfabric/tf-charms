@@ -18,6 +18,9 @@ provides:
   nrpe-external-master:
     interface: nrpe-external-master
     scope: container
+  container-runtime:
+    interface: container-runtime
+    scope: container
 requires:
   contrail-analyticsdb:
     interface: contrail-analyticsdb

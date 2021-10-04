@@ -25,7 +25,6 @@ from charmhelpers.core.hookenv import (
 
 import contrail_analytics_utils as utils
 import common_utils
-import docker_utils
 
 
 hooks = Hooks()
@@ -39,7 +38,7 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
-    docker_utils.install()
+    common_utils.container_engine().install()
     utils.update_charm_status()
     # NOTE: do not open port until haproxy can fail
     # https://bugs.launchpad.net/charm-haproxy/+bug/1792939
@@ -49,13 +48,16 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     utils.update_nrpe_config()
+    # Charm doesn't support changing of some parameters.
+    if config.changed("container_runtime"):
+        raise Exception("Configuration parameter container_runtime couldn't be changed")
     if config.changed("control-network"):
         _update_cluster()
         if is_leader() and _address_changed(local_unit(), common_utils.get_ip()):
             _update_analytics()
             _update_analyticsdb()
 
-    docker_utils.config_changed()
+    common_utils.container_engine().config_changed()
     utils.pull_images()
     utils.update_charm_status()
 
@@ -318,6 +320,23 @@ def http_services_joined():
 @hooks.hook('nrpe-external-master-relation-changed')
 def nrpe_external_master_relation_changed():
     utils.update_nrpe_config()
+
+
+@hooks.hook('container-runtime-relation-joined')
+@hooks.hook('container-runtime-relation-changed')
+def container_runtime_relation_changed():
+    data = relation_get()
+    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
+        config['containerd_present'] = True
+    else:
+        config['containerd_present'] = False
+    utils.update_charm_status()
+
+
+@hooks.hook('container-runtime-relation-departed')
+def container_runtime_relation_departed():
+    config['containerd_present'] = False
+    utils.update_charm_status()
 
 
 @hooks.hook("stop")

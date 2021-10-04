@@ -20,7 +20,6 @@ from charmhelpers.core.hookenv import (
 from charmhelpers.contrib.charmsupport import nrpe
 
 import common_utils
-import docker_utils
 from subprocess import check_output
 
 
@@ -144,7 +143,7 @@ def get_context():
         ctx["nested_mode_config"] = common_utils.json_loads(config.get("nested_mode_config"), dict())
 
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
-    ctx["logging"] = docker_utils.render_logging()
+    ctx["logging"] = common_utils.container_engine().render_logging()
 
     log("CTX: {}".format(ctx))
 
@@ -163,7 +162,7 @@ def pull_images():
     tag = config.get('image-tag')
     for image in IMAGES:
         try:
-            docker_utils.pull(image, tag)
+            common_utils.container_engine().pull(image, tag)
         except Exception as e:
             log("Can't load image {}".format(e), level=ERROR)
             raise Exception('Image could not be pulled: {}:{}'.format(image, tag))
@@ -193,6 +192,8 @@ def _update_charm_status(ctx):
         missing_relations.append("kube-api-endpoint")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
+    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
+        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -215,7 +216,7 @@ def _update_charm_status(ctx):
     changed = changed_dict["common"]
 
     service_changed = changed_dict["kubernetes-master"]
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
     common_utils.update_services_status(MODULE, SERVICES)
 
@@ -252,7 +253,7 @@ def update_nrpe_config():
 
 
 def stop_kubernetes_master():
-    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIGS_PATH + "/docker-compose.yaml")
 
 
 def remove_created_files():
@@ -312,7 +313,7 @@ def ziu_stage_0(ziu_stage, trigger):
 
 def ziu_stage_1(ziu_stage, trigger):
     # stop API services
-    docker_utils.compose_down(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_down(CONFIGS_PATH + "/docker-compose.yaml")
     signal_ziu("ziu_done", ziu_stage)
 
 
@@ -320,7 +321,7 @@ def ziu_stage_2(ziu_stage, trigger):
     # start API services
     ctx = get_context()
     _render_configs(ctx)
-    docker_utils.compose_run(CONFIGS_PATH + "/docker-compose.yaml")
+    common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml")
 
     result = common_utils.update_services_status(MODULE, SERVICES)
     if result:

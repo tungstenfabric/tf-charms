@@ -17,6 +17,12 @@ options:
       Openstack mostly defaults to using public endpoints for internal
       communication between services. If set to True this option will
       configure services to use internal endpoints where possible.
+  container_runtime:
+    type: string
+    default: docker
+    description: |
+      Container runtime valid values are "docker" and "containerd".
+      Warning! The changes will not be applied after the package is installed.
   docker_runtime:
     type: string
     default: upstream
