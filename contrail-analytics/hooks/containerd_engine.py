@@ -328,6 +328,9 @@ class Containerd(container_engine_base.Container):
             f.write("\n")
         args.extend(["--log-uri", log_file])
         args.extend([image_id, cont_name])
+        # TODO(tikitavi): remove this
+        if cont_name == "analytics_alarm_kafka":
+            args.extend(["/bin/bash", "-c", "ulimit -n 4096 && /docker-entrypoint.sh bin/kafka-server-start.sh config/server.properties"])
         log("Running container: {}", " ".join(args))
         check_call(args)
         # we run containers in detach mode if they should restart in case of failure
