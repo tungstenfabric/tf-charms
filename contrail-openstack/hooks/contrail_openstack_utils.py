@@ -21,7 +21,6 @@ from charmhelpers.core.hookenv import (
     related_units,
     leader_get,
     leader_set,
-    status_set,
     application_version_set,
 )
 from charmhelpers.core.host import (
@@ -228,16 +227,7 @@ def get_component_sys_paths(component):
                         component]).decode('UTF-8')
 
 
-def _check_readyness():
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        status_set('blocked', 'Missing or incomplete relations: containerd')
-        return False
-    return True
-
-
 def deploy_openstack_code(image, component):
-    if not _check_readyness():
-        return
     log("Deploy openstack code for {} from {}".format(component, image))
     tag = config.get('image-tag')
     try:

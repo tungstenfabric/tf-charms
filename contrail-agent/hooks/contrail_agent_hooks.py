@@ -174,23 +174,6 @@ def tls_certificates_relation_departed():
     utils.update_charm_status()
 
 
-@hooks.hook('container-runtime-relation-joined')
-@hooks.hook('container-runtime-relation-changed')
-def container_runtime_relation_changed():
-    data = relation_get()
-    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
-        config['containerd_present'] = True
-    else:
-        config['containerd_present'] = False
-    utils.update_charm_status()
-
-
-@hooks.hook('container-runtime-relation-departed')
-def container_runtime_relation_departed():
-    config['containerd_present'] = False
-    utils.update_charm_status()
-
-
 @hooks.hook("vrouter-plugin-relation-changed")
 def vrouter_plugin_changed():
     # accepts 'ready' value in realation (True/False)

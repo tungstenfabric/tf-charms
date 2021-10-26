@@ -192,8 +192,6 @@ def _update_charm_status(ctx, services_to_run=None):
         missing_relations.append("contrail-cluster")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -233,7 +231,12 @@ def _update_charm_status(ctx, services_to_run=None):
     service_changed = changed_dict["redis"]
     common_utils.container_engine().compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    common_utils.update_services_status(MODULE, SERVICES)
+    # TODO(tikitavi): Remove when contrail-status fixed
+    if config.get("container_runtime") == "containerd":
+        status_set('waiting',
+                   "Contrail-status doesn't work for containerd.")
+    else:
+        common_utils.update_services_status(MODULE, SERVICES)
 
     if has_provisioning_finished():
         config['apply-defaults'] = False

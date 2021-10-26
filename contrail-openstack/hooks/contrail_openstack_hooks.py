@@ -143,8 +143,6 @@ def _rebuild_config_from_controller_relation():
 def _update_status():
     if "controller_ips" not in config:
         status_set("blocked", "Missing relation to contrail-controller (controller_ips is empty or absent in relation)")
-    elif config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        status_set('blocked', 'Missing or incomplete relations: containerd')
     else:
         status_set("active", "Unit is ready")
 
@@ -172,23 +170,6 @@ def contrail_cotroller_departed():
     config.save()
     utils.write_configs()
     _update_status()
-
-
-@hooks.hook('container-runtime-relation-joined')
-@hooks.hook('container-runtime-relation-changed')
-def container_runtime_relation_changed():
-    data = relation_get()
-    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
-        config['containerd_present'] = True
-    else:
-        config['containerd_present'] = False
-    utils.update_charm_status()
-
-
-@hooks.hook('container-runtime-relation-departed')
-def container_runtime_relation_departed():
-    config['containerd_present'] = False
-    utils.update_charm_status()
 
 
 def _configure_metadata_shared_secret():

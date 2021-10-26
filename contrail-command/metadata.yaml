@@ -10,9 +10,6 @@ series:
 provides:
   https-services:
     interface: http
-  container-runtime:
-    interface: container-runtime
-    scope: container
 requires:
   contrail-controller:
     interface: contrail-controller

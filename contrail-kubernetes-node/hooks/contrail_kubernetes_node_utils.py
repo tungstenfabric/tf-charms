@@ -48,13 +48,6 @@ def pull_images():
 
 def update_charm_status():
     ctx = get_context()
-    missing_relations = []
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        missing_relations.append("containerd")
-    if missing_relations:
-        status_set('blocked',
-                   'Missing or incomplete relations: ' + ', '.join(missing_relations))
-        return
 
     changed = common_utils.render_and_log(
         "cni.env",

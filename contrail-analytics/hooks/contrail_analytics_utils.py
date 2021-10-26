@@ -239,8 +239,6 @@ def _update_charm_status(ctx):
         missing_relations.append("contrail-analyticsdb")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -284,6 +282,11 @@ def _update_charm_status(ctx):
         services.pop("analytics-alarm")
         services.pop("analytics-snmp")
 
+    # TODO(tikitavi): Remove when contrail-status fixed
+    if config.get("container_runtime") == "containerd":
+        status_set('waiting',
+                   "Contrail-status doesn't work for containerd.")
+        return
     common_utils.update_services_status(MODULE, services)
 
 

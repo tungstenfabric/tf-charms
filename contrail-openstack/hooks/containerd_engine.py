@@ -1,5 +1,7 @@
 import datetime
 import os
+import random
+import string
 from subprocess import check_call, check_output, DEVNULL
 import time
 import uuid
@@ -8,6 +10,7 @@ import yaml
 from charmhelpers.core.hookenv import (
     config,
     log,
+    status_set,
     DEBUG,
 )
 from charmhelpers.core.host import (
@@ -15,28 +18,34 @@ from charmhelpers.core.host import (
     mkdir,
 )
 from charmhelpers.core.templating import render
+from charmhelpers.fetch import apt_hold, apt_install, apt_update
 import container_engine_base
 
 
 config = config()
 
+CONTAINERD_PACKAGE = 'containerd'
 CTR_CLI = "/usr/bin/ctr"
 
 
 class Containerd(container_engine_base.Container):
     def install(self):
-        pass
+        status_set('maintenance', 'Installing containerd via apt')
+        apt_update()
+        apt_install(CONTAINERD_PACKAGE, fatal=True)
+        apt_hold(CONTAINERD_PACKAGE)
 
     def cp(self, cnt_name, src, dst):
         tmp_dir = "/tmp/" + cnt_name
         os.mkdir(tmp_dir)
         cmd = CTR_CLI + " snapshot mounts " + tmp_dir + " " + cnt_name + " | xargs sudo"
         check_call(cmd, shell=True)
-        check_call(["cp", tmp_dir + "/" + src, dst])
+        check_call(["cp", "-r", tmp_dir + src, dst])
 
     def execute(self, name, cmd, shell=False):
         # ctr task exec --exec-id <exec-id> <container-name> <command>
-        cli = [CTR_CLI, "task", "exec", "--exec-id", "$RANDOM", name]
+        exec_id = ''.join(random.choice(string.digits) for _ in range(8))
+        cli = [CTR_CLI, "task", "exec", "--exec-id", exec_id, name]
         if isinstance(cmd, list):
             cli.extend(cmd)
         else:
@@ -52,6 +61,16 @@ class Containerd(container_engine_base.Container):
         return "{}/{}:{}".format(registry, image, tag)
 
     def pull(self, image, tag):
+        def _check_ctr_presence():
+            try:
+                check_call([CTR_CLI, "--version"])
+                return True
+            except Exception:
+                return False
+
+        if not _check_ctr_presence():
+            status_set("waiting", "Waiting for containerd installation")
+            return False
         docker_user = config.get("docker-user")
         docker_password = config.get("docker-password")
         registry_insecure = config.get("docker-registry-insecure")
@@ -274,9 +293,9 @@ class Containerd(container_engine_base.Container):
 
         image_id = services_spec[service]["image"]
         if not self._if_image_exists(image_id):
-            image_id_separated = image_id.split(":")
-            image_name = image_id_separated[0].split("/")[-1]
-            image_tag = image_id_separated[1]
+            image_id_separated = image_id.split("/")
+            image_name = image_id_separated[-1].split(":")[0]
+            image_tag = config.get('image-tag')
             self.pull(image_name, image_tag)
         volumes = []
         parsed_volumes = self._parse_volumes(services_spec[service].get("volumes", []), volumes_spec)
@@ -314,8 +333,12 @@ class Containerd(container_engine_base.Container):
                 args.extend(["--env", "{}".format(env)])
         if env_file:
             if isinstance(env_file, list):
-                for file in env_file:
-                    args.extend(["--env-file", file])
+                # ctr run takes only one env-file in command options
+                # concetanating several env_file in single
+                file_path = os.path.dirname(env_file[0])
+                env_file_name = file_path + "/" + cont_name + ".env"
+                self._join_files(env_file, env_file_name)
+                args.extend(["--env-file", env_file_name])
             else:
                 args.extend(["--env-file", env_file])
 
@@ -366,3 +389,9 @@ class Containerd(container_engine_base.Container):
         render('docker-proxy.conf', '/etc/systemd/system/containerd.service.d/proxy.conf', config)
         check_call(['systemctl', 'daemon-reload'])
         service_restart('containerd')
+
+    def _join_files(self, filenames, env_file_name):
+        with open(env_file_name, 'w') as outfile:
+            for fname in filenames:
+                with open(fname) as infile:
+                    outfile.write(infile.read())

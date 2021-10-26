@@ -626,23 +626,6 @@ def contrail_issu_relation_changed():
     utils.update_issu_state(issu_data)
 
 
-@hooks.hook('container-runtime-relation-joined')
-@hooks.hook('container-runtime-relation-changed')
-def container_runtime_relation_changed():
-    data = relation_get()
-    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
-        config['containerd_present'] = True
-    else:
-        config['containerd_present'] = False
-    utils.update_charm_status()
-
-
-@hooks.hook('container-runtime-relation-departed')
-def container_runtime_relation_departed():
-    config['containerd_present'] = False
-    utils.update_charm_status()
-
-
 @hooks.hook("update-status")
 def update_status():
     utils.update_ziu("update-status")

@@ -134,8 +134,6 @@ def update_charm_status():
     if not ctx.get("cloud_orchestrator"):
         status_set('blocked', 'Missing cloud orchestrator info in relations.')
         return
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))

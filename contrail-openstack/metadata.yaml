@@ -23,9 +23,6 @@ provides:
   heat-plugin:
     interface: heat-plugin-subordinate
     scope: container
-  container-runtime:
-    interface: container-runtime
-    scope: container
 requires:
   contrail-controller:
     interface: contrail-controller

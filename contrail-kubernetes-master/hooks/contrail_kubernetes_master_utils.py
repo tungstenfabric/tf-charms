@@ -192,8 +192,6 @@ def _update_charm_status(ctx):
         missing_relations.append("kube-api-endpoint")
     if config.get('tls_present', False) != config.get('ssl_enabled', False):
         missing_relations.append("tls-certificates")
-    if config.get('container_runtime') == "containerd" and not config.get('containerd_present'):
-        missing_relations.append("containerd")
     if missing_relations:
         status_set('blocked',
                    'Missing or incomplete relations: ' + ', '.join(missing_relations))
@@ -218,6 +216,11 @@ def _update_charm_status(ctx):
     service_changed = changed_dict["kubernetes-master"]
     common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
+    # TODO(tikitavi): Remove when contrail-status fixed
+    if config.get("container_runtime") == "containerd":
+        status_set('waiting',
+                   "Contrail-status doesn't work for containerd.")
+        return
     common_utils.update_services_status(MODULE, SERVICES)
 
 

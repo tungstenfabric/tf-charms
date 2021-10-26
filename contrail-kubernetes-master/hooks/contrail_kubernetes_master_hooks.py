@@ -186,23 +186,6 @@ def cluster_departed():
     utils.update_charm_status()
 
 
-@hooks.hook('container-runtime-relation-joined')
-@hooks.hook('container-runtime-relation-changed')
-def container_runtime_relation_changed():
-    data = relation_get()
-    if data.get("socket") == '"unix:///var/run/containerd/containerd.sock"':
-        config['containerd_present'] = True
-    else:
-        config['containerd_present'] = False
-    utils.update_charm_status()
-
-
-@hooks.hook('container-runtime-relation-departed')
-def container_runtime_relation_departed():
-    config['containerd_present'] = False
-    utils.update_charm_status()
-
-
 def _address_changed(unit, ip):
     cluster_info = common_utils.json_loads(leader_get("cluster_info"), dict())
     if unit in cluster_info and ip == cluster_info[unit]:
