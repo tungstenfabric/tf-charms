@@ -351,6 +351,9 @@ class Containerd(container_engine_base.Container):
             f.write("\n")
         args.extend(["--log-uri", log_file])
         args.extend([image_id, cont_name])
+        # TODO(tikitavi): remove this
+        if cont_name == "vrouter_vrouter-agent":
+            args.extend(["/bin/bash", "-c", 'ulimit -n 4096 && /entrypoint.sh /usr/bin/contrail-vrouter-agent'])
         log("Running container: {}", " ".join(args))
         check_call(args)
         # we run containers in detach mode if they should restart in case of failure
