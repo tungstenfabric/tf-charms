@@ -41,9 +41,10 @@ def install():
 
 @hooks.hook("config-changed")
 def config_changed():
-    # Charm doesn't support changing of some parameters.
-    if config.changed("container_runtime"):
+    # Charm doesn't support changing container runtime (check for empty value after upgrade).
+    if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
+
     notify_nova = False
     tag_changed = config.get("saved-image-tag") != config["image-tag"]
     log("saved-image-tag = {}, current image-tag = {}".format(config.get("saved-image-tag"), config.get("image-tag")))

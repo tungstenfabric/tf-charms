@@ -48,9 +48,10 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     utils.update_nrpe_config()
-    # Charm doesn't support changing of some parameters.
-    if config.changed("container_runtime"):
+    # Charm doesn't support changing container runtime (check for empty value after upgrade).
+    if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
+
     if config.changed("control-network"):
         _update_cluster()
         if is_leader() and _address_changed(local_unit(), common_utils.get_ip()):

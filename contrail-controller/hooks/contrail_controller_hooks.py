@@ -51,9 +51,10 @@ def install():
 @hooks.hook("config-changed")
 def config_changed():
     utils.update_nrpe_config()
-    # Charm doesn't support changing of some parameters.
-    if config.changed("container_runtime"):
+    # Charm doesn't support changing container runtime (check for empty value after upgrade).
+    if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
+
     auth_mode = config.get("auth-mode")
     if auth_mode not in ("rbac", "cloud-admin", "no-auth"):
         raise Exception("Config is invalid. auth-mode must one of: "

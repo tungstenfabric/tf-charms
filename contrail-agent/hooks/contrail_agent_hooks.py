@@ -51,7 +51,8 @@ def config_changed():
         raise Exception("Configuration parameter dpdk couldn't be changed")
     if config.changed("l3mh-cidr"):
         raise Exception("Configuration parameter l3mh-cidr couldn't be changed")
-    if config.changed("container_runtime"):
+    # Charm doesn't support changing container runtime (check for empty value after upgrade).
+    if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
 
     if not config["dpdk"]:

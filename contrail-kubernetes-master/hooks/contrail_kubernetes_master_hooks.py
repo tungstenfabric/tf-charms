@@ -58,8 +58,8 @@ def leader_elected():
 
 @hooks.hook("config-changed")
 def config_changed():
-    # Charm doesn't support changing of some parameters.
-    if config.changed("container_runtime"):
+    # Charm doesn't support changing container runtime (check for empty value after upgrade).
+    if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
     if config.changed("nested_mode"):
         raise Exception('Nested mode cannot be changed after deployment.')
