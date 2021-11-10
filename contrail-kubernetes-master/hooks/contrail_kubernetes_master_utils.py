@@ -216,11 +216,6 @@ def _update_charm_status(ctx):
     service_changed = changed_dict["kubernetes-master"]
     common_utils.container_engine().compose_run(CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    # TODO(tikitavi): Remove when contrail-status fixed
-    if config.get("container_runtime") == "containerd":
-        status_set('waiting',
-                   "Contrail-status doesn't work for containerd.")
-        return
     common_utils.update_services_status(MODULE, SERVICES)
 
 

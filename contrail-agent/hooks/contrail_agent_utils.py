@@ -358,11 +358,6 @@ def _run_services(ctx):
         status_set('blocked',
                    'Reboot is required due to hugepages allocation.')
         return
-    # TODO(tikitavi): Remove when contrail-status fixed
-    if config.get("container_runtime") == "containerd":
-        status_set('waiting',
-                   "Contrail-status doesn't work for containerd.")
-        return
     common_utils.update_services_status(MODULE, SERVICES)
 
 
