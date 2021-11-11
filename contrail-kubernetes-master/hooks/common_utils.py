@@ -396,7 +396,7 @@ def get_contrail_version():
         tag_date = re.findall(release, tag)
         if len(tag_date) != 0:
             return int(tag_date[0])
-    for release in [r"21.\d", r"22.\d"]:
+    for release in [r"21\.\d", r"22\.\d"]:
         tag_date = re.findall(release, tag)
         if len(tag_date) != 0:
             ver_split = tag_date[0].split(".")
