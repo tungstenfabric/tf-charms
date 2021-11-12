@@ -114,8 +114,6 @@ services:
       - NET_ADMIN
       - NET_RAW
     env_file: /etc/contrail/common_config.env
-    environment:
-      - NODE_TYPE=device-manager
     volumes_from:
       - node-init
     volumes:
