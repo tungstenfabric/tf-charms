@@ -231,12 +231,7 @@ def _update_charm_status(ctx, services_to_run=None):
     service_changed = changed_dict["redis"]
     common_utils.container_engine().compose_run(REDIS_CONFIGS_PATH + "/docker-compose.yaml", changed or service_changed)
 
-    # TODO(tikitavi): Remove when contrail-status fixed
-    if config.get("container_runtime") == "containerd":
-        status_set('waiting',
-                   "Contrail-status doesn't work for containerd.")
-    else:
-        common_utils.update_services_status(MODULE, SERVICES)
+    common_utils.update_services_status(MODULE, SERVICES)
 
     if has_provisioning_finished():
         config['apply-defaults'] = False

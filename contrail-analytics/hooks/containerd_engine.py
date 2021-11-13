@@ -26,6 +26,7 @@ config = config()
 
 CONTAINERD_PACKAGE = 'containerd'
 CTR_CLI = "/usr/bin/ctr"
+CONTAINERD_NAMESPACE = "default"
 
 
 class Containerd(container_engine_base.Container):
@@ -88,8 +89,16 @@ class Containerd(container_engine_base.Container):
                 pull_opts += ":" + docker_password
         if registry_insecure:
             insecure_opts = "-k"
-        # pull image
-        check_call([CTR_CLI, "image", "pull", pull_opts, insecure_opts, self.get_image_id(image, tag)], stdout=DEVNULL)
+        # pull image. Insert retries to cover issue when image cannot be pulled due to vrouter restart
+        for i in range(10):
+            try:
+                check_call([CTR_CLI, "image", "pull", pull_opts, insecure_opts, self.get_image_id(image, tag)], stdout=DEVNULL)
+                break
+            except Exception as e:
+                log("Cannot pull image {}:{}. {}".format(image, tag, e))
+
+            # retry
+            time.sleep(30)
 
     def compose_run(self, path, config_changed=True):
         do_update = config_changed
@@ -142,6 +151,7 @@ class Containerd(container_engine_base.Container):
                         if i < 4:
                             try:
                                 self.remove_container(cnt_name)
+                                self._wait_for_absence(cnt_name)
                             except Exception:
                                 pass
                     # retry
@@ -163,6 +173,7 @@ class Containerd(container_engine_base.Container):
             cnt_id = self.get_container_id(path, service)
             try:
                 self.remove_container(cnt_id)
+                self._wait_for_absence(cnt_id)
             except Exception as e:
                 log("Error during remove container {}: {}".format(cnt_id, e))
 
@@ -205,7 +216,7 @@ class Containerd(container_engine_base.Container):
             # let's return None when docker fails to return status by ID or we failed to read provided JSON
             return None
 
-    def stop_container(self, cnt_id, signal="SIGQUIT"):
+    def stop_container(self, cnt_id, signal="SIGKILL"):
         log("Stopping container {}".format(cnt_id))
         cmd = [CTR_CLI, "task", "kill", "-s", signal, cnt_id]
         check_call(cmd)
@@ -287,6 +298,7 @@ class Containerd(container_engine_base.Container):
         if self._if_container_exists(cnt_name):
             if config_changed:
                 self.remove_container(cnt_name)
+                self._wait_for_absence(cnt_name)
             else:
                 # we shouldn't re-run container if it exists and config didn't changed
                 return
@@ -341,6 +353,8 @@ class Containerd(container_engine_base.Container):
                 args.extend(["--env-file", env_file_name])
             else:
                 args.extend(["--env-file", env_file])
+        # add namespace to env
+        args.extend(["--env", "CONTAINERD_NAMESPACE={}".format(CONTAINERD_NAMESPACE)])
 
         log_dir = '/var/log/containerd/'  # ???
         mkdir(log_dir, perms=0o755)
@@ -354,12 +368,18 @@ class Containerd(container_engine_base.Container):
         # TODO(tikitavi): remove this
         if cont_name == "analytics_alarm_kafka":
             args.extend(["/bin/bash", "-c", "ulimit -n 4096 && /docker-entrypoint.sh bin/kafka-server-start.sh config/server.properties"])
-        log("Running container: {}", " ".join(args))
+        log("Running container: {}".format(" ".join(args)))
         check_call(args)
         # we run containers in detach mode if they should restart in case of failure
         if detach:
             cmd = [CTR_CLI, "container", "label", cont_name, "containerd.io/restart.status=running"]
             check_call(cmd)
+
+    def _wait_for_absence(self, cnt_name):
+        for i in range(5):
+            if not self._if_container_exists(cnt_name):
+                return
+            time.sleep(2)
 
     def _if_container_exists(self, cnt_name):
         cmd = [CTR_CLI, "container", "ls", "-q", "id=={}".format(cnt_name)]
