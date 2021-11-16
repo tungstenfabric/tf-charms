@@ -242,6 +242,12 @@ class Containerd(container_engine_base.Container):
             else:
                 log("Container {} was not removed. {}".format(cnt_id, str(exc)))
                 raise exc
+            # sometimes after removing container the task is alive for some time
+            # and it prevents recreating container
+            try:
+                self._remove_task(cnt_id)
+            except Exception:
+                pass
 
     def create(self, image, tag):
         name = str(uuid.uuid4())
@@ -269,6 +275,10 @@ class Containerd(container_engine_base.Container):
 
     def render_logging(self):
         return ""
+
+    def _remove_task(self, cnt_id):
+        cmd = [CTR_CLI, "task", "rm", cnt_id]
+        check_call(cmd)
 
     def _parse_volumes(self, volumes_list, volumes_spec):
         # parse volumes from list [ src:dst, ... ] to crt mount format
@@ -322,11 +332,12 @@ class Containerd(container_engine_base.Container):
         # define which containers need privileged
         privileged = True  # services_spec[service].get("privileged") or services_spec[service].get("cap_add")
         net_host = services_spec[service].get("network_mode") == "host"
+        pid_host = services_spec[service].get("pid") == "host"
         self._run(cnt_name, image_id, volumes, env_dict=env_dict, env_file=env_file,
-                  privileged=privileged, net_host=net_host, detach=detach)
+                  privileged=privileged, net_host=net_host, pid_host=pid_host, detach=detach)
 
     def _run(self, cont_name, image_id, volumes,
-             remove=False, env_dict=None, env_file=None, net_host=False,
+             remove=False, env_dict=None, env_file=None, net_host=False, pid_host=False,
              privileged=False, detach=True):
         # run container
         args = [CTR_CLI, "run"]
@@ -336,6 +347,8 @@ class Containerd(container_engine_base.Container):
             args.append("--rm")
         if net_host:
             args.append("--net-host")
+        if pid_host:
+            args.extend(["--with-ns", "pid:/proc/1/ns/pid"])
         if privileged:
             args.append("--privileged")
         for volume in volumes:
