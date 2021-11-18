@@ -431,3 +431,4 @@ class Containerd(container_engine_base.Container):
             for fname in filenames:
                 with open(fname) as infile:
                     outfile.write(infile.read())
+                    outfile.write('\n')
