@@ -64,7 +64,7 @@ class Containerd(container_engine_base.Container):
     def pull(self, image, tag):
         def _check_ctr_presence():
             try:
-                check_call([CTR_CLI, "--version"])
+                check_call([CTR_CLI, "--version"], stderr=DEVNULL)
                 return True
             except Exception:
                 return False
@@ -120,50 +120,20 @@ class Containerd(container_engine_base.Container):
             with open(path, "r") as f:
                 spec = yaml.load(f, Loader=yaml.Loader)
 
-            # create volumes
-            volumes_spec = spec.get("volumes", [])
-            if volumes_spec:
-                for volume in volumes_spec:
-                    self._create_volume(volume[:-1])
-
             # get containers list to run
             # init_containers run without restart
             services_spec = spec["services"]
-            init_containers = []
-            running_containers = []
+            volumes_spec = spec.get("volumes", [])
             cnt_name_prefix = path.split("/")[-2] + "_"
+
+            # start containers
             for service in services_spec:
+                cnt_name = cnt_name_prefix + service
                 if "-init" in services_spec[service]["image"]:
-                    init_containers.append(service)
+                    detach = False
                 else:
-                    running_containers.append(service)
-
-            # start init containers (5 attempts)
-            for service in init_containers:
-                cnt_name = cnt_name_prefix + service
-                for i in range(5):
-                    try:
-                        log("Running container {}. Attempt {}".format(cnt_name, i))
-                        self._run_container(cnt_name, volumes_spec, services_spec, service, detach=False, config_changed=config_changed)
-                        break
-                    except Exception as e:
-                        exc = e
-                        if i < 4:
-                            try:
-                                self.remove_container(cnt_name)
-                                self._wait_for_absence(cnt_name)
-                            except Exception:
-                                pass
-                    # retry
-                    time.sleep(10)
-                else:
-                    log("Container {} is not running. {}".format(cnt_name, str(exc)))
-                    raise exc
-
-            # start containers that would restart
-            for service in running_containers:
-                cnt_name = cnt_name_prefix + service
-                self._run_container(cnt_name, volumes_spec, services_spec, service, detach=True, config_changed=config_changed)
+                    detach = True
+                self._run_container(cnt_name, volumes_spec, services_spec, service, detach=detach)
 
     def compose_down(self, path):
         with open(path, "r") as f:
@@ -219,26 +189,24 @@ class Containerd(container_engine_base.Container):
     def stop_container(self, cnt_id, signal="SIGKILL"):
         log("Stopping container {}".format(cnt_id))
         cmd = [CTR_CLI, "task", "kill", "-s", signal, cnt_id]
-        check_call(cmd)
+        check_call(cmd, stderr=DEVNULL)
 
     def remove_container(self, cnt_id):
         if self._if_container_exists(cnt_id):
             for i in range(5):
                 try:
                     self.stop_container(cnt_id, signal="SIGKILL")
-                except Exception as e:
-                    log("Cannot stop container {}. {}".format(cnt_id, e))
+                except Exception:
+                    pass
                 try:
-                    log("Removing container {}".format(cnt_id))
+                    log("Removing container {}. Try {}".format(cnt_id, i))
                     cmd = [CTR_CLI, "container", "rm", cnt_id]
-                    check_call(cmd)
+                    check_call(cmd, stderr=DEVNULL)
                     break
                 except Exception as e:
                     exc = e
-                    log("Cannot remove container {}. {}".format(cnt_id, e))
-
                 # retry
-                time.sleep(5)
+                time.sleep(3)
             else:
                 log("Container {} was not removed. {}".format(cnt_id, str(exc)))
                 raise exc
@@ -278,7 +246,7 @@ class Containerd(container_engine_base.Container):
 
     def _remove_task(self, cnt_id):
         cmd = [CTR_CLI, "task", "rm", cnt_id]
-        check_call(cmd)
+        check_call(cmd, stderr=DEVNULL)
 
     def _parse_volumes(self, volumes_list, volumes_spec):
         # parse volumes from list [ src:dst, ... ] to crt mount format
@@ -297,22 +265,8 @@ class Containerd(container_engine_base.Container):
             volumes.append("type=bind,src={},dst={},options=rbind:rw".format(src, dst))
         return volumes
 
-    def _create_volume(self, name):
-        volumes_dir = "/var/lib/contrail/"
-        mkdir(volumes_dir + name, perms=0o755)
-
-    def _run_container(self, cnt_name, volumes_spec, services_spec, service, detach=True, config_changed=True):
+    def _run_container(self, cnt_name, volumes_spec, services_spec, service, detach=True):
         # parse services spec from yaml to container options
-
-        # check if container is already running
-        if self._if_container_exists(cnt_name):
-            if config_changed:
-                self.remove_container(cnt_name)
-                self._wait_for_absence(cnt_name)
-            else:
-                # we shouldn't re-run container if it exists and config didn't changed
-                return
-
         image_id = services_spec[service]["image"]
         if not self._if_image_exists(image_id):
             image_id_separated = image_id.split("/")
@@ -336,10 +290,11 @@ class Containerd(container_engine_base.Container):
         self._run(cnt_name, image_id, volumes, env_dict=env_dict, env_file=env_file,
                   privileged=privileged, net_host=net_host, pid_host=pid_host, detach=detach)
 
-    def _run(self, cont_name, image_id, volumes,
+    def _run(self, cnt_name, image_id, volumes,
              remove=False, env_dict=None, env_file=None, net_host=False, pid_host=False,
              privileged=False, detach=True):
         # run container
+        changed = False
         args = [CTR_CLI, "run"]
         if detach:
             args.append("-d")
@@ -351,42 +306,103 @@ class Containerd(container_engine_base.Container):
             args.extend(["--with-ns", "pid:/proc/1/ns/pid"])
         if privileged:
             args.append("--privileged")
+        # we run containers in detach mode if they should restart in case of failure
+        if detach:
+            args.extend(["--label", "containerd.io/restart.status=running"])
         for volume in volumes:
             args.extend(["--mount", volume])
-        if env_dict:
-            for env in env_dict:
-                args.extend(["--env", "{}".format(env)])
-        if env_file:
-            if isinstance(env_file, list):
-                # ctr run takes only one env-file in command options
-                # concetanating several env_file in single
-                file_path = os.path.dirname(env_file[0])
-                env_file_name = file_path + "/" + cont_name + ".env"
-                self._join_files(env_file, env_file_name)
-                args.extend(["--env-file", env_file_name])
-            else:
-                args.extend(["--env-file", env_file])
-        # add namespace to env
-        args.extend(["--env", "CONTAINERD_NAMESPACE={}".format(CONTAINERD_NAMESPACE)])
+        if env_dict or env_file:
+            env_filename = "/etc/contrail/" + cnt_name + ".env"
+            self._get_env(env_filename, env_dict, env_file)
+            changed |= self._if_changed(env_filename)
+            args.extend(["--env-file", env_filename])
+        log_file = self._create_log_file(cnt_name)
+        args.extend(["--log-uri", log_file])
+        args.extend([image_id, cnt_name])
 
-        log_dir = '/var/log/containerd/'  # ???
+        run_filename = '/etc/contrail/' + cnt_name + '.run'
+        with open(run_filename, 'w') as f:
+            f.write(" ".join(args))
+        changed |= self._if_changed(run_filename)
+
+        if not changed:
+            os.remove(env_filename)
+            os.remove(run_filename)
+            return
+
+        # check if container is already running
+        if self._if_container_exists(cnt_name):
+            self.remove_container(cnt_name)
+            self._wait_for_absence(cnt_name)
+
+        for i in range(5):
+            try:
+                log("Running container {}. Attempt {}".format(cnt_name, i))
+                log("Command: {}".format(" ".join(args)))
+                check_call(args)
+                break
+            except Exception as e:
+                exc = e
+                if i < 4:
+                    try:
+                        self.remove_container(cnt_name)
+                        self._wait_for_absence(cnt_name)
+                    except Exception:
+                        pass
+            # retry
+            time.sleep(10)
+        else:
+            log("Container {} doesn't start running. {}".format(cnt_name, str(exc)))
+            raise exc
+
+        os.replace(run_filename, run_filename + ".current")
+        if env_filename:
+            os.replace(env_filename, env_filename + ".current")
+
+    def _create_log_file(self, cnt_name):
+        log_dir = '/var/log/containerd/'
         mkdir(log_dir, perms=0o755)
-        log_file = log_dir + cont_name + '.log'
+        log_file = log_dir + cnt_name + '.log'
         # create log file (isn't created automatically)
         with open(log_file, 'a+') as f:
             f.write(datetime.datetime.utcnow().isoformat())
             f.write("\n")
-        args.extend(["--log-uri", log_file])
-        args.extend([image_id, cont_name])
-        # TODO(tikitavi): remove this
-        if cont_name == "vrouter_vrouter-agent":
-            args.extend(["/bin/bash", "-c", 'ulimit -n 4096 && /entrypoint.sh /usr/bin/contrail-vrouter-agent'])
-        log("Running container: {}".format(" ".join(args)))
-        check_call(args)
-        # we run containers in detach mode if they should restart in case of failure
-        if detach:
-            cmd = [CTR_CLI, "container", "label", cont_name, "containerd.io/restart.status=running"]
-            check_call(cmd)
+        return log_file
+
+    def _get_env(self, filename, env_dict, env_files):
+        with open(filename, 'w') as outfile:
+            outfile.write("# env file is autogenerated, do not edit manually\n")
+        if env_files:
+            if isinstance(env_files, str):
+                env_files = [env_files]
+            self._join_files(env_files, filename)
+        if env_dict:
+            with open(filename, 'a+') as outfile:
+                for env in env_dict:
+                    outfile.write(env)
+                    outfile.write('\n')
+        # add CONTAINERD_NAMESPACE var to containers
+        with open(filename, 'a+') as outfile:
+            # TODO: check if possible to detect namespace from inside container
+            outfile.write("CONTAINERD_NAMESPACE={}\n".format(CONTAINERD_NAMESPACE))
+
+    def _get_file(self, filename):
+        try:
+            with open(filename) as f:
+                file_lines = set(f.readlines())
+        except Exception:
+            file_lines = set()
+
+        return file_lines
+
+    def _if_changed(self, filename):
+        """Returns True if configuration has been changed."""
+        old_lines = self._get_file(filename + ".current")
+        new_lines = self._get_file(filename)
+        new_set = new_lines.difference(old_lines)
+        old_set = old_lines.difference(new_lines)
+
+        return bool(new_set or old_set)
 
     def _wait_for_absence(self, cnt_name):
         for i in range(5):
@@ -426,9 +442,9 @@ class Containerd(container_engine_base.Container):
         check_call(['systemctl', 'daemon-reload'])
         service_restart('containerd')
 
-    def _join_files(self, filenames, env_file_name):
-        with open(env_file_name, 'w') as outfile:
+    def _join_files(self, filenames, env_filename):
+        with open(env_filename, 'a+') as outfile:
             for fname in filenames:
                 with open(fname) as infile:
                     outfile.write(infile.read())
-                    outfile.write('\n')
+                    outfile.write('\n\n')
