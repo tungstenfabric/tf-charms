@@ -1,5 +1,6 @@
 import os
 import uuid
+import requests
 
 from distutils.dir_util import copy_tree
 import shutil
@@ -14,8 +15,7 @@ from charmhelpers.core.hookenv import (
 
 import common_utils
 from subprocess import (
-    check_call,
-    check_output
+    check_call
 )
 
 
@@ -80,16 +80,13 @@ def update_status():
     command_ip = common_utils.get_ip()
 
     try:
-        output = check_output(
-            "curl -sSk https://{}:8079 | grep '<title>'".format(command_ip),
-            shell=True).decode('UTF-8')
+        r = requests.get("https://{}:8079".format(command_ip), verify=False)
     except Exception:
         status_set("waiting", "URL is not ready {}:8079".format(command_ip))
         return False
-    if 'Contrail Command' not in output:
+    if r.status_code != 200:
         status_set("waiting", "URL is not ready {}:8079".format(command_ip))
         return False
-
     status_set("active", "Unit is ready")
     return True
 
