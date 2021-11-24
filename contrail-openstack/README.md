@@ -48,3 +48,13 @@ Option 'enable-metadata-server' controls if a local nova-api-metadata service is
 started (per Compute Node) and registered to serve metadata requests. It is
 the recommended approach for serving metadata to instances and is enabled by
 default.
+
+Containerd
+----------
+
+This charm supports containerd as container runtime:
+
+    juju config contrail-openstack container_runtime=containerd
+
+Please note that in this case all charms must be configured to use containerd.
+This setting cannot be changed after deploy.

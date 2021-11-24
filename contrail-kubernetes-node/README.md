@@ -36,3 +36,13 @@ Istead of attaching resource with docker image charm can accept image from remot
 docker-registry should be specified if the registry is only accessible via http protocol (insecure registry).
 docker-user / docker-password can be specified if registry requires authentification.
 And image-name / image-tag are the parameters for the image itself.
+
+Containerd
+----------
+
+This charm supports containerd as container runtime:
+
+    juju config contrail-kubernetes-node container_runtime=containerd
+
+Please note that in this case all charms must be configured to use containerd.
+This setting cannot be changed after deploy.
