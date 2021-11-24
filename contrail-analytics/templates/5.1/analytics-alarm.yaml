@@ -51,6 +51,10 @@ services:
     image: "{{ container_registry }}/contrail-external-kafka:{{ contrail_version_tag }}"
     network_mode: "host"
     env_file: /etc/contrail/common_analytics.env
+{% if container_runtime == 'containerd' %}
+    entrypoint: ["/bin/bash", "-c", "ulimit -n 4096 && /docker-entrypoint.sh bin/kafka-server-start.sh config/server.properties"]
+    privileged: true
+{% endif %}
     environment:
       - KAFKA_NODES={{ analytics_servers|sort|join(',') }}
       - ZOOKEEPER_NODES={{ controller_servers|sort|join(',') }}

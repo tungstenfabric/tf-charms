@@ -110,9 +110,13 @@ services:
   dnsmasq:
     image: "{{ container_registry }}/contrail-controller-config-dnsmasq:{{ contrail_version_tag }}"
     network_mode: "host"
+{% if container_runtime == 'docker' %}
     cap_add:
       - NET_ADMIN
       - NET_RAW
+{% else %}
+    privileged: true
+{% endif %}
     env_file: /etc/contrail/common_config.env
     volumes_from:
       - node-init

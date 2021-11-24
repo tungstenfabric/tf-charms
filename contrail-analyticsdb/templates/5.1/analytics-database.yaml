@@ -54,8 +54,12 @@ services:
   query-engine:
     image: "{{ container_registry }}/contrail-analytics-query-engine:{{ contrail_version_tag }}"
     network_mode: "host"
+{% if container_runtime == 'docker' %}
     cap_add:
       - SYS_PTRACE
+{% else %}
+    privileged: true
+{% endif %}
     env_file: /etc/contrail/common_analyticsdb.env
     volumes_from:
       - node-init
@@ -66,8 +70,12 @@ services:
   cassandra:
     image: "{{ container_registry }}/contrail-external-cassandra:{{ contrail_version_tag }}"
     network_mode: "host"
+{% if container_runtime == 'docker' %}
     cap_add:
       - SYS_NICE  # CAP_SYS_NICE
+{% else %}
+    privileged: true
+{% endif %}
     env_file: /etc/contrail/common_analyticsdb.env
     environment:
       - CASSANDRA_SEEDS={{ analyticsdb_servers|sort|join(',') }}

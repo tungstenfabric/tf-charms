@@ -176,6 +176,7 @@ def get_context():
     ctx["certs_hash"] = common_utils.get_certs_hash(MODULE) if ctx["ssl_enabled"] else ''
     ctx["container_registry"] = config.get("docker-registry")
     ctx["contrail_version_tag"] = config.get("image-tag")
+    ctx["container_runtime"] = config.get("container_runtime")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
         ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()

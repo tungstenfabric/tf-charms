@@ -57,8 +57,12 @@ services:
   control:
     image: "{{ container_registry }}/contrail-controller-control-control:{{ contrail_version_tag }}"
     network_mode: "host"
+{% if container_runtime == 'docker' %}
     cap_add:
       - SYS_PTRACE
+{% else %}
+    privileged: true
+{% endif %}
     env_file: /etc/contrail/common_config.env
     volumes_from:
       - node-init
@@ -83,8 +87,12 @@ services:
   dns:
     image: "{{ container_registry }}/contrail-controller-control-dns:{{ contrail_version_tag }}"
     network_mode: "host"
+{% if container_runtime == 'docker' %}
     cap_add:
       - SYS_PTRACE
+{% else %}
+    privileged: true
+{% endif %}
     env_file: /etc/contrail/common_config.env
     pid: host
     volumes:

@@ -121,6 +121,7 @@ def get_context():
     ctx["config_analytics_ssl_available"] = common_utils.is_config_analytics_ssl_available()
     ctx["logging"] = common_utils.container_engine().render_logging()
     ctx["contrail_version"] = common_utils.get_contrail_version()
+    ctx["container_runtime"] = config.get("container_runtime")
     ctx.update(common_utils.json_loads(config.get("orchestrator_info"), dict()))
     if not ctx.get("cloud_orchestrators"):
         ctx["cloud_orchestrators"] = [ctx.get("cloud_orchestrator")] if ctx.get("cloud_orchestrator") else list()

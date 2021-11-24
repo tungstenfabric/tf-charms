@@ -82,6 +82,9 @@ services:
   vrouter-agent-dpdk:
     image: "{{ container_registry }}/contrail-vrouter-agent-dpdk:{{ contrail_version_tag }}"
     network_mode: host
+{% if container_runtime == 'containerd' %}
+    entrypoint: ["/bin/bash", "-c", "ulimit -n 4096 && /entrypoint.sh /usr/bin/contrail-vrouter-agent"]
+{% endif %}
     privileged: true
     env_file: /etc/contrail/common_vrouter.env
     pid: host
@@ -103,6 +106,9 @@ services:
   vrouter-agent:
     image: "{{ container_registry }}/contrail-vrouter-agent:{{ contrail_version_tag }}"
     network_mode: host
+{% if container_runtime == 'containerd' %}
+    entrypoint: ["/bin/bash", "-c", "ulimit -n 4096 && /entrypoint.sh /usr/bin/contrail-vrouter-agent"]
+{% endif %}
     privileged: true
     pid: host
     env_file: /etc/contrail/common_vrouter.env

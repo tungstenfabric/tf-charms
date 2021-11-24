@@ -191,6 +191,7 @@ def get_context():
     ctx["xflow_node_ip"] = config.get("xflow-node-ip")
     ctx["vrouter_module_options"] = config.get("vrouter-module-options")
     ctx["contrail_version"] = common_utils.get_contrail_version()
+    ctx["container_runtime"] = config.get("container_runtime")
 
     # NOTE: charm should set non-fqdn hostname to be compatible with R5.0 deployments
     ctx["hostname"] = socket.getfqdn() if config.get("hostname-use-fqdn", True) else socket.gethostname()

@@ -299,18 +299,16 @@ class Containerd(container_engine_base.Container):
             volumes.extend(self._parse_volumes(services_spec[serv].get("volumes", []), volumes_spec))
         env_dict = services_spec[service].get("environment")
         env_file = services_spec[service].get("env_file")
-        # TODO(tikitavi): if cap_add - run with additional capabilities, not privileged
-        # TODO: + cni_init container cannot set ulimit, adding privileged mode
-        # define which containers need privileged
-        privileged = True  # services_spec[service].get("privileged") or services_spec[service].get("cap_add")
+        privileged = services_spec[service].get("privileged")
         net_host = services_spec[service].get("network_mode") == "host"
         pid_host = services_spec[service].get("pid") == "host"
-        self._run(cnt_name, image_id, volumes, env_dict=env_dict, env_file=env_file,
+        entrypoint = services_spec[service].get("entrypoint")
+        self._run(cnt_name, image_id, volumes, env_dict=env_dict, env_file=env_file, entrypoint=entrypoint,
                   privileged=privileged, net_host=net_host, pid_host=pid_host, detach=detach)
 
     def _run(self, cnt_name, image_id, volumes,
-             remove=False, env_dict=None, env_file=None, net_host=False, pid_host=False,
-             privileged=False, detach=True):
+             remove=False, env_dict=None, env_file=None, entrypoint=None, net_host=False,
+             pid_host=False, privileged=False, detach=True):
         # run container
         changed = False
         args = [CTR_CLI, "run"]
@@ -337,7 +335,8 @@ class Containerd(container_engine_base.Container):
         log_file = self._create_log_file(cnt_name)
         args.extend(["--log-uri", log_file])
         args.extend([image_id, cnt_name])
-
+        if entrypoint:
+            args.extend(entrypoint)
         run_filename = '/etc/contrail/' + cnt_name + '.run'
         with open(run_filename, 'w') as f:
             f.write(" ".join(args))
