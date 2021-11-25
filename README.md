@@ -145,6 +145,21 @@ juju config contrail-controller control-network="192.168.0.0/24 192.168.1.0/24 1
 
 In this case each controller will choose the address from its own network.
 
+Contrail's containerd setup
+--------------------------------
+It is possible to run contrail containers using containerd runtime. It can be set by using `container_runtime` parameter.
+
+WARNING: all possible contrail-charms should use the same `contailner_runtime`. It should be set on bundle or in the beginnig of deploy and cannot be changed after.
+
+The charms that support containerd:
+- contrail-agent
+- contrail-analytics
+- contrail-analyticsdb
+- contrail-controller
+- contrail-kubernetes-master
+- contrail-kubernetes-node
+- contrail-openstackl
+
 Known issues
 ------------
 

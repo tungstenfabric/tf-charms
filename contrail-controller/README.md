@@ -87,3 +87,13 @@ Charm can be related to RabbitMQ:
 
 In this case internal RabbitMQ server will not be run and Contrail software will be configured
 to use external one.
+
+Containerd
+----------
+
+This charm supports containerd as container runtime:
+
+    juju config contrail-controller container_runtime=containerd
+
+Please note that in this case all charms must be configured to use containerd.
+This setting cannot be changed after deploy.

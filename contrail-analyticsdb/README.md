@@ -47,3 +47,13 @@ This charm supports relation to easyrsa charm to obtain certificates for XMPP an
     juju add-relation contrail-analyticsdb easyrsa
 
 Please note that in this case all charms must be related to easyrsa. Components require CA certificate for communication.
+
+Containerd
+----------
+
+This charm supports containerd as container runtime:
+
+    juju config contrail-analyticsdb container_runtime=containerd
+
+Please note that in this case all charms must be configured to use containerd.
+This setting cannot be changed after deploy.
