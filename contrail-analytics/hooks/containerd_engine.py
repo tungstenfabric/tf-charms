@@ -186,30 +186,47 @@ class Containerd(container_engine_base.Container):
             # let's return None when docker fails to return status by ID or we failed to read provided JSON
             return None
 
-    def stop_container(self, cnt_id, signal="SIGKILL"):
+    def stop_container(self, cnt_id, signal="SIGTERM"):
         log("Stopping container {}".format(cnt_id))
         cmd = [CTR_CLI, "task", "kill", "-s", signal, cnt_id]
-        check_call(cmd, stderr=DEVNULL)
+        check_call(cmd)
 
     def remove_container(self, cnt_id):
         if self._if_container_exists(cnt_id):
+            # trying to stop container with SIGTERM and remove it
             for i in range(5):
                 try:
-                    self.stop_container(cnt_id, signal="SIGKILL")
+                    self.stop_container(cnt_id)
                 except Exception:
                     pass
                 try:
                     log("Removing container {}. Try {}".format(cnt_id, i))
                     cmd = [CTR_CLI, "container", "rm", cnt_id]
-                    check_call(cmd, stderr=DEVNULL)
+                    check_call(cmd)
                     break
                 except Exception as e:
                     exc = e
                 # retry
                 time.sleep(3)
             else:
-                log("Container {} was not removed. {}".format(cnt_id, str(exc)))
-                raise exc
+                # if not succeeded stop container with SIGKILL and remove it
+                for i in range(3):
+                    try:
+                        self.stop_container(cnt_id, signal="SIGKILL")
+                    except Exception:
+                        pass
+                    try:
+                        log("Removing container {}. Try {}".format(cnt_id, i))
+                        cmd = [CTR_CLI, "container", "rm", cnt_id]
+                        check_call(cmd)
+                        break
+                    except Exception as e:
+                        exc = e
+                    # retry
+                    time.sleep(3)
+                else:
+                    log("Container {} was not removed. {}".format(cnt_id, str(exc)))
+                    raise exc
             # sometimes after removing container the task is alive for some time
             # and it prevents recreating container
             try:
@@ -228,7 +245,8 @@ class Containerd(container_engine_base.Container):
         cnt_id = self.get_container_id(path, service)
         if not cnt_id:
             return None
-        self.stop_container(cnt_id)
+        cmd = [CTR_CLI, "task", "start", "-d", cnt_id]
+        check_call(cmd)
 
     def get_contrail_version(self, image, tag, pkg=None):
         # TODO: run container with bash to echo version inside (image inspect was not found for ctr)
