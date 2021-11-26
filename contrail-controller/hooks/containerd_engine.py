@@ -38,7 +38,7 @@ class Containerd(container_engine_base.Container):
 
     def cp(self, cnt_name, src, dst):
         tmp_dir = "/tmp/" + cnt_name
-        os.mkdir(tmp_dir)
+        mkdir(tmp_dir)
         cmd = CTR_CLI + " snapshot mounts " + tmp_dir + " " + cnt_name + " | xargs sudo"
         check_call(cmd, shell=True)
         check_call(["cp", "-r", tmp_dir + src, dst])
