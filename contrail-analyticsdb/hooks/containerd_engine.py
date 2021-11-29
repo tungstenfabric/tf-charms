@@ -342,7 +342,7 @@ class Containerd(container_engine_base.Container):
             f.write(" ".join(args))
         changed |= self._if_changed(run_filename)
 
-        if not changed:
+        if self._if_container_exists(cnt_name) and not changed:
             os.remove(env_filename)
             os.remove(run_filename)
             return
