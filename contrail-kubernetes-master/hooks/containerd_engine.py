@@ -15,7 +15,6 @@ from charmhelpers.core.hookenv import (
 )
 from charmhelpers.core.host import (
     service_restart,
-    mkdir,
 )
 from charmhelpers.core.templating import render
 from charmhelpers.fetch import apt_hold, apt_install, apt_update
@@ -38,7 +37,7 @@ class Containerd(container_engine_base.Container):
 
     def cp(self, cnt_name, src, dst):
         tmp_dir = "/tmp/" + cnt_name
-        mkdir(tmp_dir)
+        os.makedirs(tmp_dir, mode=0o755, exist_ok=True)
         cmd = CTR_CLI + " snapshot mounts " + tmp_dir + " " + cnt_name + " | xargs sudo"
         check_call(cmd, shell=True)
         check_call(["cp", "-r", tmp_dir + src, dst])
@@ -279,7 +278,8 @@ class Containerd(container_engine_base.Container):
                 if src in volumes_spec:
                     src = "/var/lib/contrail/" + src
                 dst = mount_split[1]
-            mkdir(src, perms=0o755)
+            if not os.path.exists(src):
+                os.makedirs(src, mode=0o755, exist_ok=True)
             volumes.append("type=bind,src={},dst={},options=rbind:rw".format(src, dst))
         return volumes
 
@@ -378,7 +378,7 @@ class Containerd(container_engine_base.Container):
 
     def _create_log_file(self, cnt_name):
         log_dir = '/var/log/containerd/'
-        mkdir(log_dir, perms=0o755)
+        os.makedirs(log_dir, mode=0o755, exist_ok=True)
         log_file = log_dir + cnt_name + '.log'
         # create log file (isn't created automatically)
         with open(log_file, 'a+') as f:
