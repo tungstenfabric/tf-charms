@@ -17,10 +17,7 @@ class Container():
     def compose_run(self, path, config_changed=True):
         pass
 
-    def compose_down(self, path):
-        pass
-
-    def compose_kill(self, path, signal, service=None):
+    def compose_down(self, path, service=None):
         pass
 
     def get_container_id(self, path, service):

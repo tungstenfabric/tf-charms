@@ -134,31 +134,19 @@ class Containerd(container_engine_base.Container):
                     detach = True
                 self._run_container(cnt_name, volumes_spec, services_spec, service, detach=detach)
 
-    def compose_down(self, path):
+    def compose_down(self, path, service=None):
         with open(path, "r") as f:
             services_spec = yaml.load(f, Loader=yaml.Loader)["services"]
 
         for service in services_spec:
             cnt_id = self.get_container_id(path, service)
+            self.stop_container(cnt_id, signal="SIGQUIT")
+            time.sleep(5)
             try:
                 self.remove_container(cnt_id)
                 self._wait_for_absence(cnt_id)
             except Exception as e:
                 log("Error during remove container {}: {}".format(cnt_id, e))
-
-    def compose_kill(self, path, signal, service=None):
-        if service:
-            services = [service]
-        else:
-            with open(path, "r") as f:
-                services = yaml.load(f, Loader=yaml.Loader)["services"]
-
-        for service in services:
-            cnt_id = self.get_container_id(path, service)
-            try:
-                self.stop_container(cnt_id, signal=signal)
-            except Exception as e:
-                log("Error during stop container {}: {}".format(cnt_id, e))
 
     def get_container_id(self, path, service):
         cnt_name = path.split("/")[-2] + "_" + service

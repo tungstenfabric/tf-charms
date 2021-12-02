@@ -364,16 +364,10 @@ def _run_services(ctx):
 
 def stop_agent(stop_agent=True):
     path = CONFIGS_PATH + "/docker-compose.yaml"
+    services_to_wait = None
     if stop_agent:
-        common_utils.container_engine().compose_kill(path, "SIGQUIT", "vrouter-agent")
-        # wait for exited code for vrouter-agent. Each 5 seconds, max wait 1 minute
-        for i in range(0, 12):
-            state = common_utils.container_engine().get_container_state(path, "vrouter-agent")
-            if not state or state.get('Status', '').lower() != 'running':
-                break
-        else:
-            raise Exception("vrouter-agent do not react to SIGQUIT. please check it manually and re-run operation.")
-    common_utils.container_engine().compose_down(path)
+        services_to_wait = ["vrouter-agent"]
+    common_utils.container_engine().compose_down(path, services_to_wait=services_to_wait)
     # remove all built vrouter.ko
     modules = '/lib/modules'
     for item in os.listdir(modules):

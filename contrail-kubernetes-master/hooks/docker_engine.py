@@ -211,16 +211,28 @@ class Docker(container_engine_base.Container):
         if do_update:
             check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"])
 
-    def compose_down(self, path):
+    def compose_down(self, path, services_to_wait=None):
+        self.compose_kill(path, "SIGQUIT")
+        time.sleep(2)
+        if services_to_wait:
+            for i in range(0, 12):
+                for service in list(services_to_wait):
+                    # wait for exited code for service. Each 1 second, max wait 12 seconds
+                    state = self.get_container_state(path, service)
+                    if not state or state.get('Status', '').lower() != 'running':
+                        services_to_wait.remove(service)
+                if not services_to_wait:
+                    break
+                time.sleep(1)
+            else:
+                raise Exception("{} do not react to SIGQUIT. please check it manually and re-run operation.".format(", ".join(services_to_wait)))
         try:
             check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
         except Exception as e:
             log("Error during compose down: {}".format(e))
 
-    def compose_kill(self, path, signal, service=None):
+    def compose_kill(self, path, signal):
         cmd = [DOCKER_COMPOSE_CLI, "-f", path, "kill", "-s", signal]
-        if service:
-            cmd.append(service)
         check_call(cmd)
 
     def get_container_id(self, path, service):
