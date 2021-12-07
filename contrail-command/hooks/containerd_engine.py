@@ -1,4 +1,3 @@
-import datetime
 import os
 import random
 import string
@@ -14,7 +13,10 @@ from charmhelpers.core.hookenv import (
     DEBUG,
 )
 from charmhelpers.core.host import (
+    service_start,
     service_restart,
+    service_stop,
+    service_running,
 )
 from charmhelpers.core.templating import render
 from charmhelpers.fetch import apt_hold, apt_install, apt_update
@@ -100,6 +102,7 @@ class Containerd(container_engine_base.Container):
             time.sleep(30)
 
     def compose_run(self, path, config_changed=True):
+        cnt_name_prefix = path.split("/")[-2]
         do_update = config_changed
         if not do_update:
             # check count of services
@@ -108,7 +111,7 @@ class Containerd(container_engine_base.Container):
                 data = yaml.load(fh, Loader=yaml.Loader)
                 count = len(data['services'])
             # check is it run or not
-            cmd = "{} container list -q | grep {}_".format(CTR_CLI, path.split("/")[-2])
+            cmd = "{} task list -q | grep {}-".format(CTR_CLI, cnt_name_prefix)
             try:
                 actual_count = len(check_output(cmd, shell=True).decode("UTF-8").splitlines())
             except Exception:
@@ -123,25 +126,41 @@ class Containerd(container_engine_base.Container):
             # init_containers run without restart
             services_spec = spec["services"]
             volumes_spec = spec.get("volumes", [])
-            cnt_name_prefix = path.split("/")[-2] + "_"
 
             # start containers
+            self._create_systemd_target(cnt_name_prefix)
             for service in services_spec:
-                cnt_name = cnt_name_prefix + service
-                if "-init" in services_spec[service]["image"]:
-                    detach = False
-                else:
-                    detach = True
-                self._run_container(cnt_name, volumes_spec, services_spec, service, detach=detach)
+                cnt_name = cnt_name_prefix + "-" + service
+                cnt_config = self._parse_config(cnt_name, volumes_spec, services_spec, service)
+                image_id = cnt_config["image_id"]
+                if not self._if_image_exists(image_id):
+                    self._image_pull(image_id)
+                self._create_container(cnt_config)
+                self._create_systemd_service(cnt_name_prefix, cnt_config)
+            self._run_systemd_service(cnt_name_prefix)
 
-    def compose_down(self, path, services_to_wait=None):
+    def compose_down(self, path, services_to_wait=[]):
         with open(path, "r") as f:
             services_spec = yaml.load(f, Loader=yaml.Loader)["services"]
 
+        if services_to_wait:
+            # kill containers with SIGQUIT
+            for service in list(services_to_wait):
+                cnt_id = self.get_container_id(path, service)
+                self._kill_container(cnt_id, signal="SIGQUIT")
+
+            # check if containers were stopped
+            for service in list(services_to_wait):
+                state = self.get_container_state(path, service)
+                if not state or state.get('Status', '').lower() != 'running':
+                    services_to_wait.remove(service)
+            # if not raise Exception
+            if services_to_wait:
+                raise Exception("{} do not react to SIGQUIT. please check it manually and re-run operation.".format(", ".join(services_to_wait)))
+
         for service in services_spec:
             cnt_id = self.get_container_id(path, service)
-            self.stop_container(cnt_id, signal="SIGQUIT")
-            time.sleep(5)
+            self._stop_container(cnt_id)
             try:
                 self.remove_container(cnt_id)
                 self._wait_for_absence(cnt_id)
@@ -173,19 +192,26 @@ class Containerd(container_engine_base.Container):
             # let's return None when docker fails to return status by ID or we failed to read provided JSON
             return None
 
-    def stop_container(self, cnt_id, signal="SIGTERM"):
+    def _kill_container(self, cnt_id, signal="SIGTERM"):
         log("Stopping container {}".format(cnt_id))
-        cmd = [CTR_CLI, "task", "kill", "-s", signal, cnt_id]
-        check_call(cmd)
+        wait_config = {
+            'wait_for_stop': True,
+            'name': cnt_id,
+            'kill_signal': signal
+        }
+        render("service_stop.sh", "/etc/contrail/" + cnt_id + "_stop.sh", wait_config, perms=0o755)
+        self._daemon_reload
+        service_stop(cnt_id)
+        # TODO: do we need to rewrite stop script back?
+
+    def _stop_container(self, cnt_id):
+        log("Stopping container {}".format(cnt_id))
+        service_stop(cnt_id)
 
     def remove_container(self, cnt_id):
         if self._if_container_exists(cnt_id):
-            # trying to stop container with SIGTERM and remove it
-            for i in range(5):
-                try:
-                    self.stop_container(cnt_id)
-                except Exception:
-                    pass
+            self._stop_container(cnt_id)
+            for i in range(3):
                 try:
                     log("Removing container {}. Try {}".format(cnt_id, i))
                     cmd = [CTR_CLI, "container", "rm", cnt_id]
@@ -196,30 +222,8 @@ class Containerd(container_engine_base.Container):
                 # retry
                 time.sleep(3)
             else:
-                # if not succeeded stop container with SIGKILL and remove it
-                for i in range(3):
-                    try:
-                        self.stop_container(cnt_id, signal="SIGKILL")
-                    except Exception:
-                        pass
-                    try:
-                        log("Removing container {}. Try {}".format(cnt_id, i))
-                        cmd = [CTR_CLI, "container", "rm", cnt_id]
-                        check_call(cmd)
-                        break
-                    except Exception as e:
-                        exc = e
-                    # retry
-                    time.sleep(3)
-                else:
-                    log("Container {} was not removed. {}".format(cnt_id, str(exc)))
-                    raise exc
-            # sometimes after removing container the task is alive for some time
-            # and it prevents recreating container
-            try:
-                self._remove_task(cnt_id)
-            except Exception:
-                pass
+                log("Container {} was not removed. {}".format(cnt_id, str(exc)))
+                raise exc
 
     def create(self, image, tag):
         name = str(uuid.uuid4())
@@ -232,8 +236,8 @@ class Containerd(container_engine_base.Container):
         cnt_id = self.get_container_id(path, service)
         if not cnt_id:
             return None
-        cmd = [CTR_CLI, "task", "start", "-d", cnt_id]
-        check_call(cmd)
+        service_stop(cnt_id)
+        service_start(cnt_id)
 
     def get_contrail_version(self, image, tag, pkg=None):
         # TODO: run container with bash to echo version inside (image inspect was not found for ctr)
@@ -248,6 +252,35 @@ class Containerd(container_engine_base.Container):
 
     def render_logging(self):
         return ""
+
+    # systemd
+    def _daemon_reload(self):
+        cmd = ["systemctl", "daemon-reload"]
+        check_call(cmd)
+
+    def _create_systemd_target(self, group_name):
+        params = {
+            "group_name": group_name
+        }
+        render("target.tmpl", "/etc/systemd/system/" + group_name + ".service", params)
+        self._enable_systemd_service(group_name)
+
+    def _create_systemd_service(self, group_name, cnt_config):
+        cnt_config["group_name"] = group_name
+        render("service.tmpl", "/etc/systemd/system/" + cnt_config["name"] + ".service", cnt_config)
+        render("service_stop.sh", "/etc/contrail/" + cnt_config["name"] + "_stop.sh", cnt_config, perms=0o755)
+        self._daemon_reload()
+        self._enable_systemd_service(cnt_config["name"])
+
+    def _enable_systemd_service(self, service):
+        cmd = ["systemctl", "enable", service]
+        check_call(cmd)
+
+    def _run_systemd_service(self, service):
+        log("Starting service {}".format(service))
+        service_start(service)
+        if not service_running(service):
+            raise Exception("Service {} didn't start".format(service))
 
     def _remove_task(self, cnt_id):
         cmd = [CTR_CLI, "task", "rm", cnt_id]
@@ -271,60 +304,54 @@ class Containerd(container_engine_base.Container):
             volumes.append("type=bind,src={},dst={},options=rbind:rw".format(src, dst))
         return volumes
 
-    def _run_container(self, cnt_name, volumes_spec, services_spec, service, detach=True):
-        # parse services spec from yaml to container options
-        image_id = services_spec[service]["image"]
-        if not self._if_image_exists(image_id):
-            image_id_separated = image_id.split("/")
-            image_name = image_id_separated[-1].split(":")[0]
-            image_tag = config.get('image-tag')
-            self.pull(image_name, image_tag)
+    def _parse_config(self, cnt_name, volumes_spec, services_spec, service):
+        # parse services spec from yaml
+        cnt_config = {}
+        cnt_config["name"] = cnt_name
+        cnt_config["image_id"] = services_spec[service]["image"]
         volumes = []
         parsed_volumes = self._parse_volumes(services_spec[service].get("volumes", []), volumes_spec)
         volumes.extend(parsed_volumes)
         volumes_from = services_spec[service].get("volumes_from", [])
         for serv in volumes_from:
             volumes.extend(self._parse_volumes(services_spec[serv].get("volumes", []), volumes_spec))
-        env_dict = services_spec[service].get("environment")
-        env_file = services_spec[service].get("env_file")
-        privileged = services_spec[service].get("privileged")
-        net_host = services_spec[service].get("network_mode") == "host"
-        pid_host = services_spec[service].get("pid") == "host"
-        entrypoint = services_spec[service].get("entrypoint")
-        self._run(cnt_name, image_id, volumes, env_dict=env_dict, env_file=env_file, entrypoint=entrypoint,
-                  privileged=privileged, net_host=net_host, pid_host=pid_host, detach=detach)
+        cnt_config["volumes"] = volumes
+        cnt_config["env_dict"] = services_spec[service].get("environment")
+        cnt_config["env_file"] = services_spec[service].get("env_file")
+        cnt_config["privileged"] = services_spec[service].get("privileged")
+        cnt_config["net_host"] = services_spec[service].get("network_mode") == "host"
+        cnt_config["pid_host"] = services_spec[service].get("pid") == "host"
+        cnt_config["entrypoint"] = services_spec[service].get("entrypoint")
+        cnt_config["restart"] = services_spec[service].get("restart", 'no')
+        cnt_config["after_services"] = services_spec[service].get("depends_on")
 
-    def _run(self, cnt_name, image_id, volumes,
-             remove=False, env_dict=None, env_file=None, entrypoint=None, net_host=False,
-             pid_host=False, privileged=False, detach=True):
+        return cnt_config
+
+    def _create_container(self, cnt_config):
         # run container
         changed = False
-        args = [CTR_CLI, "run"]
-        if detach:
-            args.append("-d")
-        if remove:
-            args.append("--rm")
-        if net_host:
+        cnt_name = cnt_config.get("name")
+        args = [CTR_CLI, "container", "create"]
+        if cnt_config.get("net_host"):
             args.append("--net-host")
-        if pid_host:
+        if cnt_config.get("pid_host"):
             args.extend(["--with-ns", "pid:/proc/1/ns/pid"])
-        if privileged:
+        if cnt_config.get("privileged"):
             args.append("--privileged")
-        # we run containers in detach mode if they should restart in case of failure
-        if detach:
-            args.extend(["--label", "containerd.io/restart.status=running"])
-        for volume in volumes:
+        for volume in cnt_config.get("volumes"):
             args.extend(["--mount", volume])
+
+        env_dict = cnt_config.get("env_dict")
+        env_file = cnt_config.get("env_file")
         if env_dict or env_file:
             env_filename = "/etc/contrail/" + cnt_name + ".env"
             self._get_env(env_filename, env_dict, env_file)
             changed |= self._if_changed(env_filename)
             args.extend(["--env-file", env_filename])
-        log_file = self._create_log_file(cnt_name)
-        args.extend(["--log-uri", log_file])
-        args.extend([image_id, cnt_name])
-        if entrypoint:
-            args.extend(entrypoint)
+        args.append("--")
+        args.extend([cnt_config["image_id"], cnt_name])
+        if cnt_config.get("entrypoint"):
+            args.extend(cnt_config["entrypoint"])
         run_filename = '/etc/contrail/' + cnt_name + '.run'
         with open(run_filename, 'w') as f:
             f.write(" ".join(args))
@@ -340,39 +367,12 @@ class Containerd(container_engine_base.Container):
             self.remove_container(cnt_name)
             self._wait_for_absence(cnt_name)
 
-        for i in range(5):
-            try:
-                log("Running container {}. Attempt {}".format(cnt_name, i))
-                log("Command: {}".format(" ".join(args)))
-                check_call(args)
-                break
-            except Exception as e:
-                exc = e
-                if i < 4:
-                    try:
-                        self.remove_container(cnt_name)
-                        self._wait_for_absence(cnt_name)
-                    except Exception:
-                        pass
-            # retry
-            time.sleep(10)
-        else:
-            log("Container {} doesn't start running. {}".format(cnt_name, str(exc)))
-            raise exc
+        log("Creating container: {}".format(" ".join(args)))
+        check_call(args)
 
         os.replace(run_filename, run_filename + ".current")
         if env_filename:
             os.replace(env_filename, env_filename + ".current")
-
-    def _create_log_file(self, cnt_name):
-        log_dir = '/var/log/containerd/'
-        os.makedirs(log_dir, mode=0o755, exist_ok=True)
-        log_file = log_dir + cnt_name + '.log'
-        # create log file (isn't created automatically)
-        with open(log_file, 'a+') as f:
-            f.write(datetime.datetime.utcnow().isoformat())
-            f.write("\n")
-        return log_file
 
     def _get_env(self, filename, env_dict, env_files):
         with open(filename, 'w') as outfile:
@@ -438,6 +438,12 @@ class Containerd(container_engine_base.Container):
             # there is no image
             return False
         return True
+
+    def _image_pull(self, image_id):
+        image_id_separated = image_id.split("/")
+        image_name = image_id_separated[-1].split(":")[0]
+        image_tag = config.get('image-tag')
+        self.pull(image_name, image_tag)
 
     def _render_config(self):
         # From https://docs.docker.com/config/daemon/systemd/#httphttps-proxy

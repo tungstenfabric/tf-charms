@@ -1,0 +1,22 @@
+[Unit]
+Description="TF {{ name }} container"
+PartOf={{ group_name }}.service
+{%- if after_services %}
+{%- for service in after_services %}
+After={{ group_name }}_{{ service }}.service
+{%- endfor %}
+{%- endif %}
+
+[Service]
+Type=simple
+ExecStartPre=-ctr task rm {{ name }}
+ExecStart=ctr task start {% if 'init' in name %}-d{% endif %} {{ name }}
+{%- if restart != 'no' %}
+Restart={{ restart }}
+PIDFile=/run/containerd/io.containerd.runtime.v2.task/default/{{ name }}/init.pid
+ExecStop=/etc/contrail/{{ name }}_stop.sh
+ExecStopPost=/etc/contrail/{{ name }}_stop.sh
+{%- endif %}
+
+[Install]
+WantedBy={{ group_name }}.service
