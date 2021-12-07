@@ -134,7 +134,7 @@ class Containerd(container_engine_base.Container):
                     detach = True
                 self._run_container(cnt_name, volumes_spec, services_spec, service, detach=detach)
 
-    def compose_down(self, path, service=None):
+    def compose_down(self, path, services_to_wait=None):
         with open(path, "r") as f:
             services_spec = yaml.load(f, Loader=yaml.Loader)["services"]
 

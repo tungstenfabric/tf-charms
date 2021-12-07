@@ -17,7 +17,7 @@ class Container():
     def compose_run(self, path, config_changed=True):
         pass
 
-    def compose_down(self, path, service=None):
+    def compose_down(self, path, services_to_wait=None):
         pass
 
     def get_container_id(self, path, service):
