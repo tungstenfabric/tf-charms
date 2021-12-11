@@ -53,7 +53,7 @@ def config_changed():
     if config.changed("l3mh-cidr"):
         raise Exception("Configuration parameter l3mh-cidr couldn't be changed")
 
-    if not config["dpdk"]:
+    if not config["dpdk"] and (config.changed("kernel-hugepages-1g") or config.changed("kernel-hugepages-2m")):
         utils.prepare_hugepages_kernel_mode()
     docker_utils.config_changed()
     utils.pull_images()
