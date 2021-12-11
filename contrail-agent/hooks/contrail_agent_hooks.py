@@ -55,7 +55,7 @@ def config_changed():
     if config.changed("container_runtime") and config.previous("container_runtime"):
         raise Exception("Configuration parameter container_runtime couldn't be changed")
 
-    if not config["dpdk"]:
+    if not config["dpdk"] and (config.changed("kernel-hugepages-1g") or config.changed("kernel-hugepages-2m")):
         utils.prepare_hugepages_kernel_mode()
     common_utils.container_engine().config_changed()
     utils.pull_images()

@@ -499,15 +499,20 @@ def _add_hp_fstab_mount(pagesize, mount=True):
     mkdir(mnt_point, owner='root', group='root', perms=0o755)
     lfstab = fstab.Fstab()
     fstab_entry = lfstab.get_entry_by_attr('mountpoint', mnt_point)
-    if fstab_entry:
-        lfstab.remove_entry(fstab_entry)
+
     # use different device name for 1G and 2M.
     # this name actually is not used by the system
     # but add_antry filter by device name.
     device = 'hugetlbfs{}'.format(pagesize)
-    entry = lfstab.Entry(device, mnt_point, 'hugetlbfs',
-                         'pagesize={}'.format(pagesize), 0, 0)
-    lfstab.add_entry(entry)
+    new_entry = lfstab.Entry(device, mnt_point, 'hugetlbfs',
+                             'pagesize={}'.format(pagesize), 0, 0)
+    if fstab_entry and new_entry == fstab_entry:
+        log("Skip adding mountpoint. Entry is the same")
+        return
+
+    if fstab_entry:
+        lfstab.remove_entry(fstab_entry)
+    lfstab.add_entry(new_entry)
     if mount:
         fstab_mount(mnt_point)
 
