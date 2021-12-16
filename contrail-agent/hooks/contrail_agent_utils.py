@@ -75,6 +75,12 @@ DPDK_ARGS = {
     "dpdk-yield-option": "-–yield_option"
 }
 
+DPDK_FLAGS = {
+    "dpdk-no-gro": "--no-gro",
+    "dpdk-no-gso": "--no-gso",
+    "dpdk-no-mrgbuf": "--no-mrgbuf",
+}
+
 config = config()
 
 
@@ -84,6 +90,10 @@ def _get_dpdk_args():
         val = config.get(arg)
         if val:
             result.append("{} {}".format(DPDK_ARGS[arg], val))
+    for flag in DPDK_FLAGS:
+        val = config.get(flag)
+        if val:
+            result.append("{}".format(DPDK_FLAGS[flag]))
     return " ".join(result)
 
 
