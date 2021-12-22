@@ -305,9 +305,11 @@ def nova_patch():
 
 
 def configure_apparmor():
+    log("Starting configure apparmor")
     apparmor_file = "/etc/apparmor.d/usr.bin.nova-compute"
     new_line = "/var/lib/contrail/ports/** rw,"
     if not os.path.exists(apparmor_file):
+        log("No apparmor file found")
         return
 
     with open(apparmor_file) as f:
@@ -316,14 +318,18 @@ def configure_apparmor():
     new_data = []
     for line in data:
         if new_line in line:
+            log("/var/lib/contrail/ports are already added to apparmor")
             return
         if line.startswith("}"):
+            log("Appending new line {}".format(new_line))
             new_data.append("  " + new_line + "\n")
         new_data.append(line)
 
+    log("Write apparmor file")
     with open(apparmor_file, "w") as f:
         f.writelines(new_data)
 
+    log("Restart apparmor service")
     service_restart("apparmor")
     check_call(["/etc/init.d/apparmor", "reload"])
 
