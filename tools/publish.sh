@@ -13,5 +13,5 @@ for folder in contrail-agent contrail-analytics contrail-analyticsdb contrail-co
   num=`echo "$res" | grep "cs:${id}" | sed "s|^.*cs:${id}-\([0-9]*\).*$|\1|"`
   charm release cs:${id}-$num
   charm grant "${id}" --channel stable --acl read --set everyone
-  charm set "${id}" bugs-url="https://github.com/Juniper/contrail-charms/issues" homepage="https://github.com/Juniper/contrail-charms"
+  charm set "${id}" bugs-url="https://jira.tungsten.io/projects" homepage="https://github.com/tungstenfabric/tf-charms"
 done
