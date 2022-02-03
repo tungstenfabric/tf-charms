@@ -9,8 +9,8 @@ After={{ group_name }}_{{ service }}.service
 
 [Service]
 Type=simple
-ExecStartPre=-ctr task rm {{ name }}
-ExecStart=ctr task start {% if 'init' in name %}-d{% endif %} {{ name }}
+ExecStartPre=-/usr/bin/ctr task rm {{ name }}
+ExecStart=/usr/bin/ctr task start {% if 'init' in name %}-d{% endif %} {{ name }}
 {%- if restart != 'no' %}
 Restart={{ restart }}
 PIDFile=/run/containerd/io.containerd.runtime.v2.task/default/{{ name }}/init.pid
