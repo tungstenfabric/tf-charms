@@ -407,6 +407,8 @@ def get_contrail_version():
     If someone changes the naming conventions, he must make changes in this function to support these new conventions.
     """
     tag = config.get("image-tag")
+    if 'master' in tag:
+        return 9999
     for release in [r"21\d\d", r"20\d\d", r"19\d\d"]:
         tag_date = re.findall(release, tag)
         if len(tag_date) != 0:
