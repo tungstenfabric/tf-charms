@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 import socket
 
 from charmhelpers.core.hookenv import (
@@ -536,6 +537,11 @@ ziu_relations = [
 ]
 
 
+# in seconds
+max_stage_timeout = 120
+max_stage_time_start = None
+
+
 def config_set(key, value):
     if value is not None:
         config[key] = value
@@ -640,13 +646,19 @@ def update_ziu(trigger):
     # move to next stage
     ziu_stage += 1
     signal_ziu("ziu", ziu_stage)
-    # run next stage on self to avoid waiting for update_status
     log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
-    # last stage must be called immediately to provide ziu=max_stage to all
+
+    # last(max) stage must not be called immediately to provide ziu=max_stage to all units
     # all other stages can call stage handler immediately to not wait for update_status
+    # moreover - we must wait some time to let work relation_set(max_stage) to avoid
+    # early cleaning it by update_status or any other hook
+    global max_stage_time_start
+    max_stage_time_start = None
     max_stage = max(stages.keys())
     if ziu_stage != max_stage:
         stages[ziu_stage](ziu_stage, trigger)
+    else:
+        max_stage_time_start = time.time()
 
 
 def ziu_stage_noop(ziu_stage, trigger):
@@ -691,6 +703,10 @@ def ziu_stage_4(ziu_stage, trigger):
 
 
 def ziu_stage_6(ziu_stage, trigger):
+    if max_stage_time_start is not None and time.time() - max_stage_time_start < max_stage_timeout:
+        # see comment in update_ziu
+        return
+
     # finish
     signal_ziu("ziu", None)
     signal_ziu("ziu_done", None)
