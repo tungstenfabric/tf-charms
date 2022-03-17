@@ -539,7 +539,6 @@ ziu_relations = [
 
 # in seconds
 max_stage_timeout = 120
-max_stage_time_start = None
 
 
 def config_set(key, value):
@@ -646,19 +645,22 @@ def update_ziu(trigger):
     # move to next stage
     ziu_stage += 1
     signal_ziu("ziu", ziu_stage)
-    log("ZIU: run stage {}, trigger {}".format(ziu_stage, trigger))
 
     # last(max) stage must not be called immediately to provide ziu=max_stage to all units
     # all other stages can call stage handler immediately to not wait for update_status
     # moreover - we must wait some time to let work relation_set(max_stage) to avoid
     # early cleaning it by update_status or any other hook
-    global max_stage_time_start
-    max_stage_time_start = None
+    config.pop("max_stage_time_start", None)
+    log("ZIU: drop start time for max stage")
     max_stage = max(stages.keys())
     if ziu_stage != max_stage:
+        log("ZIU: run stage immediately {}, trigger {}".format(ziu_stage, trigger))
         stages[ziu_stage](ziu_stage, trigger)
     else:
         max_stage_time_start = time.time()
+        config["max_stage_time_start"] = max_stage_time_start
+        log("ZIU: set start time for max stage = {}".format(max_stage_time_start))
+    config.save()
 
 
 def ziu_stage_noop(ziu_stage, trigger):
@@ -703,9 +705,14 @@ def ziu_stage_4(ziu_stage, trigger):
 
 
 def ziu_stage_6(ziu_stage, trigger):
-    if max_stage_time_start is not None and time.time() - max_stage_time_start < max_stage_timeout:
+    max_stage_time_start = config.get("max_stage_time_start", None)
+    if is_leader() and max_stage_time_start is not None:
         # see comment in update_ziu
-        return
+        time_passed = time.time() - max_stage_time_start
+        log("ZIU: stage 6 start = {}, time passed = {}".format(max_stage_time_start, time_passed))
+        if time_passed < max_stage_timeout:
+            return
+        config.pop("max_stage_time_start")
 
     # finish
     signal_ziu("ziu", None)
