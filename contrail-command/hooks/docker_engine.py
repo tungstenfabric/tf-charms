@@ -27,6 +27,11 @@ DOCKER_ADD_PACKAGES = ["docker-compose"]
 DOCKER_CLI = "/usr/bin/docker"
 DOCKER_COMPOSE_CLI = "docker-compose"
 
+DOCKER_TIMEOUTS = {
+    "DOCKER_CLIENT_TIMEOUT": "120",
+    "COMPOSE_HTTP_TIMEOUT": "120"
+}
+
 
 class Docker(container_engine_base.Container):
     def _format_curl_proxy_opt(self):
@@ -209,7 +214,9 @@ class Docker(container_engine_base.Container):
             log("Services actual count: {}, required count: {}".format(actual_count, count), level=DEBUG)
             do_update = actual_count != count
         if do_update:
-            check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"])
+            env = os.environ.copy()
+            env.update(DOCKER_TIMEOUTS)
+            check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"], env=env)
 
     def compose_down(self, path, services_to_wait=None):
         self.compose_kill(path, "SIGQUIT")
@@ -227,7 +234,9 @@ class Docker(container_engine_base.Container):
             else:
                 raise Exception("{} do not react to SIGQUIT. please check it manually and re-run operation.".format(", ".join(services_to_wait)))
         try:
-            check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"])
+            env = os.environ.copy()
+            env.update(DOCKER_TIMEOUTS)
+            check_call([DOCKER_COMPOSE_CLI, "-f", path, "down"], env=env)
         except Exception as e:
             log("Error during compose down: {}".format(e))
 
