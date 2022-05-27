@@ -654,8 +654,13 @@ def update_ziu(trigger):
     log("ZIU: drop start time for max stage")
     max_stage = max(stages.keys())
     if ziu_stage != max_stage:
-        log("ZIU: run stage immediately {}, trigger {}".format(ziu_stage, trigger))
-        stages[ziu_stage](ziu_stage, trigger)
+        try:
+            # do not fail the process - in case of unhandled exception
+            # relation is not updated and other units didn't receive stage update
+            log("ZIU: run stage immediately {}, trigger {}".format(ziu_stage, trigger))
+            stages[ziu_stage](ziu_stage, trigger)
+        except Exception as e:
+            log("Immediate stage run failed {}. will be retried in next hook".format(e))
     else:
         max_stage_time_start = time.time()
         config["max_stage_time_start"] = max_stage_time_start
