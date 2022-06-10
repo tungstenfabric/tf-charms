@@ -263,9 +263,6 @@ def compile_kernel_modules():
     modules = '/lib/modules'
     need_to_compile = False
     for item in os.listdir(modules):
-        # vrouter doesn't support kernels version 5, remove check after fix
-        if item.split('.')[0] == '5':
-            continue
         path = os.path.join(modules, item, 'updates/dkms/vrouter.ko')
         if not os.path.exists(path):
             need_to_compile = True
