@@ -84,6 +84,7 @@ class Containerd(container_engine_base.Container):
             return
 
         pull_opts = ""
+        insecure_opts = ""
         if docker_user:
             pull_opts += "--user " + docker_user
             if docker_password:
