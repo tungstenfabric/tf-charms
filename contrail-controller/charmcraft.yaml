@@ -1,0 +1,34 @@
+type: charm
+
+parts:
+  charm:
+    plugin: dump
+    source: .
+    prime:
+      - actions/*
+      - files/*
+      - hooks/*
+      - templates/*
+      - LICENSE
+      - README.md
+      - actions.yaml
+      - charm-helpers-hooks.yaml
+      - charmcraft.yaml
+      - config.yaml
+      - copyright
+      - icon.svg
+      - metadata.yaml
+bases:
+  - build-on:
+      - name: ubuntu
+        channel: "20.04"
+        architectures: ["amd64"]
+    run-on:
+      - name: ubuntu
+        channel: "20.04"
+        architectures:
+            - amd64
+      - name: ubuntu
+        channel: "18.04"
+        architectures:
+            - amd64
