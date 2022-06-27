@@ -37,6 +37,7 @@ IMAGES = {
         "contrail-nodemgr",
         "contrail-analytics-query-engine",
         "contrail-external-cassandra",
+        "contrail-status",
     ],
 }
 # images for new versions that can be absent in previous releases

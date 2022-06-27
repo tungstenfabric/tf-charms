@@ -49,6 +49,7 @@ IMAGES = {
             "contrail-nodemgr",
             "contrail-analytics-collector",
             "contrail-external-redis",
+            "contrail-status",
         ],
         "analytics-alarm": [
             "contrail-node-init",

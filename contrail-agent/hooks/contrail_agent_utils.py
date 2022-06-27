@@ -47,6 +47,7 @@ IMAGES = [
     "contrail-node-init",
     "contrail-nodemgr",
     "contrail-vrouter-agent",
+    "contrail-status",
 ]
 # images for new versions that can be absent in previous releases
 IMAGES_OPTIONAL = [
