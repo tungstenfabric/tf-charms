@@ -83,18 +83,17 @@ class Containerd(container_engine_base.Container):
         if output:
             return
 
-        pull_opts = ""
-        insecure_opts = ""
-        if docker_user:
-            pull_opts += "--user " + docker_user
-            if docker_password:
-                pull_opts += ":" + docker_password
+        cmd = [CTR_CLI, "image", "pull"]
+        if docker_user and docker_password:
+            cmd.append("--user")
+            cmd.append(docker_user + ":" + docker_password)
         if registry_insecure:
-            insecure_opts = "-k"
+            cmd.append("-k")
+        cmd.append(image_id)
         # pull image. Insert retries to cover issue when image cannot be pulled due to vrouter restart
         for i in range(10):
             try:
-                check_call([CTR_CLI, "image", "pull", pull_opts, insecure_opts, self.get_image_id(image, tag)], stdout=DEVNULL)
+                check_call(cmd, stdout=DEVNULL)
                 break
             except Exception as e:
                 log("Cannot pull image {}:{}. {}".format(image, tag, e))
