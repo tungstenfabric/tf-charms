@@ -51,6 +51,7 @@ IMAGES = [
     "contrail-external-zookeeper",
     "contrail-external-rabbitmq",
     "contrail-external-redis",
+    "contrail-status",
 ]
 # images for new versions that can be absent in previous releases
 IMAGES_OPTIONAL = [

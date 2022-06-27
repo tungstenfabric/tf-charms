@@ -31,6 +31,7 @@ BASE_CONFIGS_PATH = "/etc/contrail"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/contrail-kubernetes-master"
 IMAGES = [
     "contrail-kubernetes-kube-manager",
+    "contrail-status",
 ]
 SERVICES = {
     "kubernetes": [
