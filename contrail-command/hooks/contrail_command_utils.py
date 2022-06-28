@@ -13,6 +13,10 @@ from charmhelpers.core.hookenv import (
     ERROR,
 )
 
+from charmhelpers.core.host import (
+    lsb_release,
+)
+
 import common_utils
 from subprocess import (
     check_call
@@ -71,6 +75,17 @@ def deploy_ccd_code(image, tag):
 
         dst = '/' + image
         copy_tree(tmp_folder, dst)
+
+        # patch command code for ubuntu
+        try:
+            check_call('patch --strip 1 -d ' + dst + '< ./files/libselinux.diff', shell=True)
+        except Exception:
+            log("Unsuccessful libselinux patch attempt")
+        if lsb_release()['DISTRIB_CODENAME'] not in ['focal']:
+            try:
+                check_call('patch --strip 1 -d ' + dst + '< ./files/interpreter.diff', shell=True)
+            except Exception:
+                log("Unsuccessful ansible_python_interpreter patch attempt")
 
         shutil.rmtree(tmp_folder, ignore_errors=True)
     finally:

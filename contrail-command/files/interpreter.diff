@@ -1,0 +1,13 @@
+diff --git a/playbooks/deploy.yml b/playbooks/deploy.yml
+index d90563e..eb36451 100644
+--- a/playbooks/deploy.yml
++++ b/playbooks/deploy.yml
+@@ -10,7 +10,7 @@
+   hosts: command_servers
+   gather_facts: yes
+   vars:
+-    - ansible_python_interpreter: /usr/bin/python3
++    - ansible_python_interpreter: /usr/bin/python2
+   vars_files:
+     - "{{ hostvars['localhost'].config_file }}"
+   roles:
