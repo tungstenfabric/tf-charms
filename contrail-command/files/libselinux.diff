@@ -1,0 +1,11 @@
+diff --git a/playbooks/roles/install_packages/tasks/main.yml b/playbooks/roles/install_packages/tasks/main.yml
+index 8d61d10..6454a95 100644
+--- a/playbooks/roles/install_packages/tasks/main.yml
++++ b/playbooks/roles/install_packages/tasks/main.yml
+@@ -18,7 +18,6 @@
+   with_items:
+     - sshpass
+     - jq
+-    - libselinux-python3
+   when:
+     - ansible_os_family != 'RedHat' or ansible_distribution_major_version|int >= 8
