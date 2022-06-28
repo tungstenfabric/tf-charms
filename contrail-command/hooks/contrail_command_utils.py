@@ -27,7 +27,7 @@ BASE_CONFIGS_PATH = "/etc/contrail"
 CONFIGS_PATH = BASE_CONFIGS_PATH + "/contrail-command"
 IMAGES = [
     "contrail-command-deployer",
-    "contrail-command"
+    "contrail-command",
     "contrail-status",
 ]
 SERVICES = {}
