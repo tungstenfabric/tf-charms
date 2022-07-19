@@ -301,3 +301,11 @@ options:
       vRouter DPDK option to disable mergeable buffers on vRouter.
       Allowed values 0 / 1.
       If not set the default behaviour is enabled (false).
+  tcmalloc-heap-limit-mb:
+    type: string
+    default: ''
+    description: |
+      Limit total size of the process heap to the specified number of MiB.
+      When we approach the limit the memory is released
+      to the system more aggressively (more minor page faults).
+      Zero means to allocate as long as system allows.
