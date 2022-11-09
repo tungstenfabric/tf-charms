@@ -115,6 +115,20 @@ def get_analytics_list():
     return analytics_ip_list
 
 
+def is_analyticsdb_enabled():
+    """Check if analyticsdb is enabled on cluster"""
+
+    analyticsdb_enabled = True
+    if common_utils.get_contrail_version() > 500:
+        analyticsdb_enabled = False
+        for rid in relation_ids("contrail-analyticsdb"):
+            if related_units(rid):
+                analyticsdb_enabled = True
+                break
+
+    return analyticsdb_enabled
+
+
 def get_context():
     ctx = {}
     ctx["module"] = MODULE
@@ -151,6 +165,7 @@ def get_context():
     ctx["controller_servers"] = ips
     ctx["control_servers"] = data_ips
     ctx["analytics_servers"] = get_analytics_list()
+    ctx["analyticsdb_enabled"] = is_analyticsdb_enabled()
     log("CTX: " + str(ctx))
     ctx.update(common_utils.json_loads(config.get("auth_info"), dict()))
     return ctx
