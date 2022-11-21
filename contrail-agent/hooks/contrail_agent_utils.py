@@ -221,7 +221,7 @@ def get_context():
         ctx["dpdk_coremask"] = config.get("dpdk-coremask")
         ctx["dpdk_service_coremask"] = config.get("dpdk-service-coremask")
         ctx["dpdk_ctrl_thread_coremask"] = config.get("dpdk-ctrl-thread-coremask")
-        cpuset = _convert2cpuset(config.get("dpdk-ctrl-thread-coremask"))
+        cpuset = _convert2cpuset(config.get("container-cpuset"))
         if cpuset:
             ctx["agent_containers_cpuset"] = cpuset
         ctx["dpdk_hugepages"] = _get_hugepages()

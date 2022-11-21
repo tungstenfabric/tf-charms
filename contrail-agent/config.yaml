@@ -309,3 +309,13 @@ options:
       When we approach the limit the memory is released
       to the system more aggressively (more minor page faults).
       Zero means to allocate as long as system allows.
+  container-cpuset:
+    type: string
+    default: ""
+    description: |
+      Limit the specific CPUs or cores a container can use.
+      Value can be specified as either a hexidecimal bitmask e.g. 0xF or
+      as a numbered list separated by commas e.g. 0,1 (ranges are also supported
+      using '-' e.g. 0-2).
+      It must specify only real cores cause contrail-vrouter-dpdk service will
+      fail if specified core number is not present in the system.
