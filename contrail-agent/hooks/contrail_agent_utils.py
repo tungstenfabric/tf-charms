@@ -602,9 +602,12 @@ def get_vhost_ip():
         # there is no default interface
         return None
 
-    addr = netifaces.ifaddresses(iface)
-    if netifaces.AF_INET in addr and len(addr[netifaces.AF_INET]) > 0:
-        return addr[netifaces.AF_INET][0]["addr"]
+    try:
+        addr = netifaces.ifaddresses(iface)
+        if netifaces.AF_INET in addr and len(addr[netifaces.AF_INET]) > 0:
+            return addr[netifaces.AF_INET][0]["addr"]
+    except ValueError:
+        return None
 
     return None
 
