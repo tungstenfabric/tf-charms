@@ -134,3 +134,8 @@ options:
     description: |
       A comma-separated list of nagios servicegroups.
       If left empty, the nagios_context will be used as the servicegroup
+  reaper-enabled:
+    type: boolean
+    default: false
+    description: |
+      If cassandra-reaper tool is used.

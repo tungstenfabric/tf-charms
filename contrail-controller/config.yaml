@@ -236,3 +236,8 @@ options:
     description: |
       This option tunes some parameters in containers to provide setup
       which is more reliable in huge scale configurations.
+  reaper-enabled:
+    type: boolean
+    default: false
+    description: |
+      If cassandra-reaper tool is used.
