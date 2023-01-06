@@ -136,6 +136,6 @@ options:
       If left empty, the nagios_context will be used as the servicegroup
   reaper-enabled:
     type: boolean
-    default: false
+    default: true
     description: |
       If cassandra-reaper tool is used.

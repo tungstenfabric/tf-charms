@@ -238,6 +238,6 @@ options:
       which is more reliable in huge scale configurations.
   reaper-enabled:
     type: boolean
-    default: false
+    default: true
     description: |
       If cassandra-reaper tool is used.
