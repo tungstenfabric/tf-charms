@@ -1,4 +1,3 @@
-import time
 import os
 import base64
 
@@ -59,23 +58,9 @@ def kubernetes_token():
     except Exception as e:
         log("Can't apply manifest for service account: {}".format(e))
         return None
-    token_id = None
-    for i in range(10):
-        try:
-            token_id = check_output([
-                "snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "get", "sa", "contrail-kubemanager", "-n", "contrail",
-                "-ogo-template=\"{{(index .secrets 0).name}}\""]).decode('UTF-8').strip('\"')
-        except Exception as e:
-            log("Can't get SA for contrail-kubemanager {}".format(e))
-            return None
-        if token_id:
-            break
-        time.sleep(1)
-    if not token_id:
-        return None
     try:
         token_64 = check_output([
-            "snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "get", "secret", token_id, "-n", "contrail",
+            "snap", "run", "kubectl", "--kubeconfig", "/root/.kube/config", "get", "secret", "contrail-kubemanager", "-n", "contrail",
             "-ogo-template=\"{{.data.token}}\""]).decode('UTF-8').strip('\"')
         token = base64.b64decode(token_64).decode()
         return token
