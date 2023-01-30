@@ -218,7 +218,7 @@ class Docker(container_engine_base.Container):
             env.update(DOCKER_TIMEOUTS)
             check_call([DOCKER_COMPOSE_CLI, "-f", path, "up", "-d"], env=env)
 
-    def compose_down(self, path, services_to_wait=None):
+    def _send_sigquit(self, path, services_to_wait=None):
         self.compose_kill(path, "SIGQUIT")
         time.sleep(2)
         if services_to_wait:
@@ -233,6 +233,11 @@ class Docker(container_engine_base.Container):
                 time.sleep(1)
             else:
                 raise Exception("{} do not react to SIGQUIT. please check it manually and re-run operation.".format(", ".join(services_to_wait)))
+
+    def compose_down(self, path, services_to_wait=None):
+        # SIGQUIT is not supported on DPDK on Ubuntu, so we skip it
+        if not config.get("dpdk"):
+            self._send_sigquit(path, services_to_wait)
         try:
             env = os.environ.copy()
             env.update(DOCKER_TIMEOUTS)
