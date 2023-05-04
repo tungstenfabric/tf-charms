@@ -2,6 +2,7 @@ import json
 import hashlib
 import os
 import re
+import shutil
 import base64
 from socket import gaierror, gethostbyname, gethostname, getfqdn
 from subprocess import CalledProcessError, check_call, check_output
@@ -29,6 +30,7 @@ from charmhelpers.core.host import (
     write_file,
 )
 from charmhelpers.core.templating import render
+from charmhelpers.fetch import apt_install
 
 config = config()
 
@@ -533,3 +535,9 @@ def configure_ports(func, ports):
             func(port, "TCP")
         except Exception:
             pass
+
+
+def add_logrotate():
+    # now the file is hardcoded, may be parameterized later
+    apt_install('logrotate')
+    shutil.copy("./files/logrotate", "/etc/logrotate.d/contrail")

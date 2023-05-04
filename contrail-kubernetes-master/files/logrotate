@@ -1,0 +1,19 @@
+/var/log/contrail/*/*.log {
+    su root root
+    size 50M
+    missingok
+    rotate 4
+    compress
+    delaycompress
+    create 640
+}
+
+/var/log/contrail/*.log {
+    su root root
+    size 50M
+    missingok
+    rotate 4
+    compress
+    delaycompress
+    create 640
+}

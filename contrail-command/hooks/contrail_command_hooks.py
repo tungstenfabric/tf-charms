@@ -27,6 +27,7 @@ config = config()
 @hooks.hook("install.real")
 def install():
     status_set('maintenance', 'Installing...')
+    common_utils.add_logrotate()
     common_utils.container_engine().install()
 
 

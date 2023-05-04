@@ -147,7 +147,8 @@ class Containerd(container_engine_base.Container):
             # kill containers with SIGQUIT
             for service in list(services_to_wait):
                 cnt_id = self.get_container_id(path, service)
-                self._kill_container(cnt_id, signal="SIGQUIT")
+                if cnt_id:
+                    self._kill_container(cnt_id, signal="SIGQUIT")
 
             # check if containers were stopped
             for service in list(services_to_wait):
@@ -160,6 +161,8 @@ class Containerd(container_engine_base.Container):
 
         for service in services_spec:
             cnt_id = self.get_container_id(path, service)
+            if not cnt_id:
+                continue
             self._stop_container(cnt_id)
             try:
                 self.remove_container(cnt_id)

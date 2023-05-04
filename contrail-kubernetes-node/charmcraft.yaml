@@ -5,6 +5,7 @@ parts:
     plugin: dump
     source: .
     prime:
+      - files/*
       - hooks/*
       - templates/*
       - LICENSE
