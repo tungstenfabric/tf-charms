@@ -331,6 +331,7 @@ class Docker(container_engine_base.Container):
             changed = True
         if config.changed("docker-registry") or config.changed("docker-registry-insecure") or config.changed("docker-opts"):
             self._update_docker_settings()
+            self._login()
             changed = True
         if config.changed("docker-user") or config.changed("docker-password"):
             self._login()
