@@ -1,0 +1,234 @@
+series: bionic
+machines:
+  # kubernetes master
+  0:
+    series: "bionic"
+    constraints: mem=8G cores=2 root-disk=60G
+
+  # kubernetes worker
+  1:
+    series: "bionic"
+    constraints: mem=8G cores=4 root-disk=60G
+
+applications:
+
+  # kubernetes
+  containerd:
+    charm: containerd
+    channel: 1.26/stable
+    revision: 54
+
+  easyrsa:
+    charm: easyrsa
+    channel: 1.26/stable
+    revision: 33
+    annotations:
+      gui-x: '1168.1039428710938'
+      gui-y: '-59.11077045466004'
+    num_units: 1
+    to:
+    - "0"
+
+  etcd:
+    charm: etcd
+    channel: 1.26/stable
+    revision: 728
+    annotations:
+      gui-x: '1157.2041015625'
+      gui-y: '719.1614406201691'
+    num_units: 1
+    to:
+    - "0"
+
+  kubernetes-master:
+    charm: kubernetes-control-plane
+    channel: 1.26/stable
+    revision: 247
+    expose: true
+    options:
+      authorization-mode: Node,RBAC
+      channel: 1.20/stable
+      enable-dashboard-addons: false
+      enable-keystone-authorization: true
+      enable-metrics: false
+      keystone-policy: |-
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: k8s-auth-policy
+          namespace: kube-system
+          labels:
+            k8s-app: k8s-keystone-auth
+        data:
+          policies: |
+            [
+              {
+               "resource": {
+                  "verbs": ["get", "list", "watch"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "*"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["k8s"]
+                  }
+                ]
+              },
+              {
+               "resource": {
+                  "verbs": ["*"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "myproject"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["k8s-myproject"]
+                  }
+                ]
+              },
+              {
+               "resource": {
+                  "verbs": ["*"],
+                  "resources": ["*"],
+                  "version": "*",
+                  "namespace": "*"
+                },
+                "match": [
+                  {
+                    "type": "role",
+                    "values": ["*"]
+                  },
+                  {
+                    "type": "project",
+                    "values": ["admin"]
+                  }
+                ]
+              }
+            ]
+      service-cidr: 10.96.0.0/12
+      snapd_refresh: max
+    num_units: 1
+    annotations:
+      gui-x: '877.1133422851562'
+      gui-y: '325.6035540382413'
+    to:
+    - "0"
+
+  kubernetes-worker:
+    charm: kubernetes-worker
+    channel: 1.26/stable
+    revision: 92
+    annotations:
+      gui-x: '745.8510131835938'
+      gui-y: '-57.369691124215706'
+    num_units: 1
+    options:
+      ingress: false
+      snapd_refresh: max
+    to:
+    - "1"
+
+  # contrail
+  contrail-kubernetes-master:
+    charm: juniper-os-software-contrail-kubernetes-master
+    annotations:
+      gui-x: '586.8027801513672'
+      gui-y: '753.914497641757'
+    options:
+      cluster_name: k8s
+      log-level: 'SYS_DEBUG'
+      service_subnets: '10.96.0.0/12'
+      docker_runtime: auto
+      docker-registry: "opencontrailnightly"
+      image-tag: "master-latest"
+      ip_fabric_snat: true
+      public_fip_pool: '{''domain'':''default-domain'',''project'':''k8s-default'',''name'':''__fip_pool_public__'',''network'':''__public__''}'
+
+  contrail-kubernetes-node:
+    charm: juniper-os-software-contrail-kubernetes-node
+    annotations:
+      gui-x: '429.1971130371094'
+      gui-y: '216.05209087397168'
+    options:
+      log-level: 'SYS_DEBUG'
+      docker_runtime: auto
+      docker-registry: "opencontrailnightly"
+      image-tag: "master-latest"
+
+  contrail-agent:
+    charm: juniper-os-software-contrail-agent
+    annotations:
+      gui-x: '307.5467224121094'
+      gui-y: '-24.150856522753656'
+    options:
+      log-level: 'SYS_DEBUG'
+      docker_runtime: auto
+      docker-registry: "opencontrailnightly"
+      image-tag: "master-latest"
+      kernel-hugepages-2m: "1024"
+
+# misc
+  ntp:
+    charm: "cs:ntp"
+    annotations:
+      gui-x: '678.6017761230469'
+      gui-y: '415.27124759750086'
+
+
+  ubuntu:
+    charm: cs:ubuntu
+    channel: stable
+    revision: 18
+    num_units: 2
+    to:
+    - "0"
+    - "1"
+
+relations:
+# kubernetes
+- - kubernetes-master:kube-api-endpoint
+  - kubernetes-worker:kube-api-endpoint
+- - kubernetes-master:kube-control
+  - kubernetes-worker:kube-control
+- - kubernetes-master:certificates
+  - easyrsa:client
+- - kubernetes-master:etcd
+  - etcd:db
+- - kubernetes-worker:certificates
+  - easyrsa:client
+- - etcd:certificates
+  - easyrsa:client
+- - kubernetes-master:container-runtime
+  - containerd:containerd
+- - kubernetes-worker:container-runtime
+  - containerd:containerd
+
+# contrail-kubernetes
+- - contrail-kubernetes-node:cni
+  - kubernetes-master:cni
+- - contrail-kubernetes-node:cni
+  - kubernetes-worker:cni
+- - contrail-kubernetes-master:kube-api-endpoint
+  - kubernetes-master:kube-api-endpoint
+- - contrail-agent:juju-info
+  - kubernetes-worker:juju-info
+
+# contrail
+- - contrail-kubernetes-master:contrail-kubernetes-config
+  - contrail-kubernetes-node:contrail-kubernetes-config
+
+# misc
+- - ubuntu:juju-info
+  - ntp:juju-info

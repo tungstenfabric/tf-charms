@@ -44,6 +44,8 @@ def install():
     if config.get('local-rabbitmq-hostname-resolution'):
         utils.update_rabbitmq_cluster_hostnames()
 
+    common_utils.add_logrotate()
+
     common_utils.container_engine().install()
     utils.update_charm_status()
 

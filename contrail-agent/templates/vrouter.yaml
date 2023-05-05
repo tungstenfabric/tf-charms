@@ -49,6 +49,9 @@ services:
     depends_on:
       - node-init
     restart: on-failure
+{%- if agent_containers_cpuset %}
+    cpuset: "{{ agent_containers_cpuset }}"
+{%- endif %}
 {{ logging | indent(4,True) }}
 {% endif %}
   vrouter-kernel-init:

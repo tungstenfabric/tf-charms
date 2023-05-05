@@ -35,6 +35,8 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
+    common_utils.add_logrotate()
+
     common_utils.container_engine().install()
     status_set("blocked", "Missing relation to contrail-controller")
 

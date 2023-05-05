@@ -37,6 +37,7 @@ def install():
         if utils.is_reboot_required():
             utils.reboot()
 
+    common_utils.add_logrotate()
     common_utils.container_engine().install()
     if config["dpdk"]:
         utils.fix_libvirt()

@@ -38,6 +38,8 @@ def install():
     # TODO: try to remove this call
     common_utils.fix_hostname()
 
+    common_utils.add_logrotate()
+
     common_utils.container_engine().install()
     utils.update_charm_status()
     # NOTE: do not open port until haproxy can fail
